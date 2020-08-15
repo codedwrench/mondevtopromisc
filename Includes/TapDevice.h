@@ -14,16 +14,16 @@
 
 class TapDevice : public ILinuxDevice {
 public:
-    virtual int AllocateDevice();
-    virtual int CreateDevice(const std::string& aDeviceName);
+    int AllocateDevice() override;
+    int CreateDevice(const std::string& aDeviceName) override;
+    int GetFd() override ;
 
-    int GetFd();
 protected:
-    virtual int Open(const std::string& aDeviceNameAndPath, int aMode);
+    int Open(const std::string& aDeviceNameAndPath, int aMode) override;
+    int Close() override;
 
-    virtual int Close();
 private:
-    virtual int IoCtl(int aFd, unsigned long aRequest, char* aArgp);
+    int IoCtl(int aFd, unsigned long aRequest, char* aArgp) override;
     int AllocateOldDevice();
 
     int mFd;

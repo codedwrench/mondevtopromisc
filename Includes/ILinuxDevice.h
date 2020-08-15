@@ -22,10 +22,15 @@ public:
     /**
      * Creates the device.
      * @param aDeviceName - the name of the tap device to create.
-     * @return 0 on success, errno on failure
+     * @return 0 on success, errno on failure.
      */
     virtual int CreateDevice(const std::string& aDeviceName) = 0;
 
+    /**
+     * Gets the filedescriptor of the device.
+     * @return fd of the device, 0 on failure.
+     */
+    virtual int GetFd() = 0;
 
 protected:
     virtual int Open(const std::string& aDeviceNameAndPath, int aMode) = 0;
