@@ -26,10 +26,10 @@ private:
     int IoCtl(int aFd, unsigned long aRequest, char* aArgp) override;
     int AllocateOldDevice();
 
-    int mFd;
-    std::string mDeviceName;
+    int mFd = 0;
+    std::string mDeviceName = "";
 
 };
 
 
-#endif //MONDEV_TAPDEVICE_H
+#endif //TAPDEVICE_H

@@ -2,6 +2,7 @@
 #include <getopt.h>
 #include <pcap/pcap.h>
 
+#include "Includes/PCapReader.h"
 #include "Includes/TapDevice.h"
 
 int main(int argc, char **argv) {
@@ -52,49 +53,54 @@ int main(int argc, char **argv) {
         "         -d %s: What to name the tap device, keep empty if you want it to be named automatically" << std::endl;
     }
     else if (lOptionsProvided && !lCaptureInterface.empty()) {
-        bool lContinueLooping = true;
+//        TapDevice lDevice;
+//        if (lDevice.AllocateDevice() == 0) {
+//            if(lDevice.CreateDevice(lTapDevice) == 0)
+//            {
+//                std::cout << lDevice.GetFd() << std::endl;
+//            } else {
+//                std::cout << "Failed to create TUN/TAP device" << std::endl;
+//            }
+//        } else {
+//            std::cout << "Failed to allocate TUN/TAP device" << std::endl;
+//        }
 
-        TapDevice lDevice;
-        if (lDevice.AllocateDevice() == 0) {
-            if(lDevice.CreateDevice(lTapDevice) == 0)
-            {
-                std::cout << lDevice.GetFd() << std::endl;
-            } else {
-                std::cout << "Failed to create TUN/TAP device" << std::endl;
-            }
-        } else {
-            std::cout << "Failed to allocate TUN/TAP device" << std::endl;
+
+//        // TODO: Should probably move this to a different class
+//        char lErrorBuffer[PCAP_ERRBUF_SIZE];
+//        pcap_t *lHandler = pcap_create(lCaptureInterface.c_str(), lErrorBuffer);
+//        if (lHandler != NULL) {
+//            if (pcap_set_rfmon(lHandler, true) == 0) {
+//                std::cout << "Monitor mode enabled on: " << lCaptureInterface << std::endl;
+//
+//                // TODO: Figure out correct values for this
+//                pcap_set_snaplen(lHandler, 2048);  // Set the snapshot length to 2048
+//                pcap_set_promisc(lHandler, 1); // Turn promiscuous mode on
+//                pcap_set_timeout(lHandler, 512); // Set the timeout to 512 milliseconds
+//                int lStatus = pcap_activate(lHandler);
+//                if (lStatus == 0)
+//                {
+//                    while (lContinueLooping) {
+//
+//                    }
+//                }
+//                else
+//                {
+//                    std::cout << pcap_statustostr(lStatus) << std::endl;
+//                }
+//            } else {
+//                std::cerr << "pcap_set_rfmon failed: " << lErrorBuffer << std::endl;
+//            }
+//        } else {
+//            std::cerr << "pcap_create failed: " << lErrorBuffer << std::endl;
+//        }
+        PCapReader lPCapReader;
+        lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+
+        while(lPCapReader.ReadNextPacket()) {
+            // Do nothing
         }
-
-
-        // TODO: Should probably move this to a different class
-        char lErrorBuffer[PCAP_ERRBUF_SIZE];
-        pcap_t *lHandler = pcap_create(lCaptureInterface.c_str(), lErrorBuffer);
-        if (lHandler != NULL) {
-            if (pcap_set_rfmon(lHandler, true) == 0) {
-                std::cout << "Monitor mode enabled on: " << lCaptureInterface << std::endl;
-
-                // TODO: Figure out correct values for this
-                pcap_set_snaplen(lHandler, 2048);  // Set the snapshot length to 2048
-                pcap_set_promisc(lHandler, 1); // Turn promiscuous mode on
-                pcap_set_timeout(lHandler, 512); // Set the timeout to 512 milliseconds
-                int lStatus = pcap_activate(lHandler);
-                if (lStatus == 0)
-                {
-                    while (lContinueLooping) {
-
-                    }
-                }
-                else
-                {
-                    std::cout << pcap_statustostr(lStatus) << std::endl;
-                }
-            } else {
-                std::cerr << "pcap_set_rfmon failed: " << lErrorBuffer << std::endl;
-            }
-        } else {
-            std::cerr << "pcap_create failed: " << lErrorBuffer << std::endl;
-        }
+        lPCapReader.Close();
     }
 
     return 0;
