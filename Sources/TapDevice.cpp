@@ -5,11 +5,11 @@
 #include <cstring>
 #include <iostream>
 
+#include "../Includes/Logger.h"
 #include "../Includes/TapDevice.h"
 
-int TapDevice::Open(const std::string& device_name_and_path, int mode)
-{
-    int lReturn = open(device_name_and_path.c_str(), mode);
+int TapDevice::Open(const std::string &aDeviceNameAndPath, int aMode) {
+    int lReturn = open(aDeviceNameAndPath.c_str(), aMode);
     if (lReturn != -1) {
         mFd = lReturn;
         lReturn = 0;
@@ -59,19 +59,18 @@ int TapDevice::CreateDevice(const std::string& aDeviceName)
     } else {
         Close();
         lReturn = errno;
-        std::cout << "Failed to create device: " << strerror(lReturn) << std::endl;
+        Logger::GetInstance().Log("Failed to create device, " + std::string(strerror(lReturn)), Logger::ERROR);
     }
 
     return lReturn;
 }
 
-int TapDevice::AllocateDevice()
-{
+int TapDevice::AllocateDevice() {
     int lReturn = 0;
 
-    int lError = Open("/dev/net/tun", O_RDWR);
-    if (lError != 0) {
-        std::cout << "Failed to open device" << strerror(lError) << std::endl;
+    lReturn = Open("/dev/net/tun", O_RDWR);
+    if (lReturn != 0) {
+        Logger::GetInstance().Log("Failed to open device, " + std::string(strerror(lReturn)), Logger::ERROR);
     }
 
     if (mFd < 0) {
@@ -82,8 +81,8 @@ int TapDevice::AllocateDevice()
 }
 
 int TapDevice::AllocateOldDevice() {
-    std::string device_name_and_path {"/dev/" + mDeviceName};
-    return Open(device_name_and_path, O_RDWR);
+    std::string lDeviceNameAndPath{"/dev/" + mDeviceName};
+    return Open(lDeviceNameAndPath, O_RDWR);
 }
 
 int TapDevice::GetFd() {

@@ -5,11 +5,13 @@ set(CMAKE_CXX_STANDARD 20)
 include(FindPCAP.cmake)
 
 add_executable(mondev main.cpp
-                      Sources/TapDevice.cpp
-                      Sources/PCapReader.cpp
-                      Includes/TapDevice.h
-                      Includes/ILinuxDevice.h
-                      Includes/PCapReader.h
-                      Includes/IPCapDevice.h)
+        Sources/TapDevice.cpp
+        Sources/PCapReader.cpp
+        Sources/Logger.cpp
+        Includes/TapDevice.h
+        Includes/ILinuxDevice.h
+        Includes/PCapReader.h
+        Includes/IPCapDevice.h
+        Includes/Logger.h)
 
 target_link_libraries(mondev ${PCAP_LIBRARY})

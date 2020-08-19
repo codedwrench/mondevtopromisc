@@ -1,12 +1,11 @@
+#ifndef IPCAPDEVCE_H
+#define IPCAPDEVCE_H
 
 /* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
  *
  * This file contains an interface for pcap devices, either file based or device based.
  *
  * */
-
-#ifndef IPCAPDEVCE_H
-#define IPCAPDEVCE_H
 
 #include <string>
 #include <pcap.h>
@@ -43,6 +42,12 @@ public:
      * @return pointer to header as pcap_pkthdr type.
      */
     virtual const pcap_pkthdr *GetHeader() = 0;
+
+    /**
+     * Prints data in a pretty format.
+     * @return a string containing the data in the following format (in hex) XX XX XX XX.
+     */
+    virtual std::string DataToFormattedString() = 0;
 };
 
 

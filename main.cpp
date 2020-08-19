@@ -2,22 +2,27 @@
 #include <getopt.h>
 #include <pcap/pcap.h>
 
+#include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
 #include "Includes/TapDevice.h"
 
 int main(int argc, char **argv) {
 
     bool lHelpFlag = false;
+    std::string lBssid{};
     std::string lCaptureInterface{};
+    std::string lInjectionInterface{};
     std::string lTapDevice{};
 
-    bool lOptionsProvided = true;
     int lOption;
 
-    while ((lOption = getopt(argc, argv, ":hc:d:")) != -1) {
+    while ((lOption = getopt(argc, argv, ":hb:c:d:i:")) != -1) {
         switch (lOption) {
             case 'h':
                 lHelpFlag = true;
+                break;
+            case 'b':
+                lBssid = optarg;
                 break;
             case 'c':
                 lCaptureInterface = optarg;
@@ -26,7 +31,7 @@ int main(int argc, char **argv) {
                 lTapDevice = optarg;
                 break;
             case ':':
-                std::cerr  << "Option -" << static_cast<char>(optopt) << " requires an argument." << std::endl;
+                std::cerr << "Option -" << static_cast<char>(optopt) << " requires an argument." << std::endl;
                 lHelpFlag = true;
                 break;
             case '?':
@@ -34,7 +39,6 @@ int main(int argc, char **argv) {
                 lHelpFlag = true;
                 break;
             default:
-                lOptionsProvided = false;
                 lHelpFlag = true;
                 std::cerr << "Unknown error occurred" << std::endl;
                 break;
@@ -42,17 +46,23 @@ int main(int argc, char **argv) {
     }
 
     if (argc < 2) {
-        std::cerr << "No options provided, -c is at least required!" << std::endl;
-        return 1;
+        std::cerr << "No options provided, -b and -c are least required!" << std::endl;
+        lHelpFlag = true;
+    } else if ((!lHelpFlag) && (lBssid.empty() || lCaptureInterface.empty())) {
+        std::cerr << "Not enough options provided, -b and -c are least required!" << std::endl;
+        lHelpFlag = true;
     }
 
     if (lHelpFlag) {
         std::cout << "Usage example: " << argv[0] << " -c wlp4s0" << std::endl <<
-        "Options: -h:    Shows this help text" << std::endl <<
-        "         -c %s: REQUIRED: The capture interface to use" << std::endl <<
-        "         -d %s: What to name the tap device, keep empty if you want it to be named automatically" << std::endl;
-    }
-    else if (lOptionsProvided && !lCaptureInterface.empty()) {
+                  "Options: -h:    Shows this help text" << std::endl <<
+                  "         -b %s: REQUIRED: The BSSID to listen to" << std::endl <<
+                  "         -c %s: REQUIRED: The capture interface to use" << std::endl <<
+                  "         -i %s: The injection interface to use, " << std::endl <<
+                  "                keep empty if packet injection in monitor mode is to be used" << std::endl <<
+                  "         -d %s: What to name the tap device, keep empty if you want it to be named automatically"
+                  << std::endl;
+    } else {
 //        TapDevice lDevice;
 //        if (lDevice.AllocateDevice() == 0) {
 //            if(lDevice.CreateDevice(lTapDevice) == 0)
@@ -94,10 +104,12 @@ int main(int argc, char **argv) {
 //        } else {
 //            std::cerr << "pcap_create failed: " << lErrorBuffer << std::endl;
 //        }
+
+        Logger::GetInstance().Init(Logger::DEBUG, true, "log.txt");
         PCapReader lPCapReader;
         lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
 
-        while(lPCapReader.ReadNextPacket()) {
+        while (lPCapReader.ReadNextPacket()) {
             // Do nothing
         }
         lPCapReader.Close();
