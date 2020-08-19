@@ -3,7 +3,7 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
  *
- * This file contains an interface for wrappers around a linux device, for example a TUN/TAP interface.
+ * This file contains an interface for wrappers around a linux device, for example a TUN/TAP interface or socket.
  *
  * */
 
@@ -21,10 +21,9 @@ public:
 
     /**
      * Creates the device.
-     * @param aDeviceName - the name of the tap device to create.
      * @return 0 on success, errno on failure.
      */
-    virtual int CreateDevice(const std::string& aDeviceName) = 0;
+    virtual int CreateDevice() = 0;
 
     /**
      * Gets the filedescriptor of the device.
@@ -32,11 +31,15 @@ public:
      */
     virtual int GetFd() = 0;
 
+    /**
+     * Closes the device
+     * @return - 0 if successful, errno if unsuccessful.
+     */
+    virtual int Close() = 0;
 protected:
     virtual int Open(const std::string& aDeviceNameAndPath, int aMode) = 0;
-    virtual int Close() = 0;
     virtual int IoCtl(int aFd, unsigned long aRequest, char* aArgp) = 0;
 };
 
 
-#endif //MONDEV_ILINUXDEVICE_H
+#endif //ILINUXDEVICE_H

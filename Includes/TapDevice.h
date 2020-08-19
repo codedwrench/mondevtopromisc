@@ -12,11 +12,12 @@
 
 #include "ILinuxDevice.h"
 
-class TapDevice : public ILinuxDevice {
+class TapDevice : public ILinuxDevice
+{
 public:
     int AllocateDevice() override;
-    int CreateDevice(const std::string& aDeviceName) override;
-    int GetFd() override ;
+    int CreateDevice() override;
+    int GetFd() override;
 
 protected:
     int Open(const std::string& aDeviceNameAndPath, int aMode) override;

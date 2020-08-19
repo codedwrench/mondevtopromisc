@@ -12,7 +12,8 @@ Logger::~Logger() {
     }
 }
 
-void Logger::Init(eLevel aLevel, bool aLogToDisk, const std::string &aFileName = "") {
+void Logger::Init(Level aLevel, bool aLogToDisk, const std::string& aFileName = "")
+{
     SetLogLevel(aLevel);
     SetLogToDisk(aLogToDisk);
     SetFileName(aFileName);
@@ -33,7 +34,8 @@ void Logger::SetFileName(const std::string &aFileName) {
     }
 }
 
-void Logger::SetLogLevel(eLevel aLevel) {
+void Logger::SetLogLevel(Level aLevel)
+{
     mLogLevel = aLevel;
 }
 
@@ -50,7 +52,8 @@ void Logger::SetLogToDisk(bool aLoggingToDiskEnabled) {
     mLogToDisk = aLoggingToDiskEnabled;
 }
 
-void Logger::Log(const std::string &aText, eLevel aLevel, const std::experimental::source_location &aLocation) {
+void Logger::Log(const std::string& aText, Level aLevel, const std::experimental::source_location& aLocation)
+{
     std::stringstream lLogEntry;
 
     if (aLevel >= mLogLevel) {

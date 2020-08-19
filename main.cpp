@@ -4,9 +4,18 @@
 
 #include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
+#include "Includes/XLinkKaiConnection.h"
 #include "Includes/TapDevice.h"
 
-int main(int argc, char **argv) {
+namespace
+{
+    constexpr Logger::Level cLogLevel{Logger::DEBUG};
+    constexpr char cLogFileName[]{"log.txt"};
+    constexpr bool cLogToDisk{true};
+}
+
+int main(int argc, char** argv)
+{
 
     bool lHelpFlag = false;
     std::string lBssid{};
@@ -105,14 +114,19 @@ int main(int argc, char **argv) {
 //            std::cerr << "pcap_create failed: " << lErrorBuffer << std::endl;
 //        }
 
-        Logger::GetInstance().Init(Logger::DEBUG, true, "log.txt");
+        Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
         PCapReader lPCapReader;
-        lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+        XLinkKaiConnection lXLinkKaiConnection;
 
-        while (lPCapReader.ReadNextPacket()) {
-            // Do nothing
+        if (lXLinkKaiConnection.Open()) {
+
+            lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+
+            while (lPCapReader.ReadNextPacket()) {
+                // Do nothing
+            }
+            lPCapReader.Close();
         }
-        lPCapReader.Close();
     }
 
     return 0;

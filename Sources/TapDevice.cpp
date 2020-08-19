@@ -32,10 +32,10 @@ int TapDevice::IoCtl(int aFd, unsigned long aRequest, char* aArgp)
     return ioctl(aFd, aRequest, aArgp);
 }
 
-int TapDevice::CreateDevice(const std::string& aDeviceName)
+int TapDevice::CreateDevice()
 {
     // Create device
-    ifreq lIfr {0};
+    ifreq lIfr{0};
 
     // Clear lIfr with memset to be sure it's actually empty
     memset(&lIfr, 0, sizeof(lIfr));
@@ -46,10 +46,6 @@ int TapDevice::CreateDevice(const std::string& aDeviceName)
      *        IFF_NO_PI - Do not provide packet information
      */
     lIfr.ifr_flags = IFF_TAP;
-    if (!aDeviceName.empty())
-    {
-        strncpy(lIfr.ifr_name, aDeviceName.c_str(), IFNAMSIZ);
-    }
 
     int lReturn = IoCtl(mFd, TUNSETIFF, reinterpret_cast<char *>(&lIfr));
 

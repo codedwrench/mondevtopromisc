@@ -16,13 +16,14 @@
 #include <fstream>
 
 
-class Logger {
+class Logger
+{
 public:
-    Logger(const Logger &c) = delete;
+    Logger(const Logger &aLogger) = delete;
+    Logger &operator=(const Logger &aLogger) = delete;
 
-    Logger &operator=(const Logger &c) = delete;
-
-    enum eLevel {
+    enum Level
+    {
         DEBUG = 0,
         WARNING,
         ERROR
@@ -32,7 +33,8 @@ public:
      * Gets the Logger singleton.
      * @return The Logger object.
      */
-    static Logger &GetInstance() {
+    static Logger &GetInstance()
+    {
         static Logger lInstance;
         return lInstance;
     }
@@ -43,7 +45,7 @@ public:
      * @param aLogToDisk - Whether we should log to disk or not.
      * @param aFileName - Filename to use for logging.
      */
-    void Init(eLevel aLevel, bool aLogToDisk, const std::string &aFileName);
+    void Init(Level aLevel, bool aLogToDisk, const std::string &aFileName);
 
     /**
      * Logs given text to file.
@@ -51,7 +53,7 @@ public:
      * @param aLevel - Loglevel to use.
      * @param aLocation - Source location (keep empty).
      */
-    void Log(const std::string &aText, eLevel aLevel, const std::experimental::source_location &aLocation =
+    void Log(const std::string &aText, Level aLevel, const std::experimental::source_location &aLocation =
     std::experimental::source_location::current());
 
     /**
@@ -59,7 +61,7 @@ public:
      * shown.
      * @param aLevel - The level to set.
      */
-    void SetLogLevel(eLevel aLevel);
+    void SetLogLevel(Level aLevel);
 
     /**
      * Sets the filename to log to when logging to disk is enabled.
@@ -75,11 +77,10 @@ public:
 
 private:
     Logger() = default;
-
     ~Logger();
 
     std::string mFileName{"log.txt"};
-    eLevel mLogLevel{eLevel::ERROR};
+    Level mLogLevel{Level::ERROR};
     std::array<std::string, 3> mLogLevelTexts{"DEBUG", "WARNING", "ERROR"};
     std::ofstream mLogOutputStream{};
     bool mLogToDisk{false};
