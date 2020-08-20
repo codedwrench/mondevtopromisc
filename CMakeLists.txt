@@ -27,7 +27,11 @@ endif (DOXYGEN_FOUND)
 
 include(FindPCAP.cmake)
 
-find_package(Boost 1.71 REQUIRED COMPONENTS system program_options)
+find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
+
+IF (NOT APPLE AND NOT MSVC)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+ENDIF ()
 
 add_executable(mondevtopromisc main.cpp
         Sources/Logger.cpp
@@ -35,7 +39,6 @@ add_executable(mondevtopromisc main.cpp
         Sources/TapDevice.cpp
         Sources/XLinkKaiConnection.cpp
         Includes/ILinuxDevice.h
-        Includes/INetworkConnection.h
         Includes/IPCapDevice.h
         Includes/Logger.h
         Includes/PCapReader.h

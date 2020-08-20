@@ -7,49 +7,69 @@
  *
  * */
 
-#include "INetworkConnection.h"
+#include <boost/asio.hpp>
+#include <boost/thread.hpp>
 #include <string>
 #include <unistd.h>
 
 namespace XLinkKai_Constants
 {
-    constexpr char cIp[]{"127.0.0.1"};
-    constexpr char cKeepAliveFormat[]{"keepalive;"};
-    constexpr char cLocalIdentifier[]{""};
+    constexpr int cMaxLength = 4096;
+    constexpr std::string_view cIp{"127.0.0.1"};
+    constexpr std::string_view cSeparator{";"};
+    constexpr std::string_view cKeepAliveFormat{"keepalive"};
+    constexpr std::string_view cConnectFormat{"connect"};
+    constexpr std::string_view cConnectedResponseFormat{"connected"};
+    constexpr std::string_view cEthernetDataFormat{"e"};
+    constexpr std::string_view cLocallyUniqueName{"PSP"};
+    constexpr std::string_view cEmulatorName{"Real_PSP"};
     constexpr unsigned int cPort{34523};
+
+    const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() +
+                                     cLocallyUniqueName.data() + cSeparator.data() +
+                                     cEmulatorName.data() + cSeparator.data()};
+
+    const std::string cConnectedString{std::string(cConnectedResponseFormat) + cSeparator.data() +
+                                       cLocallyUniqueName.data()};
+
+    const std::string cKeepAliveString{std::string(cKeepAliveFormat) + cSeparator.data()};
+
+    const std::string cEthernetDataString{std::string(cEthernetDataFormat) + cSeparator.data() +
+                                          cEthernetDataFormat.data() + cSeparator.data()};
 }
 
 using namespace XLinkKai_Constants;
 
-class XLinkKaiConnection : public INetworkConnection
+class XLinkKaiConnection
 {
 public:
     XLinkKaiConnection() = default;
     XLinkKaiConnection(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
     XLinkKaiConnection& operator=(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
-    ~XLinkKaiConnection();
-
-    int GetFd() override
-    { return 0; };
-
-    int Send(const void* aBuffer, size_t aLength, int aFlags) override;
-
-    int Socket(int aDomain, int aType, int aProtocol) override;
-
-    int Bind(const sockaddr* aAddress, socklen_t aAddressLength);
-
-    int Close() final
-    {
-        close(mFd);
-        return 0;
-    };
 
     /**
      * Creates a connection.
      * @param aIp - IP Address of the XLink Kai engine.
      * @return True if successful.
      */
-    bool Open(const std::string& aIp = cIp, unsigned int aPort = cPort);
+    bool Open(std::string_view aIp = cIp, unsigned int aPort = cPort);
+
+    /**
+     * Connects to XLink Kai
+     * @return True if successful.
+     */
+    bool Connect();
+
+    /**
+     * Starts receiving network messages from Xlink Kai
+     * @return
+     */
+    bool StartReceiverThread();
+private:
+    /**
+     * Handles traffic from XLink Kai
+     */
+    void ReceiveCallback(const boost::system::error_code& aError, size_t aBytesReceived);
 
     /**
      * Sends a keepalive back to the XLink Kai engine, call this function when a keepalive is received.
@@ -57,10 +77,13 @@ public:
      */
     bool HandleKeepAlive();
 
-private:
+    std::array<char, cMaxLength> mData;
     std::string mIp{cIp};
     unsigned int mPort{cPort};
-    int mFd{0};
+    boost::asio::io_service mIoService{};
+    boost::asio::ip::udp::socket mSocket{mIoService};
+    boost::asio::ip::udp::endpoint mRemote{};
+    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
 };
 
 #endif // XLINKKAICONNECTION_H

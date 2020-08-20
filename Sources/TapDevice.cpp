@@ -1,14 +1,15 @@
+#include <cstring>
 #include <fcntl.h>
+#include <iostream>
+#include <unistd.h>
 #include <linux/if_tun.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
 
 #include "../Includes/Logger.h"
 #include "../Includes/TapDevice.h"
 
-int TapDevice::Open(const std::string &aDeviceNameAndPath, int aMode) {
+int TapDevice::Open(const std::string& aDeviceNameAndPath, int aMode)
+{
     int lReturn = open(aDeviceNameAndPath.c_str(), aMode);
     if (lReturn != -1) {
         mFd = lReturn;

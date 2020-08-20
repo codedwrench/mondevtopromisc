@@ -85,17 +85,23 @@ int main(int argc, char** argv)
 //        }
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        PCapReader lPCapReader;
+        //PCapReader lPCapReader;
         XLinkKaiConnection lXLinkKaiConnection;
 
         if (lXLinkKaiConnection.Open()) {
 
-            lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+            lXLinkKaiConnection.Connect();
+            lXLinkKaiConnection.StartReceiverThread();
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
 
-            while (lPCapReader.ReadNextPacket()) {
-                // Do nothing
             }
-            lPCapReader.Close();
+            //lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+
+            //while (lPCapReader.ReadNextPacket()) {
+            //    // Do nothing
+            //}
+            //lPCapReader.Close();
         }
     }
 

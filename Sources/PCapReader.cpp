@@ -1,11 +1,12 @@
+#include <iomanip>
+#include <iostream>
+#include <string>
+
 #include "../Includes/Logger.h"
 #include "../Includes/PCapReader.h"
 
-#include <string>
-#include <iostream>
-#include <iomanip>
-
-bool PCapReader::Open(const std::string &aName) {
+bool PCapReader::Open(const std::string& aName)
+{
     bool lReturn = true;
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
     mHandler = pcap_open_offline(aName.c_str(), lErrorBuffer);
@@ -37,12 +38,12 @@ bool PCapReader::ReadNextPacket() {
         // Show a warning if the length captured is different
         if (mHeader->len != mHeader->caplen) {
             Logger::GetInstance().Log("Capture size different than packet size:" + std::to_string(mHeader->len) +
-                                      " bytes", Logger::WARNING);
+                                              " bytes", Logger::WARNING);
         }
 
         // Show Epoch Time
         Logger::GetInstance().Log("Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" +
-                                  std::to_string(mHeader->ts.tv_usec), Logger::DEBUG);
+                                          std::to_string(mHeader->ts.tv_usec), Logger::DEBUG);
     } else {
         lReturn = false;
     }
@@ -68,7 +69,7 @@ std::string PCapReader::DataToFormattedString() {
         }
 
         lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
-                         << " ";
+                << " ";
     }
 
     return lFormattedString.str();
