@@ -27,6 +27,8 @@ endif (DOXYGEN_FOUND)
 
 include(FindPCAP.cmake)
 
+find_package(Boost 1.71 REQUIRED COMPONENTS system program_options)
+
 add_executable(mondevtopromisc main.cpp
         Sources/Logger.cpp
         Sources/PCapReader.cpp
@@ -40,4 +42,5 @@ add_executable(mondevtopromisc main.cpp
         Includes/TapDevice.h
         Includes/XLinkKaiConnection.h)
 
-target_link_libraries(mondevtopromisc ${PCAP_LIBRARY})
+target_link_libraries(mondevtopromisc ${PCAP_LIBRARY}
+        ${Boost_LIBRARIES})

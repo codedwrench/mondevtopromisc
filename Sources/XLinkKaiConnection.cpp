@@ -17,6 +17,12 @@ int XLinkKaiConnection::Bind(const sockaddr* aAddress, socklen_t aAddressLength)
     return bind(mFd, aAddress, aAddressLength);
 }
 
+int XLinkKaiConnection::Send(const void* aBuffer, size_t aLength, int aFlags)
+{
+    return send(mFd, aBuffer, aLength, aFlags);
+}
+
+
 XLinkKaiConnection::~XLinkKaiConnection()
 {
     if (mFd != 0) {
@@ -50,5 +56,17 @@ bool XLinkKaiConnection::Open(const std::string& aIp, unsigned int aPort)
         Logger::GetInstance().Log("Failed to open socket: " + std::string(strerror(errno)), Logger::ERROR);
     }
 
+    return lReturn;
+}
+
+bool XLinkKaiConnection::HandleKeepAlive()
+{
+    bool lReturn = true;
+    int lBytesSent = Send(cKeepAliveFormat, sizeof(cKeepAliveFormat), 0);
+    if (lBytesSent != sizeof(cKeepAliveFormat)) {
+        Logger::GetInstance().Log("Could not fully send keepalive! " + std::to_string(lBytesSent) + "bytes sent.",
+                                  Logger::DEBUG);
+        lReturn = false;
+    }
     return lReturn;
 }

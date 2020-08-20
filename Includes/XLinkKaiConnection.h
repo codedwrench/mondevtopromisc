@@ -14,6 +14,7 @@
 namespace XLinkKai_Constants
 {
     constexpr char cIp[]{"127.0.0.1"};
+    constexpr char cKeepAliveFormat[]{"keepalive;"};
     constexpr char cLocalIdentifier[]{""};
     constexpr unsigned int cPort{34523};
 }
@@ -31,8 +32,7 @@ public:
     int GetFd() override
     { return 0; };
 
-    int Send(const void* aBuffer, size_t aLength, int aFlags) override
-    { return 0; };
+    int Send(const void* aBuffer, size_t aLength, int aFlags) override;
 
     int Socket(int aDomain, int aType, int aProtocol) override;
 
@@ -50,6 +50,13 @@ public:
      * @return True if successful.
      */
     bool Open(const std::string& aIp = cIp, unsigned int aPort = cPort);
+
+    /**
+     * Sends a keepalive back to the XLink Kai engine, call this function when a keepalive is received.
+     * @return True if all bytes have been sent over successfully.
+     */
+    bool HandleKeepAlive();
+
 private:
     std::string mIp{cIp};
     unsigned int mPort{cPort};

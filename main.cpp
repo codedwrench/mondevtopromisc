@@ -2,6 +2,8 @@
 #include <getopt.h>
 #include <pcap/pcap.h>
 
+#include <boost/program_options.hpp>
+
 #include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
 #include "Includes/XLinkKaiConnection.h"
@@ -14,64 +16,32 @@ namespace
     constexpr bool cLogToDisk{true};
 }
 
+namespace po = boost::program_options;
+
 int main(int argc, char** argv)
 {
-
-    bool lHelpFlag = false;
     std::string lBssid{};
     std::string lCaptureInterface{};
     std::string lInjectionInterface{};
-    std::string lTapDevice{};
-
     int lOption;
+    po::options_description lDescription("Options");
+    lDescription.add_options()
+            ("help,h", "Shows this help message.")
+            ("bssid,b", po::value<std::string>(&lBssid)->required(), "The BSSID to listen to.")
+            ("capture_interface,c", po::value<std::string>(&lCaptureInterface)->required(),
+             "The interface that will be in monitor mode listening to packets.")
+            ("tap_device,t", "Enable TAP device")
+            ("injection_interface,i", po::value<std::string>(&lInjectionInterface),
+             "If your interface does not support packet injection, another interface can be used")
+            ("xlink_kai,x", "Enables the XLink Kai interface, so packets will be sent there directly");
 
-    while ((lOption = getopt(argc, argv, ":hb:c:d:i:")) != -1) {
-        switch (lOption) {
-            case 'h':
-                lHelpFlag = true;
-                break;
-            case 'b':
-                lBssid = optarg;
-                break;
-            case 'c':
-                lCaptureInterface = optarg;
-                break;
-            case 'd':
-                lTapDevice = optarg;
-                break;
-            case ':':
-                std::cerr << "Option -" << static_cast<char>(optopt) << " requires an argument." << std::endl;
-                lHelpFlag = true;
-                break;
-            case '?':
-                std::cerr << "Unknown option - " << static_cast<char>(optopt) << std::endl;
-                lHelpFlag = true;
-                break;
-            default:
-                lHelpFlag = true;
-                std::cerr << "Unknown error occurred" << std::endl;
-                break;
-        }
-    }
+    po::variables_map lVariableMap;
+    po::store(po::command_line_parser(argc, argv).options(lDescription).run(), lVariableMap);
 
-    if (argc < 2) {
-        std::cerr << "No options provided, -b and -c are least required!" << std::endl;
-        lHelpFlag = true;
-    } else if ((!lHelpFlag) && (lBssid.empty() || lCaptureInterface.empty())) {
-        std::cerr << "Not enough options provided, -b and -c are least required!" << std::endl;
-        lHelpFlag = true;
-    }
-
-    if (lHelpFlag) {
-        std::cout << "Usage example: " << argv[0] << " -c wlp4s0" << std::endl <<
-                  "Options: -h:    Shows this help text" << std::endl <<
-                  "         -b %s: REQUIRED: The BSSID to listen to" << std::endl <<
-                  "         -c %s: REQUIRED: The capture interface to use" << std::endl <<
-                  "         -i %s: The injection interface to use, " << std::endl <<
-                  "                keep empty if packet injection in monitor mode is to be used" << std::endl <<
-                  "         -d %s: What to name the tap device, keep empty if you want it to be named automatically"
-                  << std::endl;
+    if (lVariableMap.count("help") || lVariableMap.count("h")) {
+        std::cout << lDescription << std::endl;
     } else {
+        po::notify(lVariableMap);
 //        TapDevice lDevice;
 //        if (lDevice.AllocateDevice() == 0) {
 //            if(lDevice.CreateDevice(lTapDevice) == 0)
