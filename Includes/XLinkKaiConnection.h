@@ -20,17 +20,18 @@ namespace XLinkKai_Constants
     constexpr std::string_view cKeepAliveFormat{"keepalive"};
     constexpr std::string_view cConnectFormat{"connect"};
     constexpr std::string_view cDisconnectFormat{"disconnect"};
-    constexpr std::string_view cConnectedResponseFormat{"connected"};
+    constexpr std::string_view cConnectedFormat{"connected"};
     constexpr std::string_view cEthernetDataFormat{"e"};
     constexpr std::string_view cLocallyUniqueName{"PSP"};
     constexpr std::string_view cEmulatorName{"Real_PSP"};
     constexpr unsigned int cPort{34523};
+    constexpr std::chrono::seconds cConnectionTimeout{10};
 
     const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() +
                                      cLocallyUniqueName.data() + cSeparator.data() +
                                      cEmulatorName.data() + cSeparator.data()};
 
-    const std::string cConnectedString{std::string(cConnectedResponseFormat) + cSeparator.data() +
+    const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() +
                                        cLocallyUniqueName.data()};
 
     const std::string cDisconnectString{std::string(cDisconnectFormat) + cSeparator.data()};
@@ -76,6 +77,18 @@ public:
      */
     bool Send(std::string_view aMessage);
 
+    /**
+     * Check if XLink Kai connection has been interrupted.
+     * @return True if disconnected.
+     */
+    bool IsDisconnected() const;
+
+    /**
+     * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
+     * @return True if successful.
+     */
+    bool Close();
+
 private:
     /**
      * Handles traffic from XLink Kai.
@@ -88,12 +101,9 @@ private:
      */
     bool HandleKeepAlive();
 
-    /**
-     * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
-     * @return True if successful.
-     */
-    bool Close();
-
+    bool mConnected{false};
+    bool mConnectInitiated{false};
+    std::chrono::time_point<std::chrono::system_clock> mConnectionTimerStart{std::chrono::seconds{0}};
 
     std::array<char, cMaxLength> mData;
     std::string mIp{cIp};

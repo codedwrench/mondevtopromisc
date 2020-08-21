@@ -118,7 +118,14 @@ int main(int argc, char** argv)
 
 
             // Wait 20 seconds, this is just for testing.
-            while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::seconds{20}))) {
+            while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::seconds{60}))) {
+                if (lXLinkKaiConnection.IsDisconnected()) {
+                    // Try reconnecting if connection has failed.
+                    lXLinkKaiConnection.Close();
+                    lXLinkKaiConnection.Open();
+                    lXLinkKaiConnection.Connect();
+                    lXLinkKaiConnection.StartReceiverThread();
+                }
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 

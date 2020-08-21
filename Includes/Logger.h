@@ -26,6 +26,7 @@ public:
     {
         TRACE = 0,
         DEBUG,
+        INFO,
         WARNING,
         ERROR
     };
@@ -82,7 +83,7 @@ private:
 
     std::string mFileName{"log.txt"};
     Level mLogLevel{Level::ERROR};
-    std::array<std::string, 3> mLogLevelTexts{"DEBUG", "WARNING", "ERROR"};
+    std::array<std::string, 5> mLogLevelTexts{"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
     std::ofstream mLogOutputStream{};
     bool mLogToDisk{false};
 };
