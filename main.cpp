@@ -11,7 +11,7 @@
 
 namespace
 {
-    constexpr Logger::Level cLogLevel{Logger::DEBUG};
+    constexpr Logger::Level cLogLevel{Logger::TRACE};
     constexpr char cLogFileName[]{"log.txt"};
     constexpr bool cLogToDisk{true};
 
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
 
 
             // Wait 20 seconds, this is just for testing.
-            while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::seconds{60}))) {
+            while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
                 if (lXLinkKaiConnection.IsDisconnected()) {
                     // Try reconnecting if connection has failed.
                     lXLinkKaiConnection.Close();

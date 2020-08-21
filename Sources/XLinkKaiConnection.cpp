@@ -85,6 +85,8 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
     std::size_t lFirstSeparator{lData.find(cSeparator)};
     std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
+    Logger::GetInstance().Log("Received: " + lData, Logger::TRACE);
+
     if (!mConnected && (lCommand == std::string(cConnectedFormat) + cSeparator.data())) {
         lCommand = lData.substr(0, cConnectedString.size());
         if (lCommand == cConnectedString) {
@@ -104,8 +106,6 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
         if (lCommand != cEthernetDataString) {
             Logger::GetInstance().Log("Unknown command received: " + lCommand, Logger::DEBUG);
             lCommand = "";
-        } else {
-            Logger::GetInstance().Log("Data: " + lData.substr(cEthernetDataString.size(), lData.size()), Logger::TRACE);
         }
     }
 
