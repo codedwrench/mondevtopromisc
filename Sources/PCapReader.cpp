@@ -29,10 +29,10 @@ bool PCapReader::ReadNextPacket() {
 
     if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
         ++mPacketCount;
-        Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::DEBUG);
+        Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
 
         // Show the size in bytes of the packet
-        Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::DEBUG);
+        Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::TRACE);
 
 
         // Show a warning if the length captured is different
@@ -43,7 +43,7 @@ bool PCapReader::ReadNextPacket() {
 
         // Show Epoch Time
         Logger::GetInstance().Log("Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" +
-                                          std::to_string(mHeader->ts.tv_usec), Logger::DEBUG);
+                                  std::to_string(mHeader->ts.tv_usec), Logger::TRACE);
     } else {
         lReturn = false;
     }

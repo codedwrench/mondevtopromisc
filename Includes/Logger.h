@@ -24,7 +24,8 @@ public:
 
     enum Level
     {
-        DEBUG = 0,
+        TRACE = 0,
+        DEBUG,
         WARNING,
         ERROR
     };

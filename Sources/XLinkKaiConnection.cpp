@@ -51,7 +51,7 @@ bool XLinkKaiConnection::HandleKeepAlive()
     if (mSocket.is_open()) {
         try {
             mSocket.send_to(buffer(cKeepAliveString), mRemote);
-            Logger::GetInstance().Log("Sent keepalive.", Logger::DEBUG);
+            Logger::GetInstance().Log("Sent keepalive.", Logger::TRACE);
         } catch (const boost::system::system_error& lException) {
             Logger::GetInstance().Log("Could not send keepalive.", Logger::DEBUG);
             lReturn = false;
@@ -76,7 +76,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
             Logger::GetInstance().Log("Unknown command received: " + lCommand, Logger::DEBUG);
             lCommand = "";
         } else {
-            Logger::GetInstance().Log("Data: " + lData.substr(cEthernetDataString.size(), lData.size()), Logger::DEBUG);
+            Logger::GetInstance().Log("Data: " + lData.substr(cEthernetDataString.size(), lData.size()), Logger::TRACE);
         }
     }
     StartReceiverThread();
