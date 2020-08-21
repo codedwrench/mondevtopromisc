@@ -1,9 +1,13 @@
+#include <chrono>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <string>
 
 #include "../Includes/Logger.h"
 #include "../Includes/PCapReader.h"
+
+using namespace std::chrono;
 
 bool PCapReader::Open(const std::string& aName)
 {
@@ -43,7 +47,7 @@ bool PCapReader::ReadNextPacket() {
 
         // Show Epoch Time
         Logger::GetInstance().Log("Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" +
-                                  std::to_string(mHeader->ts.tv_usec), Logger::TRACE);
+                                          std::to_string(mHeader->ts.tv_usec), Logger::TRACE);
     } else {
         lReturn = false;
     }
@@ -69,8 +73,55 @@ std::string PCapReader::DataToFormattedString() {
         }
 
         lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
-                << " ";
+                         << " ";
     }
 
     return lFormattedString.str();
+}
+
+// TODO: Needs to be some interface with send function for all interfaces
+std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aConnection)
+{
+    bool lFailedPacket{false};
+    unsigned int lPacketsSent = 0;
+
+    // Read the first packet
+    if (ReadNextPacket()) {
+
+        microseconds lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
+
+        if (ReplayPacket(aConnection)) {
+            lPacketsSent++;
+            bool lSuccessfulReplay{true};
+
+            while (ReadNextPacket() && lSuccessfulReplay) {
+
+                // Get time offset.
+                microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
+                lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
+
+                // Wait for next send.
+                std::this_thread::sleep_for(lSleepFor);
+
+                lSuccessfulReplay = ReplayPacket(aConnection);
+                if (lSuccessfulReplay) {
+                    lPacketsSent++;
+                } else {
+                    lFailedPacket = true;
+                }
+            }
+        }
+    }
+    return std::pair{!lFailedPacket, lPacketsSent};
+}
+
+bool PCapReader::ReplayPacket(XLinkKaiConnection& aConnection)
+{
+    std::string lData = XLinkKai_Constants::cEthernetDataString;
+    lData.reserve(mHeader->caplen);
+    for (unsigned int lCount = 0; lCount < mHeader->caplen; lCount++) {
+        lData += mData[lCount];
+    }
+    aConnection.Send(lData);
+    return true;
 }

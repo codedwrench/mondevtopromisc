@@ -3,6 +3,7 @@
 #include <pcap/pcap.h>
 
 #include <boost/program_options.hpp>
+#include <boost/thread.hpp>
 
 #include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
@@ -106,7 +107,7 @@ int main(int argc, char** argv)
 //        }
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        //PCapReader lPCapReader;
+        PCapReader lPCapReader;
         XLinkKaiConnection lXLinkKaiConnection;
 
         if (lXLinkKaiConnection.Open()) {
@@ -116,8 +117,10 @@ int main(int argc, char** argv)
 
             std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
 
+            lPCapReader.Open("/home/codedwrench/Desktop/promiscious mode.pcapng");
+            boost::thread lPacketReplayer([&] { lPCapReader.ReplayPackets(lXLinkKaiConnection); });
 
-            // Wait 20 seconds, this is just for testing.
+            // Wait 60 seconds, this is just for testing.
             while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
                 if (lXLinkKaiConnection.IsDisconnected()) {
                     // Try reconnecting if connection has failed.
@@ -131,12 +134,8 @@ int main(int argc, char** argv)
 
             lSignalIoService.stop();
             lThread.join();
-            //lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
-
-            //while (lPCapReader.ReadNextPacket()) {
-            //    // Do nothing
-            //}
-            //lPCapReader.Close();
+            lPacketReplayer.join();
+            lPCapReader.Close();
         }
     }
 

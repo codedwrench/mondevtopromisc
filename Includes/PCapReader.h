@@ -8,6 +8,8 @@
  * */
 
 #include "IPCapDevice.h"
+#include "XLinkKaiConnection.h"
+
 
 class PCapReader : public IPCapDevice
 {
@@ -24,7 +26,17 @@ public:
 
     std::string DataToFormattedString() override;
 
+    /**
+     * Replays packets from file to injection device / XLink Kai.
+     * Assumes no packets have been read from the opened file yet.
+     * Tip: Put into separate thread for better timing accuracy.
+     * @param aSendFunction - What to use to send the packet.
+     * @return pair with amount of packets sent and whether it has fully replayed them or not.
+     */
+    std::pair<bool, unsigned int> ReplayPackets(XLinkKaiConnection& aConnection);
+
 private:
+    bool ReplayPacket(XLinkKaiConnection& aConnection);
     const unsigned char* mData{nullptr};
     pcap_t* mHandler{nullptr};
     pcap_pkthdr* mHeader{nullptr};
