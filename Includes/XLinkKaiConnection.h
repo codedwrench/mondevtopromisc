@@ -19,8 +19,9 @@ namespace XLinkKai_Constants
     constexpr std::string_view cSeparator{";"};
     constexpr std::string_view cKeepAliveFormat{"keepalive"};
     constexpr std::string_view cConnectFormat{"connect"};
-    constexpr std::string_view cDisconnectFormat{"disconnect"};
     constexpr std::string_view cConnectedFormat{"connected"};
+    constexpr std::string_view cDisconnectFormat{"disconnect"};
+    constexpr std::string_view cDisconnectedFormat{"disconnected"};
     constexpr std::string_view cEthernetDataFormat{"e"};
     constexpr std::string_view cLocallyUniqueName{"PSP"};
     constexpr std::string_view cEmulatorName{"Real_PSP"};
@@ -33,6 +34,9 @@ namespace XLinkKai_Constants
 
     const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() +
                                        cLocallyUniqueName.data()};
+
+    const std::string cDisconnectedString{std::string(cDisconnectedFormat) + cSeparator.data() +
+                                          cLocallyUniqueName.data()};
 
     const std::string cDisconnectString{std::string(cDisconnectFormat) + cSeparator.data()};
 

@@ -97,15 +97,23 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
     }
 
     // If no connection confirmation has been sent on XLink Kai's side, Don't care about any other message yet
-    if (mConnected && (lCommand == cKeepAliveString)) {
-        HandleKeepAlive();
-    } else if (lCommand == std::string(cEthernetDataFormat) + cSeparator.data()) {
-        // For data XLink Kai uses e;e; which doesn't filter all that well, so if we find e; just check if this
-        // is e;e;
-        lCommand = lData.substr(0, cEthernetDataString.size());
-        if (lCommand != cEthernetDataString) {
-            Logger::GetInstance().Log("Unknown command received: " + lCommand, Logger::DEBUG);
-            lCommand = "";
+    if (mConnected) {
+        if (lCommand == cKeepAliveString) {
+            HandleKeepAlive();
+        } else if (lCommand == std::string(cEthernetDataFormat) + cSeparator.data()) {
+            // For data XLink Kai uses e;e; which doesn't filter all that well, so if we find e; just check if this
+            // is e;e;
+            lCommand = lData.substr(0, cEthernetDataString.size());
+            if (lCommand == cEthernetDataString) {
+                // TODO: Implement
+            }
+        } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
+            lCommand = lData.substr(0, cDisconnectedString.size());
+            if (lCommand == cDisconnectedString) {
+                Logger::GetInstance().Log("Xlink Kai has disconnected us!" + lCommand, Logger::ERROR);
+                mConnected = false;
+                mIoService.stop();
+            }
         }
     }
 
@@ -131,7 +139,6 @@ bool XLinkKaiConnection::StartReceiverThread()
                         (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
                         Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERROR);
                         mIoService.stop();
-                        mSocket.close();
                         mConnectInitiated = false;
                         mConnected = false;
                     }
