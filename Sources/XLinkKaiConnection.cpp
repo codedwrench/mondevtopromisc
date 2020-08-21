@@ -1,8 +1,14 @@
 #include <cstring>
+#include <iostream>
 #include "../Includes/XLinkKaiConnection.h"
 #include "../Includes/Logger.h"
 
 using namespace boost::asio;
+
+XLinkKaiConnection::~XLinkKaiConnection()
+{
+    Close();
+}
 
 bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
 {
@@ -45,17 +51,28 @@ bool XLinkKaiConnection::Connect()
     return lReturn;
 }
 
-bool XLinkKaiConnection::HandleKeepAlive()
+bool XLinkKaiConnection::Send(std::string_view aMessage)
 {
     bool lReturn{true};
     if (mSocket.is_open()) {
         try {
-            mSocket.send_to(buffer(cKeepAliveString), mRemote);
-            Logger::GetInstance().Log("Sent keepalive.", Logger::TRACE);
+            Logger::GetInstance().Log("Sent: " + std::string(aMessage), Logger::TRACE);
+            mSocket.send_to(buffer(std::string(aMessage)), mRemote);
         } catch (const boost::system::system_error& lException) {
-            Logger::GetInstance().Log("Could not send keepalive.", Logger::DEBUG);
+            Logger::GetInstance().Log("Could not send message! " + std::string(aMessage) +
+                                      std::string(lException.what()), Logger::ERROR);
             lReturn = false;
         }
+    }
+    return lReturn;
+}
+
+bool XLinkKaiConnection::HandleKeepAlive()
+{
+    bool lReturn{true};
+    if (!Send(cKeepAliveString)) {
+        // Logging in send function.
+        lReturn = false;
     }
     return lReturn;
 }
@@ -100,6 +117,31 @@ bool XLinkKaiConnection::StartReceiverThread()
         Logger::GetInstance().Log("Can't start receiving without an opened socket!", Logger::ERROR);
         lReturn = false;
     }
+
+    return lReturn;
+}
+
+bool XLinkKaiConnection::Close()
+{
+    bool lReturn{true};
+
+    try {
+        Send(cDisconnectString);
+
+        if (mReceiverThread != nullptr) {
+            if (!mIoService.stopped()) {
+                mIoService.stop();
+            }
+            mReceiverThread->join();
+        }
+
+        if (mSocket.is_open()) {
+            mSocket.close();
+        }
+    } catch (...) {
+        std::cout << "Failed to disconnect :( " + boost::current_exception_diagnostic_information() << std::endl;
+        lReturn = false;
+    };
 
     return lReturn;
 }

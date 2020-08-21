@@ -14,16 +14,29 @@ namespace
     constexpr Logger::Level cLogLevel{Logger::DEBUG};
     constexpr char cLogFileName[]{"log.txt"};
     constexpr bool cLogToDisk{true};
+
+    // Indicates if the program should be running or not, used to gracefully exit the program.
+    bool gRunning{true};
 }
 
 namespace po = boost::program_options;
+
+static void SignalHandler(const boost::system::error_code& aError, int aSignalNumber)
+{
+    if (!aError) {
+        if (aSignalNumber == SIGINT ||
+            aSignalNumber == SIGTERM) {
+            // Quit gracefully.
+            gRunning = false;
+        }
+    }
+}
 
 int main(int argc, char** argv)
 {
     std::string lBssid{};
     std::string lCaptureInterface{};
     std::string lInjectionInterface{};
-    int lOption;
     po::options_description lDescription("Options");
     lDescription.add_options()
             ("help,h", "Shows this help message.")
@@ -42,6 +55,14 @@ int main(int argc, char** argv)
         std::cout << lDescription << std::endl;
     } else {
         po::notify(lVariableMap);
+
+        // Handle quit signals gracefully.
+        boost::asio::io_service lSignalIoService{};
+        boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
+        lSignals.async_wait(&SignalHandler);
+        boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
+
+
 //        TapDevice lDevice;
 //        if (lDevice.AllocateDevice() == 0) {
 //            if(lDevice.CreateDevice(lTapDevice) == 0)
@@ -92,10 +113,17 @@ int main(int argc, char** argv)
 
             lXLinkKaiConnection.Connect();
             lXLinkKaiConnection.StartReceiverThread();
-            while (true) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
 
+            std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
+
+
+            // Wait 20 seconds, this is just for testing.
+            while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::seconds{20}))) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
+
+            lSignalIoService.stop();
+            lThread.join();
             //lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
 
             //while (lPCapReader.ReadNextPacket()) {
@@ -105,5 +133,5 @@ int main(int argc, char** argv)
         }
     }
 
-    return 0;
+    exit(0);
 }

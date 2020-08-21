@@ -19,6 +19,7 @@ namespace XLinkKai_Constants
     constexpr std::string_view cSeparator{";"};
     constexpr std::string_view cKeepAliveFormat{"keepalive"};
     constexpr std::string_view cConnectFormat{"connect"};
+    constexpr std::string_view cDisconnectFormat{"disconnect"};
     constexpr std::string_view cConnectedResponseFormat{"connected"};
     constexpr std::string_view cEthernetDataFormat{"e"};
     constexpr std::string_view cLocallyUniqueName{"PSP"};
@@ -32,6 +33,8 @@ namespace XLinkKai_Constants
     const std::string cConnectedString{std::string(cConnectedResponseFormat) + cSeparator.data() +
                                        cLocallyUniqueName.data()};
 
+    const std::string cDisconnectString{std::string(cDisconnectFormat) + cSeparator.data()};
+
     const std::string cKeepAliveString{std::string(cKeepAliveFormat) + cSeparator.data()};
 
     const std::string cEthernetDataString{std::string(cEthernetDataFormat) + cSeparator.data() +
@@ -44,6 +47,7 @@ class XLinkKaiConnection
 {
 public:
     XLinkKaiConnection() = default;
+    ~XLinkKaiConnection();
     XLinkKaiConnection(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
     XLinkKaiConnection& operator=(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
 
@@ -55,19 +59,26 @@ public:
     bool Open(std::string_view aIp = cIp, unsigned int aPort = cPort);
 
     /**
-     * Connects to XLink Kai
+     * Connects to XLink Kai.
      * @return True if successful.
      */
     bool Connect();
 
     /**
-     * Starts receiving network messages from Xlink Kai
-     * @return
+     * Starts receiving network messages from Xlink Kai.
+     * @return True if successful.
      */
     bool StartReceiverThread();
+
+    /**
+     * Sends a message to Xlink Kai.
+     * @return True if successful.
+     */
+    bool Send(std::string_view aMessage);
+
 private:
     /**
-     * Handles traffic from XLink Kai
+     * Handles traffic from XLink Kai.
      */
     void ReceiveCallback(const boost::system::error_code& aError, size_t aBytesReceived);
 
@@ -76,6 +87,13 @@ private:
      * @return True if all bytes have been sent over successfully.
      */
     bool HandleKeepAlive();
+
+    /**
+     * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
+     * @return True if successful.
+     */
+    bool Close();
+
 
     std::array<char, cMaxLength> mData;
     std::string mIp{cIp};
