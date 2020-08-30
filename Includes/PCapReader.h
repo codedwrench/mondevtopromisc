@@ -31,12 +31,14 @@ public:
      * Assumes no packets have been read from the opened file yet.
      * Tip: Put into separate thread for better timing accuracy.
      * @param aSendFunction - What to use to send the packet.
+     * @param aMonitorCapture - If the file was captured in monitor mode.
      * @return pair with amount of packets sent and whether it has fully replayed them or not.
      */
-    std::pair<bool, unsigned int> ReplayPackets(XLinkKaiConnection& aConnection);
+    std::pair<bool, unsigned int> ReplayPackets(XLinkKaiConnection& aConnection, bool aMonitorCapture);
 
 private:
-    bool ReplayPacket(XLinkKaiConnection& aConnection);
+    static bool ReplayPacket(XLinkKaiConnection& aConnection, std::string_view aData);
+    std::string DataToString();
     const unsigned char* mData{nullptr};
     pcap_t* mHandler{nullptr};
     pcap_pkthdr* mHeader{nullptr};

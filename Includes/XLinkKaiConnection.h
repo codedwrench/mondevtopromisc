@@ -88,6 +88,12 @@ public:
     bool IsDisconnected() const;
 
     /**
+     * Check if XLink Kai is connecting.
+     * @return True if connecting.
+     */
+    bool IsConnecting() const;
+
+    /**
      * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
      * @return True if successful.
      */

@@ -82,37 +82,41 @@ bool XLinkKaiConnection::HandleKeepAlive()
 void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError, size_t aBytesReceived)
 {
     std::string lData{mData.data()};
-    std::size_t lFirstSeparator{lData.find(cSeparator)};
-    std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
-    Logger::GetInstance().Log("Received: " + lData, Logger::TRACE);
+    // If we actually received anything useful, react.
+    if (!lData.empty()) {
+        Logger::GetInstance().Log("Received: " + lData, Logger::TRACE);
+        std::size_t lFirstSeparator{lData.find(cSeparator)};
+        std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
-    if (!mConnected && (lCommand == std::string(cConnectedFormat) + cSeparator.data())) {
-        lCommand = lData.substr(0, cConnectedString.size());
-        if (lCommand == cConnectedString) {
-            Logger::GetInstance().Log("XLink Kai succesfully connected: " + lCommand, Logger::INFO);
-            mConnectInitiated = false;
-            mConnected = true;
-        }
-    }
 
-    // If no connection confirmation has been sent on XLink Kai's side, Don't care about any other message yet
-    if (mConnected) {
-        if (lCommand == cKeepAliveString) {
-            HandleKeepAlive();
-        } else if (lCommand == std::string(cEthernetDataFormat) + cSeparator.data()) {
-            // For data XLink Kai uses e;e; which doesn't filter all that well, so if we find e; just check if this
-            // is e;e;
-            lCommand = lData.substr(0, cEthernetDataString.size());
-            if (lCommand == cEthernetDataString) {
-                // TODO: Implement
+        if (!mConnected && (lCommand == std::string(cConnectedFormat) + cSeparator.data())) {
+            lCommand = lData.substr(0, cConnectedString.size());
+            if (lCommand == cConnectedString) {
+                Logger::GetInstance().Log("XLink Kai succesfully connected: " + lCommand, Logger::INFO);
+                mConnectInitiated = false;
+                mConnected = true;
             }
-        } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
-            lCommand = lData.substr(0, cDisconnectedString.size());
-            if (lCommand == cDisconnectedString) {
-                Logger::GetInstance().Log("Xlink Kai has disconnected us!" + lCommand, Logger::ERROR);
-                mConnected = false;
-                mIoService.stop();
+        }
+
+        // If no connection confirmation has been sent on XLink Kai's side, Don't care about any other message yet
+        if (mConnected) {
+            if (lCommand == cKeepAliveString) {
+                HandleKeepAlive();
+            } else if (lCommand == std::string(cEthernetDataFormat) + cSeparator.data()) {
+                // For data XLink Kai uses e;e; which doesn't filter all that well, so if we find e; just check if this
+                // is e;e;
+                lCommand = lData.substr(0, cEthernetDataString.size());
+                if (lCommand == cEthernetDataString) {
+                    // TODO: Implement
+                }
+            } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
+                lCommand = lData.substr(0, cDisconnectedString.size());
+                if (lCommand == cDisconnectedString) {
+                    Logger::GetInstance().Log("Xlink Kai has disconnected us!" + lCommand, Logger::ERROR);
+                    mConnected = false;
+                    mIoService.stop();
+                }
             }
         }
     }
@@ -187,5 +191,11 @@ bool XLinkKaiConnection::Close()
 
 bool XLinkKaiConnection::IsDisconnected() const
 {
+    return (!mConnected);
+}
+
+bool XLinkKaiConnection::IsConnecting() const
+{
     return (!mConnected && !mConnectInitiated);
 }
+

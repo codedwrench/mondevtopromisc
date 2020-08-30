@@ -35,12 +35,14 @@ ENDIF ()
 
 add_executable(mondevtopromisc main.cpp
         Sources/Logger.cpp
+        Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
         Sources/TapDevice.cpp
         Sources/XLinkKaiConnection.cpp
         Includes/ILinuxDevice.h
         Includes/IPCapDevice.h
         Includes/Logger.h
+        Includes/PacketConverter.h
         Includes/PCapReader.h
         Includes/TapDevice.h
         Includes/XLinkKaiConnection.h)

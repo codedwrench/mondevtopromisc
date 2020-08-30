@@ -117,12 +117,16 @@ int main(int argc, char** argv)
 
             std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
 
-            lPCapReader.Open("/home/codedwrench/Desktop/promiscious mode.pcapng");
-            boost::thread lPacketReplayer([&] { lPCapReader.ReplayPackets(lXLinkKaiConnection); });
+            lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+            boost::thread lPacketReplayer([&] {
+                while (lXLinkKaiConnection.IsDisconnected()) {};
+                lPCapReader.ReplayPackets(lXLinkKaiConnection, true);
+            });
 
             // Wait 60 seconds, this is just for testing.
             while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
-                if (lXLinkKaiConnection.IsDisconnected()) {
+                if (lXLinkKaiConnection.IsDisconnected() &&
+                    (!lXLinkKaiConnection.IsConnecting())) {
                     // Try reconnecting if connection has failed.
                     lXLinkKaiConnection.Close();
                     lXLinkKaiConnection.Open();
