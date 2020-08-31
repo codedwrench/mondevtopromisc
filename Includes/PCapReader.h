@@ -27,6 +27,10 @@ public:
 
     std::string DataToFormattedString() override;
 
+    //TODO: Implement
+    void SetBSSIDFilter(std::string_view aBSSID) override
+    {};
+
     /**
      * Replays packets from file to injection device / XLink Kai.
      * Assumes no packets have been read from the opened file yet.

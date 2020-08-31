@@ -34,11 +34,13 @@ IF (NOT APPLE AND NOT MSVC)
 ENDIF ()
 
 add_executable(mondevtopromisc main.cpp
+        Sources/WirelessCaptureDevice.cpp
         Sources/Logger.cpp
         Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
         Sources/TapDevice.cpp
         Sources/XLinkKaiConnection.cpp
+        Includes/WirelessCaptureDevice.h
         Includes/ILinuxDevice.h
         Includes/IPCapDevice.h
         Includes/Logger.h

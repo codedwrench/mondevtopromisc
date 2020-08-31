@@ -1,5 +1,34 @@
+#ifdef _MSC_VER
+#include <stdlib.h>
+#define bswap_16(x) _byteswap_ushort(x)
+#define bswap_32(x) _byteswap_ulong(x)
+#define bswap_64(x) _byteswap_uint64(x)
+#else
+
+#include <byteswap.h>  // bswap_16 bswap_32 bswap_64
+
+#endif
+
 #include "../Includes/Logger.h"
 #include "../Includes/PacketConverter.h"
+
+#include <numeric>
+#include <regex>
+
+// Skip use of ether_aton because that could hinder Windows support.
+uint64_t MacToInt(std::string_view aMac)
+{
+    std::istringstream lStringStream(aMac.data());
+    uint64_t lNibble;
+    uint64_t lResult(0);
+    lStringStream >> std::hex;
+    while (lStringStream >> lNibble) {
+        lResult = (lResult << 8) + lNibble;
+        lStringStream.get();
+    }
+
+    return lResult;
+}
 
 PacketConverter::PacketConverter(bool aHasRadioTap)
 {
@@ -15,9 +44,30 @@ void PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
 
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
+    bool lReturn{false};
     UpdateIndexAfterRadioTap(aData);
 
-    return aData.at(mIndexAfterRadioTap) == c80211DataType;
+    // Sometimes it seems to send malformed packets.
+    if (mIndexAfterRadioTap <= 255) {
+        lReturn = *reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap) == c80211DataType;
+    } else {
+        lReturn = false;
+    }
+    return lReturn;
+}
+
+bool PacketConverter::IsForBSSID(std::string_view aData, std::string_view aBSSID)
+{
+    UpdateIndexAfterRadioTap(aData);
+
+    uint64_t lMac = *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + cBSSIDIndex);
+    lMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1); // it's actually a uint48.
+
+    // Big- to Little endian
+    lMac = bswap_64(lMac);
+    lMac = lMac >> 16u;
+
+    return lMac == MacToInt(aBSSID);
 }
 
 std::string PacketConverter::ConvertPacketToPromiscuous(std::string_view aData)

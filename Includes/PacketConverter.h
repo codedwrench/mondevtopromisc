@@ -15,11 +15,13 @@ namespace PacketConverter_Constants
     constexpr unsigned int cDestinationAddressLength{6};
     constexpr unsigned int cSourceAddressIndex{10};
     constexpr unsigned int cSourceAddressLength{6};
+    constexpr unsigned int cBSSIDIndex{16};
+    constexpr unsigned int cBSSIDLength{6};
     constexpr unsigned int cTypeIndex{30};
     constexpr unsigned int cTypeLength{2};
     constexpr unsigned int cDataIndex{32};
     constexpr unsigned int cRadioTapLengthIndex{2};
-    constexpr unsigned int c80211DataType{0x08};
+    constexpr uint8_t c80211DataType{0x08};
     constexpr unsigned int cHeaderLength{cDestinationAddressLength +
                                          cSourceAddressLength +
                                          cTypeLength};
@@ -44,6 +46,14 @@ public:
     bool Is80211Data(std::string_view aData);
 
     /**
+     * Check if provided packet matches BSSID.
+     * @param aData - Data to inspect.
+     * @param aBSSID - BSSID to compare against.
+     * @return true if packet is for this BSSID.
+     */
+    bool IsForBSSID(std::string_view aData, std::string_view aBSSID);
+
+    /**
      * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
      * 802.11 header and adding an 802.3 header. Only converts data packets!
      * @param aData - The packet data to convert.
@@ -51,8 +61,8 @@ public:
      */
     std::string ConvertPacketToPromiscuous(std::string_view aData);
 private:
-    void UpdateIndexAfterRadioTap(std::string_view aData);
 
+    void UpdateIndexAfterRadioTap(std::string_view aData);
     bool mHasRadioTap{false};
     uint16_t mIndexAfterRadioTap{0};
 };

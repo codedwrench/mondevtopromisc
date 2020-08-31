@@ -41,13 +41,19 @@ public:
      * Gets header from last read packet.
      * @return pointer to header as pcap_pkthdr type.
      */
-    virtual const pcap_pkthdr *GetHeader() = 0;
+    virtual const pcap_pkthdr* GetHeader() = 0;
 
     /**
      * Prints data in a pretty format.
      * @return a string containing the data in the following format (in hex) XX XX XX XX.
      */
     virtual std::string DataToFormattedString() = 0;
+
+    /**
+     * Filters data so only traffic from specified BSSID shows up.
+     * @return true on success.
+     */
+    virtual void SetBSSIDFilter(std::string_view aBssid) = 0;
 };
 
 
