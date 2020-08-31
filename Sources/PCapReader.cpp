@@ -5,7 +5,6 @@
 #include <string>
 
 #include "../Includes/Logger.h"
-#include "../Includes/PacketConverter.h"
 #include "../Includes/PCapReader.h"
 
 using namespace std::chrono;
@@ -96,89 +95,76 @@ std::string PCapReader::DataToString()
     return lData;
 }
 
+std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& aConnection,
+                                                           PacketConverter aPacketConverter,
+                                                           bool aMonitorCapture)
+{
+    bool lUsefulPacket{true};
+    bool lSuccesfulPacket{true};
+    std::string lData{DataToString()};
+
+    // Convert to promiscuous packet and proceed as normal.
+    if (aMonitorCapture) {
+        // If Data Frame
+        lUsefulPacket = aPacketConverter.Is80211Data(lData);
+        if (lUsefulPacket) {
+            lData = aPacketConverter.ConvertPacketToPromiscuous(lData);
+            if (lData.empty()) {
+                lSuccesfulPacket = false;
+            }
+        }
+    }
+
+    if (lSuccesfulPacket && lUsefulPacket) {
+        lData.insert(0, XLinkKai_Constants::cEthernetDataString);
+        if (!aConnection.Send(lData)) {
+            lSuccesfulPacket = false;
+        }
+    }
+
+    return {lSuccesfulPacket, lUsefulPacket};
+}
+
 
 // TODO: Needs to be some interface with send function for all interfaces
-std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aConnection, bool aMonitorCapture)
+std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aConnection,
+                                                        bool aMonitorCapture,
+                                                        bool aHasRadioTap)
 {
-    bool lFailedPacket{false};
-    bool lUnimportantPacket{false};
-    unsigned int lPacketsSent = 0;
+    bool lSuccesfulPacket{false};
+    bool lUsefulPacket{true};
+    unsigned int lPacketsSent{0};
 
     // Read the first packet
     if (ReadNextPacket()) {
+        PacketConverter lPacketConverter{aHasRadioTap};
         microseconds lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 
-        std::string lData = DataToString();
+        std::tie(lSuccesfulPacket, lUsefulPacket) = ConstructAndReplayPacket(aConnection,
+                                                                             lPacketConverter,
+                                                                             aMonitorCapture);
 
-        if (aMonitorCapture) {
-            // TODO: constant!
-            // If Data Frame
-            if (mData[0] == 0x08) {
-                lData = PacketConverter::ConvertPacketToPromiscuous(lData);
-                if (lData.empty()) {
-                    lFailedPacket = true;
-                }
-            } else {
-                lUnimportantPacket = true;
-            }
+        if (lSuccesfulPacket && lUsefulPacket) {
+            lPacketsSent++;
         }
 
-        lData.insert(0, XLinkKai_Constants::cEthernetDataString);
+        while (ReadNextPacket()) {
+            // Get time offset.
+            microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
+            lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
 
-        if (lUnimportantPacket || ReplayPacket(aConnection, lData)) {
-            if (!lUnimportantPacket) {
+            // Wait for next send.
+            std::this_thread::sleep_for(lSleepFor);
+
+            std::tie(lSuccesfulPacket, lUsefulPacket) = ConstructAndReplayPacket(aConnection,
+                                                                                 lPacketConverter,
+                                                                                 aMonitorCapture);
+
+            if (lSuccesfulPacket && lUsefulPacket) {
                 lPacketsSent++;
             }
-
-            bool lSuccessfulReplay{true};
-
-            while (ReadNextPacket() && lSuccessfulReplay) {
-                lUnimportantPacket = false;
-
-                // Get time offset.
-                microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
-                lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
-
-                // Wait for next send.
-                std::this_thread::sleep_for(lSleepFor);
-
-                // Convert to promiscuous packet and proceed as normal.
-                if (aMonitorCapture) {
-                    // TODO: constant!
-                    // If Data Frame
-                    if (mData[0] == 0x08) {
-                        lData = PacketConverter::ConvertPacketToPromiscuous(DataToString());
-                        if (lData.empty()) {
-                            lFailedPacket = true;
-                        }
-                    } else {
-                        lUnimportantPacket = true;
-                    }
-                }
-
-                if (!lFailedPacket && !lUnimportantPacket) {
-                    lData.insert(0, XLinkKai_Constants::cEthernetDataString);
-                    lSuccessfulReplay = ReplayPacket(aConnection, lData);
-                    if (lSuccessfulReplay) {
-                        lPacketsSent++;
-                    } else {
-                        lFailedPacket = true;
-                    }
-                }
-            }
         }
     }
 
-    return std::pair{!lFailedPacket, lPacketsSent};
-}
-
-bool PCapReader::ReplayPacket(XLinkKaiConnection& aConnection, std::string_view aData)
-{
-    bool lReturn{false};
-
-    if (aConnection.Send(aData)) {
-        lReturn = true;
-    }
-
-    return lReturn;
+    return std::pair{!lSuccesfulPacket, lPacketsSent};
 }

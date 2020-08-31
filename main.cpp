@@ -117,10 +117,10 @@ int main(int argc, char** argv)
 
             std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
 
-            lPCapReader.Open("/home/codedwrench/Desktop/monitor mode.cap");
+            lPCapReader.Open("/home/codedwrench/Desktop/windowscapture.pcapng");
             boost::thread lPacketReplayer([&] {
                 while (lXLinkKaiConnection.IsDisconnected()) {};
-                lPCapReader.ReplayPackets(lXLinkKaiConnection, true);
+                lPCapReader.ReplayPackets(lXLinkKaiConnection, true, true);
             });
 
             // Wait 60 seconds, this is just for testing.

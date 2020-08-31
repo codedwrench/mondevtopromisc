@@ -18,6 +18,8 @@ namespace PacketConverter_Constants
     constexpr unsigned int cTypeIndex{30};
     constexpr unsigned int cTypeLength{2};
     constexpr unsigned int cDataIndex{32};
+    constexpr unsigned int cRadioTapLengthIndex{2};
+    constexpr unsigned int c80211DataType{0x08};
     constexpr unsigned int cHeaderLength{cDestinationAddressLength +
                                          cSourceAddressLength +
                                          cTypeLength};
@@ -29,12 +31,30 @@ class PacketConverter
 {
 public:
     /**
-     * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap header and
-     * adding an ethernet header. Only converts data packets!
-     * @param aPacketData - The packet data to convert.
+     * Constructs a PacketConverter that converts packets from a wireless (radiotap + 802.11) format to an ethernet,
+     * (802.3) format.
+     * @param aHasRadioTap
+     */
+    PacketConverter(bool aHasRadioTap = false);
+
+    /**
+     * Checks if the provided data is part of a data packet.
+     * Only works on packets containing a 802.11 header.
+     */
+    bool Is80211Data(std::string_view aData);
+
+    /**
+     * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
+     * 802.11 header and adding an 802.3 header. Only converts data packets!
+     * @param aData - The packet data to convert.
      * @return converted packet data, empty string if failed.
      */
-    static std::string ConvertPacketToPromiscuous(std::string_view aPacketData);
+    std::string ConvertPacketToPromiscuous(std::string_view aData);
+private:
+    void UpdateIndexAfterRadioTap(std::string_view aData);
+
+    bool mHasRadioTap{false};
+    uint16_t mIndexAfterRadioTap{0};
 };
 
 
