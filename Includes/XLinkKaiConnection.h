@@ -9,8 +9,8 @@
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
+
 #include <string>
-#include <unistd.h>
 
 namespace XLinkKai_Constants
 {

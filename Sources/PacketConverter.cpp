@@ -14,6 +14,8 @@
 
 #include <numeric>
 #include <regex>
+#include <string>
+#include <iostream>
 
 // Skip use of ether_aton because that could hinder Windows support.
 uint64_t MacToInt(std::string_view aMac)

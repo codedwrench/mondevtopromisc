@@ -1,7 +1,8 @@
 #include <cstring>
 #include <iostream>
-#include "../Includes/XLinkKaiConnection.h"
+
 #include "../Includes/Logger.h"
+#include "../Includes/XLinkKaiConnection.h"
 
 using namespace boost::asio;
 
@@ -20,7 +21,7 @@ bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
         mSocket.open(ip::udp::v4());
 
     } catch (const boost::system::system_error& lException) {
-        Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::ERROR);
+        Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::ERR);
         lReturn = false;
     }
 
@@ -55,7 +56,7 @@ bool XLinkKaiConnection::Send(std::string_view aMessage)
                 mSocket.send_to(buffer(std::string(aMessage)), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log("Could not send message! " + std::string(aMessage) +
-                                          std::string(lException.what()), Logger::ERROR);
+                                          std::string(lException.what()), Logger::ERR);
                 lReturn = false;
             }
         } else {
@@ -113,7 +114,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
             } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
                 lCommand = lData.substr(0, cDisconnectedString.size());
                 if (lCommand == cDisconnectedString) {
-                    Logger::GetInstance().Log("Xlink Kai has disconnected us!" + lCommand, Logger::ERROR);
+                    Logger::GetInstance().Log("Xlink Kai has disconnected us!" + lCommand, Logger::ERR);
                     mConnected = false;
                     mIoService.stop();
                 }
@@ -141,7 +142,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                 while (!mIoService.stopped()) {
                     if ((!mConnected) && mConnectInitiated &&
                         (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
-                        Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERROR);
+                        Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERR);
                         mIoService.stop();
                         mConnectInitiated = false;
                         mConnected = false;
@@ -154,7 +155,7 @@ bool XLinkKaiConnection::StartReceiverThread()
             });
         }
     } else {
-        Logger::GetInstance().Log("Can't start receiving without an opened socket!", Logger::ERROR);
+        Logger::GetInstance().Log("Can't start receiving without an opened socket!", Logger::ERR);
         lReturn = false;
     }
 

@@ -56,7 +56,7 @@ int TapDevice::CreateDevice()
     } else {
         Close();
         lReturn = errno;
-        Logger::GetInstance().Log("Failed to create device, " + std::string(strerror(lReturn)), Logger::ERROR);
+        Logger::GetInstance().Log("Failed to create device, " + std::string(strerror(lReturn)), Logger::ERR);
     }
 
     return lReturn;
@@ -67,7 +67,7 @@ int TapDevice::AllocateDevice() {
 
     lReturn = Open("/dev/net/tun", O_RDWR);
     if (lReturn != 0) {
-        Logger::GetInstance().Log("Failed to open device, " + std::string(strerror(lReturn)), Logger::ERROR);
+        Logger::GetInstance().Log("Failed to open device, " + std::string(strerror(lReturn)), Logger::ERR);
     }
 
     if (mFd < 0) {

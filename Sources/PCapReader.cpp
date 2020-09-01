@@ -16,7 +16,7 @@ bool PCapReader::Open(const std::string& aName)
     mHandler = pcap_open_offline(aName.c_str(), lErrorBuffer);
     if (mHandler == nullptr) {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::ERROR);
+        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::ERR);
     }
     return lReturn;
 }

@@ -18,6 +18,7 @@
 #  PCAP_LIBRARY              The libpcap library (possibly includes a thread
 #                            library e.g. required by pf_ring's libpcap)
 #  HAVE_PF_RING              If a found version of libpcap supports PF_RING
+#  HAVE_PCAP_IMMEDIATE_MODE  If the version of libpcap found supports immediate mode
 
 find_path(PCAP_ROOT_DIR
     NAMES include/pcap.h
@@ -28,9 +29,17 @@ find_path(PCAP_INCLUDE_DIR
     HINTS ${PCAP_ROOT_DIR}/include
 )
 
+set (HINT_DIR ${PCAP_ROOT_DIR}/lib)
+
+# On x64 windows, we should look also for the .lib at /lib/x64/
+# as this is the default path for the WinPcap developer's pack
+if (${CMAKE_SIZEOF_VOID_P} EQUAL 8 AND WIN32)
+    set (HINT_DIR ${PCAP_ROOT_DIR}/lib/x64/ ${HINT_DIR})
+endif ()
+
 find_library(PCAP_LIBRARY
-    NAMES pcap
-    HINTS ${PCAP_ROOT_DIR}/lib
+    NAMES pcap wpcap
+    HINTS ${HINT_DIR}
 )
 
 include(FindPackageHandleStandardArgs)
@@ -39,9 +48,9 @@ find_package_handle_standard_args(PCAP DEFAULT_MSG
     PCAP_INCLUDE_DIR
 )
 
-include(CheckCSourceCompiles)
+include(CheckCXXSourceCompiles)
 set(CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
-check_c_source_compiles("int main() { return 0; }" PCAP_LINKS_SOLO)
+check_cxx_source_compiles("int main() { return 0; }" PCAP_LINKS_SOLO)
 set(CMAKE_REQUIRED_LIBRARIES)
 
 # check if linking against libpcap also needs to link against a thread library
@@ -49,22 +58,24 @@ if (NOT PCAP_LINKS_SOLO)
     find_package(Threads)
     if (THREADS_FOUND)
         set(CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-        check_c_source_compiles("int main() { return 0; }" PCAP_NEEDS_THREADS)
+        check_cxx_source_compiles("int main() { return 0; }" PCAP_NEEDS_THREADS)
         set(CMAKE_REQUIRED_LIBRARIES)
-    endif ()
+    endif (THREADS_FOUND)
     if (THREADS_FOUND AND PCAP_NEEDS_THREADS)
         set(_tmp ${PCAP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
         list(REMOVE_DUPLICATES _tmp)
         set(PCAP_LIBRARY ${_tmp}
             CACHE STRING "Libraries needed to link against libpcap" FORCE)
-    else ()
+    else (THREADS_FOUND AND PCAP_NEEDS_THREADS)
         message(FATAL_ERROR "Couldn't determine how to link against libpcap")
-    endif ()
-endif ()
+    endif (THREADS_FOUND AND PCAP_NEEDS_THREADS)
+endif (NOT PCAP_LINKS_SOLO)
 
 include(CheckFunctionExists)
 set(CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
 check_function_exists(pcap_get_pfring_id HAVE_PF_RING)
+check_function_exists(pcap_set_immediate_mode HAVE_PCAP_IMMEDIATE_MODE)
+check_function_exists(pcap_set_tstamp_precision HAVE_PCAP_TIMESTAMP_PRECISION)
 set(CMAKE_REQUIRED_LIBRARIES)
 
 mark_as_advanced(

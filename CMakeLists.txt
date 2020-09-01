@@ -25,20 +25,29 @@ else (DOXYGEN_FOUND)
     message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
 
+if (MSVC)
+    message("You're running Windows! Make sure your paths are set correctly.")
+    set(PCAP_ROOT_DIR "c:\\npcapsdk")
+    set(BOOST_ROOT "c:\\Program Files\\boost\\boost_1_71_0")
+    
+    # Magic that boost on windows seems to need.
+    add_definitions( -DBOOST_ALL_NO_LIB )
+    add_definitions( -DBOOST_ALL_DYN_LINK )
+  endif()
+
 include(FindPCAP.cmake)
 
 find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
 
-IF (NOT APPLE AND NOT MSVC)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-ENDIF ()
+if (NOT APPLE AND NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif ()
 
 add_executable(mondevtopromisc main.cpp
         Sources/WirelessCaptureDevice.cpp
         Sources/Logger.cpp
         Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
-        Sources/TapDevice.cpp
         Sources/XLinkKaiConnection.cpp
         Includes/WirelessCaptureDevice.h
         Includes/ILinuxDevice.h
@@ -46,8 +55,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/Logger.h
         Includes/PacketConverter.h
         Includes/PCapReader.h
-        Includes/TapDevice.h
         Includes/XLinkKaiConnection.h)
 
-target_link_libraries(mondevtopromisc ${PCAP_LIBRARY}
-        ${Boost_LIBRARIES})
+target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES})

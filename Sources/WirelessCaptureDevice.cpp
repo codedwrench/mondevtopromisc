@@ -16,11 +16,19 @@ bool WirelessCaptureDevice::Open(const std::string& aName)
     bool lReturn = true;
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
 
-    //TODO: Magic numbers.
-    mHandler = pcap_open_live(aName.c_str(), BUFSIZ, 1, 1000, lErrorBuffer);
-    if (mHandler == nullptr) {
+    //TODO: Magic numbers
+    mHandler = pcap_create(aName.c_str(), lErrorBuffer);
+    pcap_set_rfmon(mHandler, 1);
+    pcap_set_snaplen(mHandler, 2048);
+    pcap_set_promisc(mHandler, 1);
+    pcap_set_timeout(mHandler, 512);
+
+    int lStatus;
+    lStatus = pcap_activate(mHandler);
+
+    if (lStatus != 0) {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_open_live failed, " + std::string(lErrorBuffer), Logger::ERROR);
+        Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)), Logger::ERR);
     }
     return lReturn;
 }
@@ -36,7 +44,7 @@ bool WirelessCaptureDevice::ReadNextPacket()
 {
     bool lReturn{false};
 
-    if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
+    if (pcap_next_ex(mHandler, &mHeader, &mData) > 0) {
         std::string lData = DataToString();
         if (mPacketConverter.Is80211Data(lData) &&
             (mBSSIDToFilter.empty() || mPacketConverter.IsForBSSID(lData, mBSSIDToFilter))) {

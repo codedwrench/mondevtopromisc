@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <ctime>
-#include <experimental/source_location>
 #include <iomanip>
 #include <iostream>
 
@@ -52,7 +51,11 @@ void Logger::SetLogToDisk(bool aLoggingToDiskEnabled) {
     mLogToDisk = aLoggingToDiskEnabled;
 }
 
+#if defined(__GNUC__) || defined(__GNUG__)
 void Logger::Log(const std::string& aText, Level aLevel, const std::experimental::source_location& aLocation)
+#else
+void Logger::Log(const std::string& aText, Level aLevel)
+#endif
 {
     std::stringstream lLogEntry;
 
@@ -61,10 +64,15 @@ void Logger::Log(const std::string& aText, Level aLevel, const std::experimental
         auto lTimeAsTimeT = std::chrono::system_clock::to_time_t(lTime);
         auto lTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(lTime.time_since_epoch()) % 1000;
 
+#if defined(__GNUC__) || defined(__GNUG__)
         lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') <<
                   std::setw(3) << lTimeMs.count() << ": " << mLogLevelTexts.at(aLevel) << ": " << aLocation.file_name()
                   << ":"
                   << aLocation.line() << ":" << aText;
+#else
+        lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') <<
+            std::setw(3) << lTimeMs.count() << ": " << mLogLevelTexts.at(aLevel) << ":" << aText;
+#endif
 
         std::cout << lLogEntry.str() << std::endl;
 

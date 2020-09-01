@@ -8,12 +8,16 @@
  *
  * */
 
-
 #include <array>
-#include <experimental/source_location>
-#include <string>
-#include <sstream>
 #include <fstream>
+
+// Does not exist in Visual Studio yet, https://github.com/microsoft/STL/pull/664
+#if defined(__GNUC__) || defined(__GNUG__)
+#include <experimental/source_location>
+#endif
+
+#include <sstream>
+#include <string>
 
 
 class Logger
@@ -28,7 +32,8 @@ public:
         DEBUG,
         INFO,
         WARNING,
-        ERROR
+        // ERROR is already defined in windows
+        ERR
     };
 
     /**
@@ -55,8 +60,12 @@ public:
      * @param aLevel - Loglevel to use.
      * @param aLocation - Source location (keep empty).
      */
+#if defined(__GNUC__) || defined(__GNUG__)
     void Log(const std::string &aText, Level aLevel, const std::experimental::source_location &aLocation =
     std::experimental::source_location::current());
+#else
+    void Log(const std::string& aText, Level aLevel);
+#endif
 
     /**
      * Sets the loglevel to debug, warning or error, based upon this variable certain logmessages will be shown or not
@@ -82,7 +91,7 @@ private:
     ~Logger();
 
     std::string mFileName{"log.txt"};
-    Level mLogLevel{Level::ERROR};
+    Level mLogLevel{Level::ERR};
     std::array<std::string, 5> mLogLevelTexts{"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
     std::ofstream mLogOutputStream{};
     bool mLogToDisk{false};

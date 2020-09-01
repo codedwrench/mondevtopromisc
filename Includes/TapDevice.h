@@ -12,6 +12,7 @@
 
 #include "ILinuxDevice.h"
 
+
 class TapDevice : public ILinuxDevice
 {
 public:

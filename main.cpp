@@ -1,5 +1,4 @@
 #include <iostream>
-#include <getopt.h>
 #include <pcap/pcap.h>
 
 #include <boost/program_options.hpp>
