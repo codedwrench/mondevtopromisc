@@ -1,5 +1,3 @@
-#include "../Includes/WirelessCaptureDevice.h"
-
 #include <chrono>
 #include <functional>
 #include <iomanip>
@@ -8,6 +6,8 @@
 
 #include "../Includes/Logger.h"
 #include "../Includes/PCapReader.h"
+#include "../Includes/WirelessCaptureDevice.h"
+
 
 using namespace std::chrono;
 
