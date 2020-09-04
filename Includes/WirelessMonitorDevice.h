@@ -1,5 +1,5 @@
-#ifndef CAPTUREDEVICE_H
-#define CAPTUREDEVICE_H
+#ifndef WIRELESS_MONITOR_DEVICE_H
+#define WIRELESS_MONITOR_DEVICE_H
 
 /* Copyright (c) 2020 [Rick de Bondt] - WirelessMonitorDevice.h
  *
@@ -10,13 +10,13 @@
 #include "IPCapDevice.h"
 #include "PacketConverter.h"
 
-namespace WirelessCaptureDevice_Constants
+namespace WirelessMonitorDevice_Constants
 {
     constexpr unsigned int cSnapshotLength{2048};
     constexpr unsigned int cTimeout{512};
 }
 
-using namespace WirelessCaptureDevice_Constants;
+using namespace WirelessMonitorDevice_Constants;
 
 class WirelessMonitorDevice : public IPCapDevice
 {
@@ -41,4 +41,4 @@ private:
 };
 
 
-#endif //CAPTUREDEVICE_H
+#endif //WIRELESS_MONITOR_DEVICE_H
