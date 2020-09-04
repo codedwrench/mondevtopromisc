@@ -11,7 +11,7 @@ using namespace std::chrono;
 
 bool PCapReader::Open(const std::string& aName)
 {
-    bool lReturn = true;
+    bool lReturn{true};
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
     mHandler = pcap_open_offline(aName.c_str(), lErrorBuffer);
     if (mHandler == nullptr) {
@@ -76,8 +76,8 @@ std::string PCapReader::DataToFormattedString()
             lFormattedString << std::endl;
         }
 
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
-                         << " ";
+        lFormattedString << std::hex << std::setfill('0') << std::setw(2) <<
+                         static_cast<unsigned int>(mData[lCount]) << " ";
     }
 
     return lFormattedString.str();
@@ -108,7 +108,7 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& a
         // If Data Frame
         lUsefulPacket = aPacketConverter.Is80211Data(lData);
         if (lUsefulPacket) {
-            lData = aPacketConverter.ConvertPacketToPromiscuous(lData);
+            lData = aPacketConverter.ConvertPacketTo8023(lData);
             if (lData.empty()) {
                 lSuccesfulPacket = false;
             }
@@ -167,4 +167,10 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aCon
     }
 
     return std::pair{!lSuccesfulPacket, lPacketsSent};
+}
+
+bool PCapReader::Send(std::string_view aData)
+{
+    // Maybe make it possible to inject a packet into the capture file here, but not sure if that's beneficial.
+    return false;
 }

@@ -10,26 +10,6 @@
 #include <string_view>
 
 
-namespace PacketConverter_Constants
-{
-    constexpr unsigned int cDestinationAddressIndex{4};
-    constexpr unsigned int cDestinationAddressLength{6};
-    constexpr unsigned int cSourceAddressIndex{10};
-    constexpr unsigned int cSourceAddressLength{6};
-    constexpr unsigned int cBSSIDIndex{16};
-    constexpr unsigned int cBSSIDLength{6};
-    constexpr unsigned int cTypeIndex{30};
-    constexpr unsigned int cTypeLength{2};
-    constexpr unsigned int cDataIndex{32};
-    constexpr unsigned int cRadioTapLengthIndex{2};
-    constexpr uint8_t c80211DataType{0x08};
-    constexpr unsigned int cHeaderLength{cDestinationAddressLength +
-                                         cSourceAddressLength +
-                                         cTypeLength};
-}
-
-using namespace PacketConverter_Constants;
-
 class PacketConverter
 {
 public:
@@ -60,12 +40,13 @@ public:
      * @param aData - The packet data to convert.
      * @return converted packet data, empty string if failed.
      */
-    std::string ConvertPacketToPromiscuous(std::string_view aData);
+    std::string ConvertPacketTo8023(std::string_view aData);
 private:
 
     void UpdateIndexAfterRadioTap(std::string_view aData);
     bool mHasRadioTap{false};
     uint16_t mIndexAfterRadioTap{0};
+    std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
 };
 
 

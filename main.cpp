@@ -6,7 +6,7 @@
 
 #include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
-#include "Includes/WirelessCaptureDevice.h"
+#include "Includes/WirelessMonitorDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 
 namespace
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        WirelessCaptureDevice lCaptureDevice;
+        WirelessMonitorDevice lCaptureDevice;
         XLinkKaiConnection lXLinkKaiConnection;
         PacketConverter lPacketConverter{true};
 
@@ -90,9 +90,9 @@ int main(int argc, char** argv)
                         lXLinkKaiConnection.StartReceiverThread();
                     }
 
-                    //TODO: Needs to be a nicer send function in WirelessCaptureDevice
+                    //TODO: Needs to be a nicer send function in WirelessMonitorDevice
                     if (lCaptureDevice.ReadNextPacket()) {
-                        std::string lData = lPacketConverter.ConvertPacketToPromiscuous(lCaptureDevice.DataToString());
+                        std::string lData = lPacketConverter.ConvertPacketTo8023(lCaptureDevice.DataToString());
                         if (!lData.empty()) {
                             lData.insert(0, XLinkKai_Constants::cEthernetDataString);
                             lXLinkKaiConnection.Send(lData);

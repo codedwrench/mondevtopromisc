@@ -55,6 +55,13 @@ public:
      * @return true on success.
      */
     virtual void SetBSSIDFilter(std::string_view aBssid) = 0;
+
+    /**
+     * Sends data over packet capture device if supported.
+     * @param aData - Data to send.
+     * @return true if successful, false on failure or unsupported.
+     */
+    virtual bool Send(std::string_view aData) = 0;
 };
 
 

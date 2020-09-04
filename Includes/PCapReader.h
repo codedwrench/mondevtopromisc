@@ -31,6 +31,8 @@ public:
     void SetBSSIDFilter(std::string_view aBSSID) override
     {};
 
+    bool Send(std::string_view aData) override;
+
     /**
      * Replays packets from file to injection device / XLink Kai.
      * Assumes no packets have been read from the opened file yet.

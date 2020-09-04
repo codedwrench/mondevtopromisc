@@ -1,3 +1,6 @@
+#include "../Includes/WirelessMonitorDevice.h"
+
+
 #include <chrono>
 #include <functional>
 #include <iomanip>
@@ -6,22 +9,20 @@
 
 #include "../Includes/Logger.h"
 #include "../Includes/PCapReader.h"
-#include "../Includes/WirelessCaptureDevice.h"
 
 
 using namespace std::chrono;
 
-bool WirelessCaptureDevice::Open(const std::string& aName)
+bool WirelessMonitorDevice::Open(const std::string& aName)
 {
-    bool lReturn = true;
+    bool lReturn{true};
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
 
-    //TODO: Magic numbers
     mHandler = pcap_create(aName.c_str(), lErrorBuffer);
     pcap_set_rfmon(mHandler, 1);
-    pcap_set_snaplen(mHandler, 2048);
+    pcap_set_snaplen(mHandler, cSnapshotLength);
     pcap_set_promisc(mHandler, 1);
-    pcap_set_timeout(mHandler, 512);
+    pcap_set_timeout(mHandler, cTimeout);
 
     int lStatus;
     lStatus = pcap_activate(mHandler);
@@ -33,14 +34,14 @@ bool WirelessCaptureDevice::Open(const std::string& aName)
     return lReturn;
 }
 
-void WirelessCaptureDevice::Close()
+void WirelessMonitorDevice::Close()
 {
     pcap_close(mHandler);
     mData = nullptr;
     mHeader = nullptr;
 }
 
-bool WirelessCaptureDevice::ReadNextPacket()
+bool WirelessMonitorDevice::ReadNextPacket()
 {
     bool lReturn{false};
 
@@ -72,17 +73,17 @@ bool WirelessCaptureDevice::ReadNextPacket()
     return lReturn;
 }
 
-const unsigned char* WirelessCaptureDevice::GetData()
+const unsigned char* WirelessMonitorDevice::GetData()
 {
     return mData;
 }
 
-const pcap_pkthdr* WirelessCaptureDevice::GetHeader()
+const pcap_pkthdr* WirelessMonitorDevice::GetHeader()
 {
     return mHeader;
 }
 
-std::string WirelessCaptureDevice::DataToFormattedString()
+std::string WirelessMonitorDevice::DataToFormattedString()
 {
     std::stringstream lFormattedString;
     // Loop through the packet and print it as hexidecimal representations of octets
@@ -99,7 +100,7 @@ std::string WirelessCaptureDevice::DataToFormattedString()
     return lFormattedString.str();
 }
 
-std::string WirelessCaptureDevice::DataToString()
+std::string WirelessMonitorDevice::DataToString()
 {
     // Convert from char* to string
     std::string lData{};
@@ -111,8 +112,14 @@ std::string WirelessCaptureDevice::DataToString()
     return lData;
 }
 
-void WirelessCaptureDevice::SetBSSIDFilter(std::string_view aBSSID)
+void WirelessMonitorDevice::SetBSSIDFilter(std::string_view aBSSID)
 {
     // Sadly a BPF filter won't work here, so for now just do filtering in userspace :(
     mBSSIDToFilter = std::string(aBSSID);
+}
+
+bool WirelessMonitorDevice::Send(std::string_view aData)
+{
+    return true;
+
 }
