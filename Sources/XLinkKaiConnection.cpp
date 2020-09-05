@@ -1,8 +1,9 @@
+#include "../Includes/XLinkKaiConnection.h"
+
 #include <cstring>
 #include <iostream>
 
 #include "../Includes/Logger.h"
-#include "../Includes/XLinkKaiConnection.h"
 
 using namespace boost::asio;
 
@@ -49,14 +50,13 @@ bool XLinkKaiConnection::Send(std::string_view aMessage)
 
     // We only allow connection/disconnection requests to be sent, when XLink Kai has not confirmed the connection yet.
     if (mSocket.is_open()) {
-        if ((mConnected || aMessage == cConnectString ||
-             aMessage == cDisconnectString)) {
+        if ((mConnected || aMessage == cConnectString || aMessage == cDisconnectString)) {
             try {
                 Logger::GetInstance().Log("Sent: " + std::string(aMessage), Logger::TRACE);
                 mSocket.send_to(buffer(std::string(aMessage)), mRemote);
             } catch (const boost::system::system_error& lException) {
-                Logger::GetInstance().Log("Could not send message! " + std::string(aMessage) +
-                                          std::string(lException.what()), Logger::ERR);
+                Logger::GetInstance().Log(
+                    "Could not send message! " + std::string(aMessage) + std::string(lException.what()), Logger::ERR);
                 lReturn = false;
             }
         } else {
@@ -96,7 +96,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
             if (lCommand == cConnectedString) {
                 Logger::GetInstance().Log("XLink Kai succesfully connected: " + lCommand, Logger::INFO);
                 mConnectInitiated = false;
-                mConnected = true;
+                mConnected        = true;
             }
         }
 
@@ -130,11 +130,10 @@ bool XLinkKaiConnection::StartReceiverThread()
     bool lReturn{true};
     if (mSocket.is_open()) {
         mSocket.async_receive_from(
-                buffer(mData, cMaxLength), mRemote,
-                boost::bind(&XLinkKaiConnection::ReceiveCallback,
-                            this,
-                            placeholders::error,
-                            placeholders::bytes_transferred));
+            buffer(mData, cMaxLength),
+            mRemote,
+            boost::bind(
+                &XLinkKaiConnection::ReceiveCallback, this, placeholders::error, placeholders::bytes_transferred));
         // Run
         if (mReceiverThread == nullptr) {
             mReceiverThread = std::make_shared<boost::thread>([&] {
@@ -145,7 +144,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                         Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERR);
                         mIoService.stop();
                         mConnectInitiated = false;
-                        mConnected = false;
+                        mConnected        = false;
                     }
                     mIoService.poll();
 
@@ -199,4 +198,3 @@ bool XLinkKaiConnection::IsConnecting() const
 {
     return (!mConnected && !mConnectInitiated);
 }
-

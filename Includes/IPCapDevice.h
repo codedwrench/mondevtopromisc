@@ -8,12 +8,13 @@
  * */
 
 #include <string>
-#include <pcap.h>
+
+#include <pcap/pcap.h>
 
 
-class IPCapDevice {
+class IPCapDevice
+{
 public:
-
     /**
      * Closes a pcap device/file.
      */
@@ -24,7 +25,7 @@ public:
      * @param aName - the name of the device to capture or the path of the file to open.
      * @return true on success.
      */
-    virtual bool Open(const std::string &aName) = 0;
+    virtual bool Open(const std::string& aName) = 0;
 
     /**
      * Reads the next packet from the device or file.
@@ -36,7 +37,7 @@ public:
      * Gets data from last read packet.
      * @return pointer to data as an unsigned char array.
      */
-    virtual const unsigned char *GetData() = 0;
+    virtual const unsigned char* GetData() = 0;
 
     /**
      * Gets header from last read packet.
@@ -65,4 +66,4 @@ public:
 };
 
 
-#endif //IPCAPDEVICE_H
+#endif  // IPCAPDEVICE_H

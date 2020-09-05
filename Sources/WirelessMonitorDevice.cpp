@@ -1,6 +1,5 @@
 #include "../Includes/WirelessMonitorDevice.h"
 
-
 #include <chrono>
 #include <functional>
 #include <iomanip>
@@ -37,7 +36,7 @@ bool WirelessMonitorDevice::Open(const std::string& aName)
 void WirelessMonitorDevice::Close()
 {
     pcap_close(mHandler);
-    mData = nullptr;
+    mData   = nullptr;
     mHeader = nullptr;
 }
 
@@ -58,13 +57,15 @@ bool WirelessMonitorDevice::ReadNextPacket()
 
             // Show a warning if the length captured is different
             if (mHeader->len != mHeader->caplen) {
-                Logger::GetInstance().Log("Capture size different than packet size:" + std::to_string(mHeader->len) +
-                                          " bytes", Logger::WARNING);
+                Logger::GetInstance().Log(
+                    "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
+                    Logger::WARNING);
             }
 
             // Show Epoch Time
-            Logger::GetInstance().Log("Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" +
-                                      std::to_string(mHeader->ts.tv_usec), Logger::TRACE);
+            Logger::GetInstance().Log(
+                "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
+                Logger::TRACE);
 
             lReturn = true;
         }
@@ -121,5 +122,4 @@ void WirelessMonitorDevice::SetBSSIDFilter(std::string_view aBSSID)
 bool WirelessMonitorDevice::Send(std::string_view aData)
 {
     return true;
-
 }

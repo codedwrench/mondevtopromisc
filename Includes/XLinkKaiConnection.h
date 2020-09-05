@@ -7,33 +7,31 @@
  *
  * */
 
+#include <string>
+
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-#include <string>
-
 namespace XLinkKai_Constants
 {
-    constexpr int cMaxLength = 4096;
-    constexpr std::string_view cIp{"127.0.0.1"};
-    constexpr std::string_view cSeparator{";"};
-    constexpr std::string_view cKeepAliveFormat{"keepalive"};
-    constexpr std::string_view cConnectFormat{"connect"};
-    constexpr std::string_view cConnectedFormat{"connected"};
-    constexpr std::string_view cDisconnectFormat{"disconnect"};
-    constexpr std::string_view cDisconnectedFormat{"disconnected"};
-    constexpr std::string_view cEthernetDataFormat{"e"};
-    constexpr std::string_view cLocallyUniqueName{"PSP"};
-    constexpr std::string_view cEmulatorName{"Real_PSP"};
-    constexpr unsigned int cPort{34523};
+    constexpr int                  cMaxLength{4096};
+    constexpr std::string_view     cIp{"127.0.0.1"};
+    constexpr std::string_view     cSeparator{";"};
+    constexpr std::string_view     cKeepAliveFormat{"keepalive"};
+    constexpr std::string_view     cConnectFormat{"connect"};
+    constexpr std::string_view     cConnectedFormat{"connected"};
+    constexpr std::string_view     cDisconnectFormat{"disconnect"};
+    constexpr std::string_view     cDisconnectedFormat{"disconnected"};
+    constexpr std::string_view     cEthernetDataFormat{"e"};
+    constexpr std::string_view     cLocallyUniqueName{"PSP"};
+    constexpr std::string_view     cEmulatorName{"Real_PSP"};
+    constexpr unsigned int         cPort{34523};
     constexpr std::chrono::seconds cConnectionTimeout{10};
 
-    const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() +
-                                     cLocallyUniqueName.data() + cSeparator.data() +
-                                     cEmulatorName.data() + cSeparator.data()};
+    const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() + cLocallyUniqueName.data() +
+                                     cSeparator.data() + cEmulatorName.data() + cSeparator.data()};
 
-    const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() +
-                                       cLocallyUniqueName.data()};
+    const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() + cLocallyUniqueName.data()};
 
     const std::string cDisconnectedString{std::string(cDisconnectedFormat) + cSeparator.data() +
                                           cLocallyUniqueName.data()};
@@ -44,7 +42,7 @@ namespace XLinkKai_Constants
 
     const std::string cEthernetDataString{std::string(cEthernetDataFormat) + cSeparator.data() +
                                           cEthernetDataFormat.data() + cSeparator.data()};
-}
+}  // namespace XLinkKai_Constants
 
 using namespace XLinkKai_Constants;
 
@@ -111,17 +109,17 @@ private:
      */
     bool HandleKeepAlive();
 
-    bool mConnected{false};
-    bool mConnectInitiated{false};
+    bool                                               mConnected{false};
+    bool                                               mConnectInitiated{false};
     std::chrono::time_point<std::chrono::system_clock> mConnectionTimerStart{std::chrono::seconds{0}};
 
-    std::array<char, cMaxLength> mData;
-    std::string mIp{cIp};
-    unsigned int mPort{cPort};
-    boost::asio::io_service mIoService{};
-    boost::asio::ip::udp::socket mSocket{mIoService};
+    std::array<char, cMaxLength>   mData;
+    std::string                    mIp{cIp};
+    unsigned int                   mPort{cPort};
+    boost::asio::io_service        mIoService{};
+    boost::asio::ip::udp::socket   mSocket{mIoService};
     boost::asio::ip::udp::endpoint mRemote{};
     std::shared_ptr<boost::thread> mReceiverThread{nullptr};
 };
 
-#endif // XLINKKAICONNECTION_H
+#endif  // XLINKKAICONNECTION_H

@@ -1,3 +1,5 @@
+#include "../Includes/PCapReader.h"
+
 #include <chrono>
 #include <functional>
 #include <iomanip>
@@ -5,7 +7,6 @@
 #include <string>
 
 #include "../Includes/Logger.h"
-#include "../Includes/PCapReader.h"
 
 using namespace std::chrono;
 
@@ -24,7 +25,7 @@ bool PCapReader::Open(const std::string& aName)
 void PCapReader::Close()
 {
     pcap_close(mHandler);
-    mData = nullptr;
+    mData   = nullptr;
     mHeader = nullptr;
 }
 
@@ -42,13 +43,14 @@ bool PCapReader::ReadNextPacket()
 
         // Show a warning if the length captured is different
         if (mHeader->len != mHeader->caplen) {
-            Logger::GetInstance().Log("Capture size different than packet size:" + std::to_string(mHeader->len) +
-                                      " bytes", Logger::WARNING);
+            Logger::GetInstance().Log(
+                "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes", Logger::WARNING);
         }
 
         // Show Epoch Time
-        Logger::GetInstance().Log("Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" +
-                                  std::to_string(mHeader->ts.tv_usec), Logger::TRACE);
+        Logger::GetInstance().Log(
+            "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
+            Logger::TRACE);
     } else {
         lReturn = false;
     }
@@ -76,8 +78,8 @@ std::string PCapReader::DataToFormattedString()
             lFormattedString << std::endl;
         }
 
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) <<
-                         static_cast<unsigned int>(mData[lCount]) << " ";
+        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
+                         << " ";
     }
 
     return lFormattedString.str();
@@ -96,11 +98,11 @@ std::string PCapReader::DataToString()
 }
 
 std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& aConnection,
-                                                           PacketConverter aPacketConverter,
-                                                           bool aMonitorCapture)
+                                                           PacketConverter     aPacketConverter,
+                                                           bool                aMonitorCapture)
 {
-    bool lUsefulPacket{true};
-    bool lSuccesfulPacket{true};
+    bool        lUsefulPacket{true};
+    bool        lSuccesfulPacket{true};
     std::string lData{DataToString()};
 
     // Convert to promiscuous packet and proceed as normal.
@@ -128,21 +130,20 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& a
 
 // TODO: Needs to be some interface with send function for all interfaces
 std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aConnection,
-                                                        bool aMonitorCapture,
-                                                        bool aHasRadioTap)
+                                                        bool                aMonitorCapture,
+                                                        bool                aHasRadioTap)
 {
-    bool lSuccesfulPacket{false};
-    bool lUsefulPacket{true};
+    bool         lSuccesfulPacket{false};
+    bool         lUsefulPacket{true};
     unsigned int lPacketsSent{0};
 
     // Read the first packet
     if (ReadNextPacket()) {
         PacketConverter lPacketConverter{aHasRadioTap};
-        microseconds lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
+        microseconds    lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 
-        std::tie(lSuccesfulPacket, lUsefulPacket) = ConstructAndReplayPacket(aConnection,
-                                                                             lPacketConverter,
-                                                                             aMonitorCapture);
+        std::tie(lSuccesfulPacket, lUsefulPacket) =
+            ConstructAndReplayPacket(aConnection, lPacketConverter, aMonitorCapture);
 
         if (lSuccesfulPacket && lUsefulPacket) {
             lPacketsSent++;
@@ -156,9 +157,8 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aCon
             // Wait for next send.
             std::this_thread::sleep_for(lSleepFor);
 
-            std::tie(lSuccesfulPacket, lUsefulPacket) = ConstructAndReplayPacket(aConnection,
-                                                                                 lPacketConverter,
-                                                                                 aMonitorCapture);
+            std::tie(lSuccesfulPacket, lUsefulPacket) =
+                ConstructAndReplayPacket(aConnection, lPacketConverter, aMonitorCapture);
 
             if (lSuccesfulPacket && lUsefulPacket) {
                 lPacketsSent++;

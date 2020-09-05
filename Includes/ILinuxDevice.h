@@ -10,9 +10,9 @@
 #include <string>
 
 
-class ILinuxDevice {
+class ILinuxDevice
+{
 public:
-
     /**
      * Takes steps required for initializing a device.
      * @return 0 on success, errno on failure.
@@ -36,10 +36,11 @@ public:
      * @return - 0 if successful, errno if unsuccessful.
      */
     virtual int Close() = 0;
+
 protected:
     virtual int Open(const std::string& aDeviceNameAndPath, int aMode) = 0;
-    virtual int IoCtl(int aFd, unsigned long aRequest, char* aArgp) = 0;
+    virtual int IoCtl(int aFd, unsigned long aRequest, char* aArgp)    = 0;
 };
 
 
-#endif //ILINUXDEVICE_H
+#endif  // ILINUXDEVICE_H

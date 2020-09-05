@@ -27,9 +27,8 @@ public:
 
     std::string DataToFormattedString() override;
 
-    //TODO: Implement
-    void SetBSSIDFilter(std::string_view aBSSID) override
-    {};
+    // TODO: Implement
+    void SetBSSIDFilter(std::string_view aBSSID) override{};
 
     bool Send(std::string_view aData) override;
 
@@ -43,8 +42,8 @@ public:
      * @return pair with amount of packets sent and whether it has fully replayed them or not.
      */
     std::pair<bool, unsigned int> ReplayPackets(XLinkKaiConnection& aConnection,
-                                                bool aMonitorCapture = false,
-                                                bool aHasRadioTap = false);
+                                                bool                aMonitorCapture = false,
+                                                bool                aHasRadioTap    = false);
 
 private:
     /**
@@ -55,14 +54,15 @@ private:
      * @return a pair containing, succesfully sent (or ignored) and whether the packet was useful enough to be sent.
      */
     std::pair<bool, bool> ConstructAndReplayPacket(XLinkKaiConnection& aConnection,
-                                                   PacketConverter aPacketConverter,
-                                                   bool aMonitorCapture);
-    std::string DataToString();
+                                                   PacketConverter     aPacketConverter,
+                                                   bool                aMonitorCapture);
+
+    std::string          DataToString();
     const unsigned char* mData{nullptr};
-    pcap_t* mHandler{nullptr};
-    pcap_pkthdr* mHeader{nullptr};
-    unsigned int mPacketCount{0};
+    pcap_t*              mHandler{nullptr};
+    pcap_pkthdr*         mHeader{nullptr};
+    unsigned int         mPacketCount{0};
 };
 
 
-#endif // PCAPREADER_H
+#endif  // PCAPREADER_H

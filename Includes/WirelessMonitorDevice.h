@@ -14,7 +14,7 @@ namespace WirelessMonitorDevice_Constants
 {
     constexpr unsigned int cSnapshotLength{2048};
     constexpr unsigned int cTimeout{512};
-}
+}  // namespace WirelessMonitorDevice_Constants
 
 using namespace WirelessMonitorDevice_Constants;
 
@@ -22,23 +22,24 @@ class WirelessMonitorDevice : public IPCapDevice
 {
 public:
     // TODO: If too many copied functions, create base class.
-    void Close() override;
-    bool Open(const std::string& aName) override;
-    bool ReadNextPacket() override;
+    void                 Close() override;
+    bool                 Open(const std::string& aName) override;
+    bool                 ReadNextPacket() override;
     const unsigned char* GetData() override;
-    const pcap_pkthdr* GetHeader() override;
-    std::string DataToFormattedString() override;
-    std::string DataToString();
-    void SetBSSIDFilter(std::string_view aBSSID) override;
-    bool Send(std::string_view aData) override;
+    const pcap_pkthdr*   GetHeader() override;
+    std::string          DataToFormattedString() override;
+    std::string          DataToString();
+    void                 SetBSSIDFilter(std::string_view aBSSID) override;
+    bool                 Send(std::string_view aData) override;
+
 private:
-    PacketConverter mPacketConverter{true};
+    PacketConverter      mPacketConverter{true};
     const unsigned char* mData{nullptr};
-    std::string mBSSIDToFilter;
-    pcap_t* mHandler{nullptr};
-    pcap_pkthdr* mHeader{nullptr};
-    unsigned int mPacketCount{0};
+    std::string          mBSSIDToFilter;
+    pcap_t*              mHandler{nullptr};
+    pcap_pkthdr*         mHeader{nullptr};
+    unsigned int         mPacketCount{0};
 };
 
 
-#endif //WIRELESS_MONITOR_DEVICE_H
+#endif  // WIRELESS_MONITOR_DEVICE_H

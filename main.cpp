@@ -1,8 +1,8 @@
 #include <iostream>
-#include <pcap/pcap.h>
 
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
+#include <pcap/pcap.h>
 
 #include "Includes/Logger.h"
 #include "Includes/PCapReader.h"
@@ -12,20 +12,19 @@
 namespace
 {
     constexpr Logger::Level cLogLevel{Logger::TRACE};
-    constexpr char cLogFileName[]{"log.txt"};
-    constexpr bool cLogToDisk{true};
+    constexpr char          cLogFileName[]{"log.txt"};
+    constexpr bool          cLogToDisk{true};
 
     // Indicates if the program should be running or not, used to gracefully exit the program.
     bool gRunning{true};
-}
+}  // namespace
 
 namespace po = boost::program_options;
 
 static void SignalHandler(const boost::system::error_code& aError, int aSignalNumber)
 {
     if (!aError) {
-        if (aSignalNumber == SIGINT ||
-            aSignalNumber == SIGTERM) {
+        if (aSignalNumber == SIGINT || aSignalNumber == SIGTERM) {
             // Quit gracefully.
             gRunning = false;
         }
@@ -34,10 +33,11 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
 
 int main(int argc, char** argv)
 {
-    std::string lBssid{};
-    std::string lCaptureInterface{};
-    std::string lInjectionInterface{};
+    std::string             lBssid{};
+    std::string             lCaptureInterface{};
+    std::string             lInjectionInterface{};
     po::options_description lDescription("Options");
+    // clang-format off
     lDescription.add_options()
             ("help,h", "Shows this help message.")
             ("bssid,b", po::value<std::string>(&lBssid)->required(), "The BSSID to listen to.")
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
             ("injection_interface,i", po::value<std::string>(&lInjectionInterface),
              "If your interface does not support packet injection, another interface can be used")
             ("xlink_kai,x", "Enables the XLink Kai interface, so packets will be sent there directly");
-
+    // clang-format on
     po::variables_map lVariableMap;
     po::store(po::command_line_parser(argc, argv).options(lDescription).run(), lVariableMap);
 
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
         WirelessMonitorDevice lCaptureDevice;
-        XLinkKaiConnection lXLinkKaiConnection;
-        PacketConverter lPacketConverter{true};
+        XLinkKaiConnection    lXLinkKaiConnection;
+        PacketConverter       lPacketConverter{true};
 
         if (lCaptureDevice.Open(lCaptureInterface)) {
             if (lXLinkKaiConnection.Open()) {
@@ -75,14 +75,11 @@ int main(int argc, char** argv)
                 lXLinkKaiConnection.Connect();
                 lXLinkKaiConnection.StartReceiverThread();
 
-                std::chrono::time_point<std::chrono::system_clock> lStartTime{
-                        std::chrono::system_clock::now()};
+                std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
 
                 // Wait 60 seconds, this is just for testing.
-                while (gRunning &&
-                       (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
-                    if (lXLinkKaiConnection.IsDisconnected() &&
-                        (!lXLinkKaiConnection.IsConnecting())) {
+                while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
+                    if (lXLinkKaiConnection.IsDisconnected() && (!lXLinkKaiConnection.IsConnecting())) {
                         // Try reconnecting if connection has failed.
                         lXLinkKaiConnection.Close();
                         lXLinkKaiConnection.Open();
@@ -90,7 +87,7 @@ int main(int argc, char** argv)
                         lXLinkKaiConnection.StartReceiverThread();
                     }
 
-                    //TODO: Needs to be a nicer send function in WirelessMonitorDevice
+                    // TODO: Needs to be a nicer send function in WirelessMonitorDevice
                     if (lCaptureDevice.ReadNextPacket()) {
                         std::string lData = lPacketConverter.ConvertPacketTo8023(lCaptureDevice.DataToString());
                         if (!lData.empty()) {

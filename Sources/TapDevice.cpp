@@ -1,18 +1,21 @@
+#include "../Includes/TapDevice.h"
+
 #include <cstring>
-#include <fcntl.h>
 #include <iostream>
-#include <unistd.h>
+
 #include <linux/if_tun.h>
+
+#include <fcntl.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "../Includes/Logger.h"
-#include "../Includes/TapDevice.h"
 
 int TapDevice::Open(const std::string& aDeviceNameAndPath, int aMode)
 {
     int lReturn = open(aDeviceNameAndPath.c_str(), aMode);
     if (lReturn != -1) {
-        mFd = lReturn;
+        mFd     = lReturn;
         lReturn = 0;
     } else {
         lReturn = errno;
@@ -24,7 +27,7 @@ int TapDevice::Open(const std::string& aDeviceNameAndPath, int aMode)
 int TapDevice::Close()
 {
     int lReturn = close(mFd);
-    mFd = 0;
+    mFd         = 0;
     return lReturn;
 }
 
@@ -48,11 +51,11 @@ int TapDevice::CreateDevice()
      */
     lIfr.ifr_flags = IFF_TAP;
 
-    int lReturn = IoCtl(mFd, TUNSETIFF, reinterpret_cast<char *>(&lIfr));
+    int lReturn = IoCtl(mFd, TUNSETIFF, reinterpret_cast<char*>(&lIfr));
 
     if (lReturn != -1) {
         mDeviceName = lIfr.ifr_name;
-        lReturn = 0;
+        lReturn     = 0;
     } else {
         Close();
         lReturn = errno;
@@ -62,7 +65,8 @@ int TapDevice::CreateDevice()
     return lReturn;
 }
 
-int TapDevice::AllocateDevice() {
+int TapDevice::AllocateDevice()
+{
     int lReturn = 0;
 
     lReturn = Open("/dev/net/tun", O_RDWR);
@@ -77,11 +81,13 @@ int TapDevice::AllocateDevice() {
     return lReturn;
 }
 
-int TapDevice::AllocateOldDevice() {
+int TapDevice::AllocateOldDevice()
+{
     std::string lDeviceNameAndPath{"/dev/" + mDeviceName};
     return Open(lDeviceNameAndPath, O_RDWR);
 }
 
-int TapDevice::GetFd() {
+int TapDevice::GetFd()
+{
     return mFd;
 }

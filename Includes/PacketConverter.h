@@ -41,13 +41,13 @@ public:
      * @return converted packet data, empty string if failed.
      */
     std::string ConvertPacketTo8023(std::string_view aData);
-private:
 
-    void UpdateIndexAfterRadioTap(std::string_view aData);
-    bool mHasRadioTap{false};
-    uint16_t mIndexAfterRadioTap{0};
+private:
+    void        UpdateIndexAfterRadioTap(std::string_view aData);
+    bool        mHasRadioTap{false};
+    uint16_t    mIndexAfterRadioTap{0};
     std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
 };
 
 
-#endif //PACKETCONVERTER_H
+#endif  // PACKETCONVERTER_H
