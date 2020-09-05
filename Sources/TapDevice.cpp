@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include <linux/if_tun.h>
+#include <sys/ioctl.h>
 
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "../Includes/Logger.h"
