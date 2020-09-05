@@ -16,13 +16,14 @@ public:
     /**
      * Constructs a PacketConverter that converts packets from a wireless (radiotap + 802.11) format to an ethernet,
      * (802.3) format.
-     * @param aHasRadioTap
+     * @param aHasRadioTap - Whether packets sent to this function have a radiotap header.
      */
-    PacketConverter(bool aHasRadioTap = false);
+    explicit PacketConverter(bool aHasRadioTap = false);
 
     /**
      * Checks if the provided data is part of a data packet.
      * Only works on packets containing a 802.11 header.
+     * @return true if packet is a data packet.
      */
     bool Is80211Data(std::string_view aData);
 

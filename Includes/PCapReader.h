@@ -36,7 +36,7 @@ public:
      * Replays packets from file to injection device / XLink Kai.
      * Assumes no packets have been read from the opened file yet.
      * Tip: Put into separate thread for better timing accuracy.
-     * @param aSendFunction - What to use to send the packet.
+     * @param aConnection - What to use to send the packet.
      * @param aMonitorCapture - If the file was captured in monitor mode.
      * @param aHasRadioTap - If the file has radiotap headers.
      * @return pair with amount of packets sent and whether it has fully replayed them or not.

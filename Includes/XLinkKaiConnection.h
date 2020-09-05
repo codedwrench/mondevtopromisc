@@ -57,6 +57,7 @@ public:
     /**
      * Creates a connection.
      * @param aIp - IP Address of the XLink Kai engine.
+     * @param aPort - Port of the XLink Kai engine.
      * @return True if successful.
      */
     bool Open(std::string_view aIp = cIp, unsigned int aPort = cPort);
@@ -83,13 +84,13 @@ public:
      * Check if XLink Kai connection has been interrupted.
      * @return True if disconnected.
      */
-    bool IsDisconnected() const;
+    [[nodiscard]] bool IsDisconnected() const;
 
     /**
      * Check if XLink Kai is connecting.
      * @return True if connecting.
      */
-    bool IsConnecting() const;
+    [[nodiscard]] bool IsConnecting() const;
 
     /**
      * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
@@ -113,7 +114,7 @@ private:
     bool                                               mConnectInitiated{false};
     std::chrono::time_point<std::chrono::system_clock> mConnectionTimerStart{std::chrono::seconds{0}};
 
-    std::array<char, cMaxLength>   mData;
+    std::array<char, cMaxLength>   mData{};
     std::string                    mIp{cIp};
     unsigned int                   mPort{cPort};
     boost::asio::io_service        mIoService{};

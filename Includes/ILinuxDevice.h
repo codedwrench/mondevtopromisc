@@ -33,7 +33,7 @@ public:
 
     /**
      * Closes the device
-     * @return - 0 if successful, errno if unsuccessful.
+     * @return 0 if successful, errno if unsuccessful.
      */
     virtual int Close() = 0;
 

@@ -7,7 +7,6 @@
 #include <string>
 
 #include "../Includes/Logger.h"
-#include "../Includes/PCapReader.h"
 
 
 using namespace std::chrono;

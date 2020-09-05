@@ -20,6 +20,8 @@ bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
 
     try {
         mSocket.open(ip::udp::v4());
+        mIp   = aIp;
+        mPort = aPort;
 
     } catch (const boost::system::system_error& lException) {
         Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::ERR);
@@ -80,7 +82,7 @@ bool XLinkKaiConnection::HandleKeepAlive()
     return lReturn;
 }
 
-void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError, size_t aBytesReceived)
+void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError, size_t /*aBytesReceived*/)
 {
     std::string lData{mData.data()};
 
@@ -150,7 +152,7 @@ bool XLinkKaiConnection::StartReceiverThread()
 
                     // Do not turn the computer into a toaster.
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                };
+                }
             });
         }
     } else {
@@ -184,7 +186,7 @@ bool XLinkKaiConnection::Close()
     } catch (...) {
         std::cout << "Failed to disconnect :( " + boost::current_exception_diagnostic_information() << std::endl;
         lReturn = false;
-    };
+    }
 
     return lReturn;
 }

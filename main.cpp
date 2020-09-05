@@ -2,10 +2,8 @@
 
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
-#include <pcap/pcap.h>
 
 #include "Includes/Logger.h"
-#include "Includes/PCapReader.h"
 #include "Includes/WirelessMonitorDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 

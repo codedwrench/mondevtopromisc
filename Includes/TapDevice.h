@@ -26,9 +26,8 @@ protected:
     int Close() override;
 
 private:
-    int IoCtl(int aFd, unsigned long aRequest, char* aArgp) override;
-    int AllocateOldDevice();
-
+    int         IoCtl(int aFd, unsigned long aRequest, char* aArgp) override;
+    int         AllocateOldDevice();
     int         mFd{0};
     std::string mDeviceName{""};
 };
