@@ -121,11 +121,21 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
 
     // General header
     lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
-    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cChannel) +
-                                      sizeof(RadioTap_Constants::cChannelFlags) +
+    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
+                                      sizeof(RadioTap_Constants::cChannel) + sizeof(RadioTap_Constants::cChannelFlags) +
                                       sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags);
 
     memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
+
+    // Optional header (Flags)
+    uint8_t lFlags{RadioTap_Constants::cFlags};
+    memcpy(aPacket + lIndex, &lFlags, sizeof(lFlags));
+    lIndex += sizeof(lFlags);
+
+    // Optional header (Rate Flags)
+    uint8_t lRateFlags{RadioTap_Constants::cRateFlags};
+    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+    lIndex += sizeof(lRateFlags);
 
     // Optional headers (Channel & Channel Flags)
     uint16_t lChannel{RadioTap_Constants::cChannel};
@@ -136,14 +146,9 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
     memcpy(aPacket + lIndex, &lChannelFlags, sizeof(lChannelFlags));
     lIndex += sizeof(lChannelFlags);
 
-    // Optional header (Rate Flags)
-    uint16_t lRateFlags{RadioTap_Constants::cRateFlags};
-    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
-    lIndex += lRateFlags;
-
     // Optional header (TX Flags)
-    uint16_t lTXFlags{RadioTap_Constants::cTXFlags};
-    memcpy(aPacket + lIndex + sizeof(lRateFlags), &lTXFlags, sizeof(lTXFlags));
+    uint32_t lTXFlags{RadioTap_Constants::cTXFlags};
+    memcpy(aPacket + lIndex, &lTXFlags, sizeof(lTXFlags));
 }
 
 // Helper function for ConvertPacketTo80211, adds the ieee80211 header.
@@ -180,9 +185,10 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 {
     std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
-        unsigned int lRadioTapHeaderSize{
-            sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags) + sizeof(RadioTap_Constants::cChannel) +
-            sizeof(RadioTap_Constants::cChannelFlags) + sizeof(RadioTap_Constants::cRateFlags)};
+        unsigned int lRadioTapHeaderSize{sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
+                                         sizeof(RadioTap_Constants::cChannel) +
+                                         sizeof(RadioTap_Constants::cChannelFlags) +
+                                         sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags)};
         unsigned int lIeee80211HeaderSize{sizeof(ieee80211_hdr)};
         unsigned int lLLCHeaderSize{sizeof(uint64_t)};
         unsigned int lDataSize{

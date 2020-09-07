@@ -39,18 +39,20 @@ namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {
-    // Enable: Channel, Rate and TX Flags
-    constexpr uint32_t cSendPresentFlags{0x0000800c};
+    // Enable: Flags, Rate, Channel and TX Flags
+    constexpr uint32_t cSendPresentFlags{0x0000800e};
+
+    // Short preamble
+    constexpr uint8_t cFlags{0x02};
 
     // Channel 1 only for now
-    constexpr uint16_t cChannel{0x6c09};  // 0x096c = 2412hz
-    constexpr uint16_t cChannelFlags{0xa000};
-
+    constexpr uint16_t cChannel{0x096c};  // 0x096c = 2412hz
+    constexpr uint16_t cChannelFlags{0x00a0};
 
     // Using 11mbps for Vita and PSP traffic.
     constexpr uint8_t cRateFlags{0x16};
     // No Ack
-    constexpr uint16_t cTXFlags{0x0008};
+    constexpr uint32_t cTXFlags{0x00000008};
 }  // namespace RadioTap_Constants
 
 // Defined in include/linux/ieee80211.h
