@@ -43,11 +43,19 @@ public:
      */
     std::string ConvertPacketTo8023(std::string_view aData);
 
-private:
-    void        UpdateIndexAfterRadioTap(std::string_view aData);
-    bool        mHasRadioTap{false};
-    uint16_t    mIndexAfterRadioTap{0};
+    /**
+     * This function converts a promiscuous mode packet to a monitor mode packet, adding the radiotap and
+     * 802.11 header and removing the 802.3 header.
+     * @param aData - The packet data to convert.
+     * @param aBSSID - The BSSID to use when constructing the packet.
+     * @return converted packet data, empty string if failed.
+     */
     std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
+
+private:
+    void     UpdateIndexAfterRadioTap(std::string_view aData);
+    bool     mHasRadioTap{false};
+    uint16_t mIndexAfterRadioTap{0};
 };
 
 

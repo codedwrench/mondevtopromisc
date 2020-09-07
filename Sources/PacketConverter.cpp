@@ -118,7 +118,7 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
     lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
     lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags);
 
-    memcpy(&aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
+    memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
 
     // Optional header (TX Flags)
     uint16_t lTXFlags{RadioTap_Constants::cTXFlags};
@@ -157,6 +157,7 @@ void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char
 
 std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID)
 {
+    std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
         unsigned int lRadioTapHeaderSize{sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags)};
         unsigned int lIeee80211HeaderSize{sizeof(ieee80211_hdr)};
@@ -166,6 +167,7 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 
         std::vector<char> lFullPacket;
         lFullPacket.reserve(lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
+        lFullPacket.resize(lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
 
         // RadioTap Header
         InsertRadioTapHeader(aData, &lFullPacket[0]);
@@ -177,8 +179,10 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
 
         // Set EtherType from ethernet frame
-        lLLC += *reinterpret_cast<const uint64_t*>(
+        uint64_t lEtherType = *reinterpret_cast<const uint16_t*>(
             aData.substr(Net_8023_Constants::cEtherTypeIndex, Net_8023_Constants::cEtherTypeLength).data());
+
+        lLLC |= lEtherType << 48LLU;
 
         memcpy(&lFullPacket[0] + lRadioTapHeaderSize + lIeee80211HeaderSize, &lLLC, sizeof(lLLC));
 
@@ -187,11 +191,10 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
                aData.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
                aData.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
 
-
-        return std::string(lFullPacket.begin(), lFullPacket.end());
+        lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     } else {
         Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::WARNING);
     }
 
-    return {};
+    return lReturn;
 }
