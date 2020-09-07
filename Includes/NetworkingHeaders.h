@@ -18,6 +18,7 @@ namespace Net_80211_Constants
     constexpr uint8_t  cDataType{0x08};
     constexpr uint8_t  cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cTypeLength};
     constexpr uint16_t cWlanFCTypeData{0x0080};
+    constexpr uint16_t cDataMaxLength{4096};  // This is only a guideline, could be more than 4096
 
     // 0xAA 0xAA 0x03 is for enabling SNAP
     constexpr uint64_t cSnapLLC{0xaaaa030000000000};
@@ -31,16 +32,16 @@ namespace Net_8023_Constants
     constexpr uint8_t cSourceAddressLength{6};
     constexpr uint8_t cEtherTypeIndex{12};
     constexpr uint8_t cEtherTypeLength{2};
-    constexpr uint8_t cEtherDataIndex{14};
+    constexpr uint8_t cDataIndex{14};
     constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
 }  // namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {
     // Enable: TX Flags
-    uint32_t cSendPresentFlags{0x00800000};
+    constexpr uint32_t cSendPresentFlags{0x00800000};
     // No Ack
-    uint16_t cTXFlags{0x0800};
+    constexpr uint16_t cTXFlags{0x0800};
 }  // namespace RadioTap_Constants
 
 // Defined in include/linux/ieee80211.h

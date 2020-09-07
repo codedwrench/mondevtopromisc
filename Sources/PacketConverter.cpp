@@ -107,49 +107,71 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
     return lConvertedPacket;
 }
 
-// TODO: Definitely rewrite
+// Helper function for ConvertPacketTo80211, adds the radiotap header.
+void InsertRadioTapHeader(std::string_view aData, char* aPacket)
+{
+    // RadioTap Header
+    RadioTapHeader lRadioTapHeader{};
+    memset(&lRadioTapHeader, 0, sizeof(lRadioTapHeader));
+
+    // General header
+    lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
+    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags);
+
+    memcpy(&aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
+
+    // Optional header (TX Flags)
+    uint16_t lTXFlags{RadioTap_Constants::cTXFlags};
+    memcpy(aPacket + sizeof(lRadioTapHeader), &lTXFlags, sizeof(lTXFlags));
+}
+
+// Helper function for ConvertPacketTo80211, adds the ieee80211 header.
+void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char* aPacket, unsigned int aPacketIndex)
+{
+    // Then comes the IEEE80211 header
+    ieee80211_hdr lIeee80211Header{};
+    memset(&lIeee80211Header, 0, sizeof(lIeee80211Header));
+
+    lIeee80211Header.frame_control = Net_80211_Constants::cWlanFCTypeData;
+    lIeee80211Header.duration_id   = 0xffff;  // Just an arbitrarily high number.
+
+    // For Ad-Hoc
+    //  | Address 1   | Address 2   | Address 3   | Address 4 |
+    //  +-------------+-------------+-------------+-----------+
+    //  | Destination | Source      | BSSID       | N/A       |
+
+    memcpy(&lIeee80211Header.addr1[0],
+           aData.substr(Net_8023_Constants::cDestinationAddressIndex, Net_8023_Constants::cDestinationAddressLength)
+               .data(),
+           Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
+
+    memcpy(&lIeee80211Header.addr2[0],
+           aData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength).data(),
+           Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
+
+    uint32_t lBSSID = MacToInt(aBSSID);
+    memcpy(&lIeee80211Header.addr3[0], &lBSSID, sizeof(uint32_t));
+
+    memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
+}
+
 std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID)
 {
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
         unsigned int lRadioTapHeaderSize{sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags)};
         unsigned int lIeee80211HeaderSize{sizeof(ieee80211_hdr)};
+        unsigned int lLLCHeaderSize{sizeof(uint64_t)};
+        unsigned int lDataSize{
+            static_cast<unsigned int>(aData.size() - (Net_8023_Constants::cHeaderLength * sizeof(char)))};
 
-        RadioTapHeader lRadioTapHeader{};
-        memset(&lRadioTapHeader, 0, sizeof(lRadioTapHeader));
+        std::vector<char> lFullPacket;
+        lFullPacket.reserve(lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
 
-        // General header + our optional field.
-        lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
-        lRadioTapHeader.bytes_in_header = lRadioTapHeaderSize;
+        // RadioTap Header
+        InsertRadioTapHeader(aData, &lFullPacket[0]);
 
-        std::array<uint8_t, sizeof(lRadioTapHeader)> lRadioTapHeaderData{};
-        memcpy(lRadioTapHeaderData.data(), &lRadioTapHeader, sizeof(lRadioTapHeader));
-
-        // Then comes the IEEE80211 header
-        ieee80211_hdr lIeee80211Header{};
-        memset(&lIeee80211Header, 0, sizeof(lIeee80211Header));
-
-        lIeee80211Header.frame_control = Net_80211_Constants::cWlanFCTypeData;
-        lIeee80211Header.duration_id   = 0xffff;  // Just an arbitrarily high number.
-
-        // For Ad-Hoc
-        //  | Address 1   | Address 2   | Address 3   | Address 4 |
-        //  +-------------+-------------+-------------+-----------+
-        //  | Destination | Source      | BSSID       | N/A       |
-
-        memcpy(&lIeee80211Header.addr1[0],
-               aData.substr(Net_8023_Constants::cDestinationAddressIndex, Net_8023_Constants::cDestinationAddressLength)
-                   .data(),
-               Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
-
-        memcpy(&lIeee80211Header.addr2[0],
-               aData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength).data(),
-               Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
-
-        uint32_t lBSSID = MacToInt(aBSSID);
-        memcpy(&lIeee80211Header.addr3[0], &lBSSID, sizeof(uint32_t));
-
-        std::array<uint8_t, sizeof(ieee80211_hdr)> lIeee80211HeaderData{};
-        memcpy(lIeee80211HeaderData.data(), &lIeee80211Header, sizeof(lIeee80211HeaderData));
+        // IEEE80211 Header
+        InsertIeee80211Header(aData, aBSSID, &lFullPacket[0], lRadioTapHeaderSize);
 
         // Logical Link Control (LLC) header
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
@@ -158,33 +180,15 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
         lLLC += *reinterpret_cast<const uint64_t*>(
             aData.substr(Net_8023_Constants::cEtherTypeIndex, Net_8023_Constants::cEtherTypeLength).data());
 
-        // Data
-        std::string_view lData =
-            aData.substr(Net_8023_Constants::cEtherDataIndex, aData.size() - Net_8023_Constants::cEtherDataIndex - 1);
+        memcpy(&lFullPacket[0] + lRadioTapHeaderSize + lIeee80211HeaderSize, &lLLC, sizeof(lLLC));
+
+        // Data, without header included
+        memcpy(&lFullPacket[0] + lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize,
+               aData.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
+               aData.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
 
 
-        unsigned int lTotalPacketSize{static_cast<unsigned int>(lRadioTapHeaderSize + lIeee80211HeaderSize +
-                                                                sizeof(Net_80211_Constants::cSnapLLC) + lData.size())};
-
-        std::string lFullPacket{};
-        lFullPacket.reserve(lTotalPacketSize);
-
-        lFullPacket.append(std::string(lRadioTapHeaderData.begin(), lRadioTapHeaderData.end()));
-
-        std::array<uint8_t, sizeof(RadioTap_Constants::cTXFlags)> lTXFlags{};
-        memcpy(&lTXFlags, &RadioTap_Constants::cTXFlags, sizeof(RadioTap_Constants::cTXFlags));
-        lFullPacket.append(std::string(lTXFlags.begin(), lTXFlags.end()));
-
-        lFullPacket.append(lIeee80211HeaderData.begin(), lIeee80211HeaderData.end());
-
-        std::array<uint8_t, sizeof(lLLC)> lLLCData{};
-        memcpy(&lLLCData, &lLLC, sizeof(lLLC));
-
-        lFullPacket.append(lLLCData.begin(), lLLCData.end());
-
-        lFullPacket.append(lData.data());
-
-        return lFullPacket;
+        return std::string(lFullPacket.begin(), lFullPacket.end());
     } else {
         Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::WARNING);
     }
