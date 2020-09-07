@@ -27,16 +27,21 @@ public:
     bool                 Open(const std::string& aName) override;
     bool                 ReadNextPacket() override;
     const unsigned char* GetData() override;
-    const pcap_pkthdr*   GetHeader() override;
-    std::string          DataToFormattedString() override;
-    std::string          DataToString();
-    void                 SetBSSIDFilter(std::string_view aBSSID) override;
-    bool                 Send(std::string_view aData) override;
+
+    const pcap_pkthdr* GetHeader() override;
+
+    std::string DataToFormattedString() override;
+
+    std::string DataToString();
+
+    void SetBSSID(std::string_view aBSSID) override;
+
+    bool Send(std::string_view aData) override;
 
 private:
     PacketConverter      mPacketConverter{true};
     const unsigned char* mData{nullptr};
-    std::string          mBSSIDToFilter;
+    std::string          mBSSID;
     pcap_t*              mHandler{nullptr};
     pcap_pkthdr*         mHeader{nullptr};
     unsigned int         mPacketCount{0};

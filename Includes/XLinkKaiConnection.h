@@ -12,6 +12,8 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include "IPCapDevice.h"
+
 namespace XLinkKai_Constants
 {
     constexpr int                  cMaxLength{4096};
@@ -56,11 +58,14 @@ public:
 
     /**
      * Creates a connection.
+     * @param aPCapDevice - Pointer to a pcap device that will be able to send packets. (optional)
      * @param aIp - IP Address of the XLink Kai engine.
      * @param aPort - Port of the XLink Kai engine.
      * @return True if successful.
      */
-    bool Open(std::string_view aIp = cIp, unsigned int aPort = cPort);
+    bool Open(std::shared_ptr<IPCapDevice> aPCapDevice = nullptr,
+              std::string_view             aIp         = cIp,
+              unsigned int                 aPort       = cPort);
 
     /**
      * Connects to XLink Kai.
@@ -121,6 +126,7 @@ private:
     boost::asio::ip::udp::socket   mSocket{mIoService};
     boost::asio::ip::udp::endpoint mRemote{};
     std::shared_ptr<boost::thread> mReceiverThread{nullptr};
+    std::shared_ptr<IPCapDevice>   mPCapDevice{nullptr};
 };
 
 #endif  // XLINKKAICONNECTION_H

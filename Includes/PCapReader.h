@@ -28,7 +28,7 @@ public:
     std::string DataToFormattedString() override;
 
     // TODO: Implement
-    void SetBSSIDFilter(std::string_view aBSSID) override{};
+    void SetBSSID(std::string_view aBSSID) override{};
 
     bool Send(std::string_view aData) override;
 

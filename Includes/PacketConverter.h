@@ -50,7 +50,7 @@ public:
      * @param aBSSID - The BSSID to use when constructing the packet.
      * @return converted packet data, empty string if failed.
      */
-    std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
+    static std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
 
 private:
     void     UpdateIndexAfterRadioTap(std::string_view aData);

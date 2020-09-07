@@ -86,7 +86,9 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 
     // The header should have it's complete size for the packet to be valid.
     if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
-        lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap - 1);
+        // Strip framecheck sequence as well.
+        lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
+                                 Net_80211_Constants::cFCSLength);
 
         lConvertedPacket.append(aData.substr(Net_80211_Constants::cDestinationAddressIndex + mIndexAfterRadioTap,
                                              Net_80211_Constants::cDestinationAddressLength));
@@ -97,8 +99,9 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
         lConvertedPacket.append(
             aData.substr(Net_80211_Constants::cTypeIndex + mIndexAfterRadioTap, Net_80211_Constants::cTypeLength));
 
-        lConvertedPacket.append(aData.substr(Net_80211_Constants::cDataIndex + mIndexAfterRadioTap,
-                                             aData.size() - Net_80211_Constants::cDataIndex - 1));
+        lConvertedPacket.append(aData.substr(
+            Net_80211_Constants::cDataIndex + mIndexAfterRadioTap,
+            aData.size() - mIndexAfterRadioTap - Net_80211_Constants::cDataIndex - Net_80211_Constants::cFCSLength));
     } else {
         Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::WARNING);
     }
@@ -110,19 +113,37 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 // Helper function for ConvertPacketTo80211, adds the radiotap header.
 void InsertRadioTapHeader(std::string_view aData, char* aPacket)
 {
+    unsigned int lIndex{sizeof(RadioTapHeader)};
+
     // RadioTap Header
     RadioTapHeader lRadioTapHeader{};
     memset(&lRadioTapHeader, 0, sizeof(lRadioTapHeader));
 
     // General header
     lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
-    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags);
+    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cChannel) +
+                                      sizeof(RadioTap_Constants::cChannelFlags) +
+                                      sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags);
 
     memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
 
+    // Optional headers (Channel & Channel Flags)
+    uint16_t lChannel{RadioTap_Constants::cChannel};
+    memcpy(aPacket + lIndex, &lChannel, sizeof(lChannel));
+    lIndex += sizeof(lChannel);
+
+    uint16_t lChannelFlags{RadioTap_Constants::cChannelFlags};
+    memcpy(aPacket + lIndex, &lChannelFlags, sizeof(lChannelFlags));
+    lIndex += sizeof(lChannelFlags);
+
+    // Optional header (Rate Flags)
+    uint16_t lRateFlags{RadioTap_Constants::cRateFlags};
+    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+    lIndex += lRateFlags;
+
     // Optional header (TX Flags)
     uint16_t lTXFlags{RadioTap_Constants::cTXFlags};
-    memcpy(aPacket + sizeof(lRadioTapHeader), &lTXFlags, sizeof(lTXFlags));
+    memcpy(aPacket + lIndex + sizeof(lRateFlags), &lTXFlags, sizeof(lTXFlags));
 }
 
 // Helper function for ConvertPacketTo80211, adds the ieee80211 header.
@@ -159,7 +180,9 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 {
     std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
-        unsigned int lRadioTapHeaderSize{sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags)};
+        unsigned int lRadioTapHeaderSize{
+            sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cTXFlags) + sizeof(RadioTap_Constants::cChannel) +
+            sizeof(RadioTap_Constants::cChannelFlags) + sizeof(RadioTap_Constants::cRateFlags)};
         unsigned int lIeee80211HeaderSize{sizeof(ieee80211_hdr)};
         unsigned int lLLCHeaderSize{sizeof(uint64_t)};
         unsigned int lDataSize{

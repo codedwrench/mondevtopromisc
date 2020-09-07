@@ -9,7 +9,7 @@
 
 namespace
 {
-    constexpr Logger::Level cLogLevel{Logger::TRACE};
+    constexpr Logger::Level cLogLevel{Logger::DEBUG};
     constexpr char          cLogFileName[]{"log.txt"};
     constexpr bool          cLogToDisk{true};
 
@@ -62,13 +62,13 @@ int main(int argc, char** argv)
 
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        WirelessMonitorDevice lCaptureDevice;
-        XLinkKaiConnection    lXLinkKaiConnection;
-        PacketConverter       lPacketConverter{true};
+        std::shared_ptr<WirelessMonitorDevice> lCaptureDevice = std::make_shared<WirelessMonitorDevice>();
+        XLinkKaiConnection                     lXLinkKaiConnection;
+        PacketConverter                        lPacketConverter{true};
 
-        if (lCaptureDevice.Open(lCaptureInterface)) {
-            if (lXLinkKaiConnection.Open()) {
-                lCaptureDevice.SetBSSIDFilter(lBssid);
+        if (lCaptureDevice->Open(lCaptureInterface)) {
+            if (lXLinkKaiConnection.Open(lCaptureDevice)) {
+                lCaptureDevice->SetBSSID(lBssid);
 
                 lXLinkKaiConnection.Connect();
                 lXLinkKaiConnection.StartReceiverThread();
@@ -80,14 +80,14 @@ int main(int argc, char** argv)
                     if (lXLinkKaiConnection.IsDisconnected() && (!lXLinkKaiConnection.IsConnecting())) {
                         // Try reconnecting if connection has failed.
                         lXLinkKaiConnection.Close();
-                        lXLinkKaiConnection.Open();
+                        lXLinkKaiConnection.Open(lCaptureDevice);
                         lXLinkKaiConnection.Connect();
                         lXLinkKaiConnection.StartReceiverThread();
                     }
 
                     // TODO: Needs to be a nicer send function in WirelessMonitorDevice
-                    if (lCaptureDevice.ReadNextPacket()) {
-                        std::string lData = lPacketConverter.ConvertPacketTo8023(lCaptureDevice.DataToString());
+                    if (lCaptureDevice->ReadNextPacket()) {
+                        std::string lData = lPacketConverter.ConvertPacketTo8023(lCaptureDevice->DataToString());
                         if (!lData.empty()) {
                             lData.insert(0, XLinkKai_Constants::cEthernetDataString);
                             lXLinkKaiConnection.Send(lData);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
                 lSignalIoService.stop();
                 lThread.join();
-                lCaptureDevice.Close();
+                lCaptureDevice->Close();
             }
         } else {
             std::cerr << "could not open capture interface" << std::endl;

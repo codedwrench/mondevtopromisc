@@ -52,10 +52,10 @@ public:
     virtual std::string DataToFormattedString() = 0;
 
     /**
-     * Filters data so only traffic from specified BSSID shows up.
+     * Set BSSID to specified BSSID, this is used for sending packets and filtering.
      * @return true on success.
      */
-    virtual void SetBSSIDFilter(std::string_view aBssid) = 0;
+    virtual void SetBSSID(std::string_view aBssid) = 0;
 
     /**
      * Sends data over packet capture device if supported.

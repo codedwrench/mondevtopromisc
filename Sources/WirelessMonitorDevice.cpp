@@ -34,7 +34,9 @@ bool WirelessMonitorDevice::Open(const std::string& aName)
 
 void WirelessMonitorDevice::Close()
 {
-    pcap_close(mHandler);
+    if (mHandler != nullptr) {
+        pcap_close(mHandler);
+    }
     mData   = nullptr;
     mHeader = nullptr;
 }
@@ -43,10 +45,9 @@ bool WirelessMonitorDevice::ReadNextPacket()
 {
     bool lReturn{false};
 
-    if (pcap_next_ex(mHandler, &mHeader, &mData) > 0) {
+    if ((mHandler != nullptr) && pcap_next_ex(mHandler, &mHeader, &mData) > 0) {
         std::string lData = DataToString();
-        if (mPacketConverter.Is80211Data(lData) &&
-            (mBSSIDToFilter.empty() || mPacketConverter.IsForBSSID(lData, mBSSIDToFilter))) {
+        if (mPacketConverter.Is80211Data(lData) && (mBSSID.empty() || mPacketConverter.IsForBSSID(lData, mBSSID))) {
             ++mPacketCount;
             Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
 
@@ -112,13 +113,25 @@ std::string WirelessMonitorDevice::DataToString()
     return lData;
 }
 
-void WirelessMonitorDevice::SetBSSIDFilter(std::string_view aBSSID)
+void WirelessMonitorDevice::SetBSSID(std::string_view aBSSID)
 {
     // Sadly a BPF filter won't work here, so for now just do filtering in userspace :(
-    mBSSIDToFilter = std::string(aBSSID);
+    mBSSID = std::string(aBSSID);
 }
 
 bool WirelessMonitorDevice::Send(std::string_view aData)
 {
-    return true;
+    bool lReturn{false};
+    if (mHandler != nullptr) {
+        std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mBSSID);
+        if (!lData.empty()) {
+            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
+                lReturn = true;
+            } else {
+                Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)), Logger::ERR);
+            }
+        }
+    }
+
+    return lReturn;
 }
