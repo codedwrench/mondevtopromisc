@@ -41,7 +41,7 @@ int TapDevice::CreateDevice()
     // Create device
     ifreq lIfr{0};
 
-    // Clear lIfr with memset to be sure it's actually empty
+    // Clear lIfr with memset to be sure its actually empty
     memset(&lIfr, 0, sizeof(lIfr));
 
     /* Flags: IFF_TUN   - TUN device (no Ethernet headers)

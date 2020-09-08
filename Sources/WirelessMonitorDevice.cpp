@@ -125,6 +125,8 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
     if (mHandler != nullptr) {
         std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mBSSID);
         if (!lData.empty()) {
+            Logger::GetInstance().Log("Sent: " + lData, Logger::TRACE);
+
             if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
                 lReturn = true;
             } else {

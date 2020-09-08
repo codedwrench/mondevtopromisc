@@ -3,58 +3,6 @@
 
 #include <cstdint>
 
-namespace Net_80211_Constants
-{
-    constexpr uint8_t  cDestinationAddressIndex{4};
-    constexpr uint8_t  cDestinationAddressLength{6};
-    constexpr uint8_t  cSourceAddressIndex{10};
-    constexpr uint8_t  cSourceAddressLength{6};
-    constexpr uint8_t  cBSSIDIndex{16};
-    constexpr uint8_t  cBSSIDLength{6};
-    constexpr uint8_t  cTypeIndex{30};
-    constexpr uint8_t  cTypeLength{2};
-    constexpr uint8_t  cDataIndex{32};
-    constexpr uint8_t  cRadioTapLengthIndex{2};
-    constexpr uint8_t  cDataType{0x08};
-    constexpr uint8_t  cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cTypeLength};
-    constexpr uint16_t cWlanFCTypeData{0x0008};
-    constexpr uint16_t cDataMaxLength{4096};  // This is only a guideline, could be more than 4096
-    constexpr uint8_t  cFCSLength{4};
-
-    // 0xAA 0xAA 0x03 is for enabling SNAP
-    constexpr uint64_t cSnapLLC{0x000000000003aaaa};
-}  // namespace Net_80211_Constants
-
-namespace Net_8023_Constants
-{
-    constexpr uint8_t cDestinationAddressIndex{0};
-    constexpr uint8_t cDestinationAddressLength{6};
-    constexpr uint8_t cSourceAddressIndex{6};
-    constexpr uint8_t cSourceAddressLength{6};
-    constexpr uint8_t cEtherTypeIndex{12};
-    constexpr uint8_t cEtherTypeLength{2};
-    constexpr uint8_t cDataIndex{14};
-    constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
-}  // namespace Net_8023_Constants
-
-namespace RadioTap_Constants
-{
-    // Enable: Flags, Rate, Channel and TX Flags
-    constexpr uint32_t cSendPresentFlags{0x0000800e};
-
-    // Short preamble
-    constexpr uint8_t cFlags{0x02};
-
-    // Channel 1 only for now
-    constexpr uint16_t cChannel{0x096c};  // 0x096c = 2412hz
-    constexpr uint16_t cChannelFlags{0x00a0};
-
-    // Using 11mbps for Vita and PSP traffic.
-    constexpr uint8_t cRateFlags{0x16};
-    // No Ack
-    constexpr uint32_t cTXFlags{0x00000008};
-}  // namespace RadioTap_Constants
-
 // Defined in include/linux/ieee80211.h
 struct ieee80211_hdr
 {
@@ -98,5 +46,72 @@ struct RadioTapHeader
     // Timestamp
     uint32_t present_flags;
 } __attribute__((packed));
+
+namespace Net_80211_Constants
+{
+    constexpr uint8_t  cDestinationAddressIndex{4};
+    constexpr uint8_t  cDestinationAddressLength{6};
+    constexpr uint8_t  cSourceAddressIndex{10};
+    constexpr uint8_t  cSourceAddressLength{6};
+    constexpr uint8_t  cBSSIDIndex{16};
+    constexpr uint8_t  cBSSIDLength{6};
+    constexpr uint8_t  cTypeIndex{30};
+    constexpr uint8_t  cTypeLength{2};
+    constexpr uint8_t  cDataIndex{32};
+    constexpr uint8_t  cRadioTapLengthIndex{2};
+    constexpr uint8_t  cDataType{0x08};
+    constexpr uint8_t  cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cTypeLength};
+    constexpr uint16_t cWlanFCTypeData{0x0008};
+    constexpr uint8_t  cFCSLength{4};
+
+    // 0xAA 0xAA 0x03 is for enabling SNAP
+    constexpr uint64_t cSnapLLC{0x000000000003aaaa};
+}  // namespace Net_80211_Constants
+
+namespace Net_8023_Constants
+{
+    constexpr uint8_t cDestinationAddressIndex{0};
+    constexpr uint8_t cDestinationAddressLength{6};
+    constexpr uint8_t cSourceAddressIndex{6};
+    constexpr uint8_t cSourceAddressLength{6};
+    constexpr uint8_t cEtherTypeIndex{12};
+    constexpr uint8_t cEtherTypeLength{2};
+    constexpr uint8_t cDataIndex{14};
+    constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
+}  // namespace Net_8023_Constants
+
+namespace RadioTap_Constants
+{
+    // Note padding for these options is embedded in the different variables, so if adding a variable that's requiring
+    // an alignment, make the variable a step bigger. Also do not forget to add the variable to cRadioTapSize and to
+    // InsertRadioTapHeader in PacketConverter.cpp
+
+    // Enable: Flags, Rate, Channel and TX Flags
+    constexpr uint32_t cSendPresentFlags{0x0000800e};
+
+    // Short preamble
+    constexpr uint8_t cFlags{0x02};
+
+    // Channel 1 (2412hz) only for now
+    // TODO: Deduce from incoming traffic
+    constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz
+    constexpr uint16_t cChannelFlags{0x00a0};  // 2.4Ghz, Turbo on
+
+    // Using 11mbps for Vita and PSP traffic
+    // TODO: Deduce from incoming traffic.
+    constexpr uint8_t cRateFlags{0x16};
+
+    // No Ack
+    constexpr uint32_t cTXFlags{0x00000008};
+
+    // RadioTapHeader length with all the optional options:
+    constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
+                                       sizeof(RadioTap_Constants::cChannel) +
+                                       sizeof(RadioTap_Constants::cChannelFlags) +
+                                       sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags);
+
+
+}  // namespace RadioTap_Constants
+
 
 #endif  // NETWORKINGHEADERS_H

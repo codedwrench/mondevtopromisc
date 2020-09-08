@@ -121,9 +121,7 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
 
     // General header
     lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
-    lRadioTapHeader.bytes_in_header = sizeof(lRadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
-                                      sizeof(RadioTap_Constants::cChannel) + sizeof(RadioTap_Constants::cChannelFlags) +
-                                      sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags);
+    lRadioTapHeader.bytes_in_header = RadioTap_Constants::cRadioTapSize;
 
     memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
 
@@ -185,24 +183,20 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 {
     std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
-        unsigned int lRadioTapHeaderSize{sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
-                                         sizeof(RadioTap_Constants::cChannel) +
-                                         sizeof(RadioTap_Constants::cChannelFlags) +
-                                         sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags)};
         unsigned int lIeee80211HeaderSize{sizeof(ieee80211_hdr)};
         unsigned int lLLCHeaderSize{sizeof(uint64_t)};
         unsigned int lDataSize{
             static_cast<unsigned int>(aData.size() - (Net_8023_Constants::cHeaderLength * sizeof(char)))};
 
         std::vector<char> lFullPacket;
-        lFullPacket.reserve(lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
-        lFullPacket.resize(lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
+        lFullPacket.reserve(RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
+        lFullPacket.resize(RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
 
         // RadioTap Header
         InsertRadioTapHeader(aData, &lFullPacket[0]);
 
         // IEEE80211 Header
-        InsertIeee80211Header(aData, aBSSID, &lFullPacket[0], lRadioTapHeaderSize);
+        InsertIeee80211Header(aData, aBSSID, &lFullPacket[0], RadioTap_Constants::cRadioTapSize);
 
         // Logical Link Control (LLC) header
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
@@ -213,10 +207,10 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 
         lLLC |= lEtherType << 48LLU;
 
-        memcpy(&lFullPacket[0] + lRadioTapHeaderSize + lIeee80211HeaderSize, &lLLC, sizeof(lLLC));
+        memcpy(&lFullPacket[0] + RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize, &lLLC, sizeof(lLLC));
 
         // Data, without header included
-        memcpy(&lFullPacket[0] + lRadioTapHeaderSize + lIeee80211HeaderSize + lLLCHeaderSize,
+        memcpy(&lFullPacket[0] + RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize,
                aData.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
                aData.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
 
