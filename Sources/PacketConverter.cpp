@@ -21,7 +21,7 @@
 
 
 // Skip use of ether_aton because that could hinder Windows support.
-uint64_t MacToInt(std::string_view aMac)
+uint64_t PacketConverter::MacToInt(std::string_view aMac)
 {
     std::istringstream lStringStream(aMac.data());
     uint64_t           lNibble{0};
@@ -35,14 +35,14 @@ uint64_t MacToInt(std::string_view aMac)
     return lResult;
 }
 
-PacketConverter::PacketConverter(bool aHasRadioTap)
+PacketConverter::PacketConverter(bool aRadioTap)
 {
-    mHasRadioTap = aHasRadioTap;
+    mRadioTap = aRadioTap;
 }
 
 void PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
 {
-    if (mHasRadioTap) {
+    if (mRadioTap) {
         mIndexAfterRadioTap =
             *reinterpret_cast<const uint16_t*>(aData.data() + Net_80211_Constants::cRadioTapLengthIndex);
     }
@@ -173,7 +173,7 @@ void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char
            aData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength).data(),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
-    uint32_t lBSSID = MacToInt(aBSSID);
+    uint32_t lBSSID = PacketConverter::MacToInt(aBSSID);
     memcpy(&lIeee80211Header.addr3[0], &lBSSID, sizeof(uint32_t));
 
     memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
@@ -220,4 +220,9 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
     }
 
     return lReturn;
+}
+
+void PacketConverter::SetRadioTap(bool aRadioTap)
+{
+    mRadioTap = aRadioTap;
 }

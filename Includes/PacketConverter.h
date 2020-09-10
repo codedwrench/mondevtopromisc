@@ -16,9 +16,18 @@ public:
     /**
      * Constructs a PacketConverter that converts packets from a wireless (radiotap + 802.11) format to an ethernet,
      * (802.3) format.
-     * @param aHasRadioTap - Whether packets sent to this function have a radiotap header.
+     * @param aRadioTap - Whether packets sent to this function have a radiotap header or should have a radiotap header
+     * added to them.
      */
-    explicit PacketConverter(bool aHasRadioTap = false);
+    explicit PacketConverter(bool aRadioTap = false);
+
+    /**
+     * Converts a mac address string in format (xx:xx:xx:xx:xx:xx) to an int, has no safety build in for invalid
+     * strings!
+     * @param aMac - The mac address string to convert to an int.
+     * @return int with the converted mac address.
+     */
+    static uint64_t MacToInt(std::string_view aMac);
 
     /**
      * Checks if the provided data is part of a data packet.
@@ -52,9 +61,16 @@ public:
      */
     static std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
 
+    /**
+     * Sets whether this converter should convert keeping a radiotap header in mind.
+     * @param aRadioTap - whether the converter should construct packets keeping a radiotap header in mind or add a
+     * radiotap header
+     */
+    void SetRadioTap(bool aRadioTap);
+
 private:
     void     UpdateIndexAfterRadioTap(std::string_view aData);
-    bool     mHasRadioTap{false};
+    bool     mRadioTap{false};
     uint16_t mIndexAfterRadioTap{0};
 };
 

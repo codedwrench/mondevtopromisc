@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BUILD_DOC "Build doxygen" ON)
+option(ENABLE_TESTS "Build unittests" OFF)
+
+include_directories(Sources)
+include_directories(Tests)
 
 # check if Doxygen is installed
 find_package(Doxygen)
@@ -62,3 +66,14 @@ add_executable(mondevtopromisc main.cpp
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES})
+
+if (ENABLE_TESTS)
+    find_package(GTest REQUIRED)
+    include(GoogleTest)
+    enable_testing()
+    add_executable(tests Tests/PacketConverter_Test.cpp
+            Sources/PacketConverter.cpp
+            Sources/Logger.cpp)
+    target_link_libraries(tests gtest gmock gtest_main)
+    gtest_discover_tests(tests)
+endif(ENABLE_TESTS)
