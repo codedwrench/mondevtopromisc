@@ -5,6 +5,7 @@
  * */
 
 #include "../Includes/PacketConverter.h"
+#include "../Includes/PCapReader.h"
 
 #include <gtest/gtest.h>
 
@@ -23,7 +24,8 @@ TEST_F(PacketConverterTest, MacToInt)
 
 TEST_F(PacketConverterTest, MonitorToPromiscuous)
 {
-    EXPECT_EQ(2, 1 + 1);
+    PCapReader lPCapReader{};
+    lPCapReader.Open("../Tests/monitorTest.pcap");
 }
 
 TEST_F(PacketConverterTest, PromiscuousToMonitor)
