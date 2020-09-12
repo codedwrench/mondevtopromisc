@@ -29,6 +29,8 @@ public:
 
     std::string DataToFormattedString() override;
 
+    std::string DataToString() override;
+
     // TODO: Implement
     void SetBSSID(std::string_view aBSSID) override{};
 
@@ -59,7 +61,6 @@ private:
                                                    PacketConverter     aPacketConverter,
                                                    bool                aMonitorCapture);
 
-    std::string          DataToString();
     const unsigned char* mData{nullptr};
     pcap_t*              mHandler{nullptr};
     pcap_pkthdr*         mHeader{nullptr};

@@ -48,6 +48,12 @@ public:
     virtual const pcap_pkthdr* GetHeader() = 0;
 
     /**
+     * Returns data as string.
+     * @return a string containing the data.
+     */
+    virtual std::string DataToString() = 0;
+
+    /**
      * Prints data in a pretty format.
      * @return a string containing the data in the following format (in hex) XX XX XX XX.
      */

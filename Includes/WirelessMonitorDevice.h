@@ -35,10 +35,7 @@ public:
 
     std::string DataToFormattedString() override;
 
-    /**
-     * Converts captured data to a string for further processing.
-     */
-    std::string DataToString();
+    std::string DataToString() override;
 
     void SetBSSID(std::string_view aBSSID) override;
 

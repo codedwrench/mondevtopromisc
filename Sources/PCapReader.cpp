@@ -7,7 +7,6 @@
 #include <string>
 
 #include "../Includes/Logger.h"
-
 using namespace std::chrono;
 
 bool PCapReader::Open(const std::string& aName)
@@ -33,25 +32,31 @@ bool PCapReader::ReadNextPacket()
 {
     bool lReturn = true;
 
-    if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
-        ++mPacketCount;
-        Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
+    if(mHandler != nullptr) {
+        if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
+            ++mPacketCount;
+            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
 
-        // Show the size in bytes of the packet
-        Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::TRACE);
+            // Show the size in bytes of the packet
+            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::TRACE);
 
 
-        // Show a warning if the length captured is different
-        if (mHeader->len != mHeader->caplen) {
+            // Show a warning if the length captured is different
+            if (mHeader->len != mHeader->caplen) {
+                Logger::GetInstance().Log(
+                    "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
+                    Logger::WARNING);
+            }
+
+            // Show Epoch Time
             Logger::GetInstance().Log(
-                "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes", Logger::WARNING);
+                "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
+                Logger::TRACE);
+        } else {
+            lReturn = false;
         }
-
-        // Show Epoch Time
-        Logger::GetInstance().Log(
-            "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
-            Logger::TRACE);
     } else {
+        Logger::GetInstance().Log("Handler not initialized before call", Logger::DEBUG);
         lReturn = false;
     }
 
