@@ -1,5 +1,4 @@
-/* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
- *
+/* Copyright (c) 2020 [Rick de Bondt] - PacketConverter_Test.cpp
  * This file contains tests for the PacketConverter class.
  *
  * */
