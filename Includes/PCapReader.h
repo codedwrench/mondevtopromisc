@@ -11,7 +11,9 @@
 #include "PacketConverter.h"
 #include "XLinkKaiConnection.h"
 
-
+/**
+ * This class contains the necessary components to read a PCap file.
+ * */
 class PCapReader : public IPCapDevice
 {
 public:

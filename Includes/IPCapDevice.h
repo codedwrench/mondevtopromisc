@@ -5,13 +5,15 @@
  *
  * This file contains an interface for pcap devices, either file based or device based.
  *
- * */
+ **/
 
 #include <string>
 
 #include <pcap/pcap.h>
 
-
+/**
+ * Interface for pcap devices, either file based or device based.
+ */
 class IPCapDevice
 {
 public:

@@ -1,25 +1,36 @@
 #ifndef NETWORKINGHEADERS_H
 #define NETWORKINGHEADERS_H
 
+/* Copyright (c) 2020 [Rick de Bondt] - NetworkingHeaders.h
+ *
+ * This file contains networking headers needed to convert packets between the different formats.  
+ **/
+
 #include <cstdint>
 
 // Defined in include/linux/ieee80211.h
+/**
+ * This is the IEEE80211 header.
+ **/
 struct ieee80211_hdr
 {
-    uint16_t /*__le16*/ frame_control;
-    uint16_t /*__le16*/ duration_id;
-    uint8_t             addr1[6];
-    uint8_t             addr2[6];
-    uint8_t             addr3[6];
-    uint16_t /*__le16*/ seq_ctrl;
-    // uint8_t addr4[6];
+    uint16_t /*__le16*/ frame_control; /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
+    uint16_t /*__le16*/ duration_id;   /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
+    uint8_t             addr1[6];      /**< Address 1 based on frame_control. */
+    uint8_t             addr2[6];      /**< Address 2 based on frame_control. */
+    uint8_t             addr3[6];      /**< Address 3 based on frame_control. */
+    uint16_t /*__le16*/ seq_ctrl;      /**< Sequence and fragmentation number. */
+    // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
 } __attribute__((packed));
 
+/**
+ * The Radiotap header needed to construct a WiFi packet.
+ **/
 struct RadioTapHeader
 {
-    uint8_t  radiotap_version;
-    uint8_t  radiotap_version_pad;
-    uint16_t bytes_in_header;
+    uint8_t  radiotap_version;     /**< Version of the RadioTap standard. */
+    uint8_t  radiotap_version_pad; /**< Padding. */
+    uint16_t bytes_in_header;      /**< Amount of bytes in the header. */
 
     // Bitmap with options:
     // TSFT
@@ -44,7 +55,7 @@ struct RadioTapHeader
     // AMPDU_Status
     // VHT
     // Timestamp
-    uint32_t present_flags;
+    uint32_t present_flags; /**< Which parts of the RadioTap header are present. See source code for more info. */
 } __attribute__((packed));
 
 namespace Net_80211_Constants

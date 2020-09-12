@@ -19,6 +19,9 @@ namespace WirelessMonitorDevice_Constants
 
 using namespace WirelessMonitorDevice_Constants;
 
+/**
+ * Class which allows a wireless device in monitor mode to capture data and send wireless frames.
+ */
 class WirelessMonitorDevice : public IPCapDevice
 {
 public:
@@ -32,6 +35,9 @@ public:
 
     std::string DataToFormattedString() override;
 
+    /**
+     * Converts captured data to a string for further processing.
+     */
     std::string DataToString();
 
     void SetBSSID(std::string_view aBSSID) override;

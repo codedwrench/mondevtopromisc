@@ -48,6 +48,9 @@ namespace XLinkKai_Constants
 
 using namespace XLinkKai_Constants;
 
+/**
+ * Class that connects to XLink Kai and sends and receives data from and to XLink Kai.
+ */
 class XLinkKaiConnection
 {
 public:

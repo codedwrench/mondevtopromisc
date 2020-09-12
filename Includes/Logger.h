@@ -20,20 +20,26 @@
 #include <string>
 
 
+/**
+ * Logger class, can log text to file or stdout.
+ */
 class Logger
 {
 public:
     Logger(const Logger& aLogger) = delete;
     Logger& operator=(const Logger& aLogger) = delete;
 
+    /**
+     * Contains loglevels, used to suppress logging based on level.
+     */
     enum Level
     {
-        TRACE = 0,
-        DEBUG,
-        INFO,
-        WARNING,
+        TRACE = 0, /**< Highest level */
+        DEBUG,     /**< Debug level */
+        INFO,      /**< Info level */
+        WARNING,   /**< Warning level */
         // ERROR is already defined in windows
-        ERR
+        ERR        /**< Lowest level */
     };
 
     /**

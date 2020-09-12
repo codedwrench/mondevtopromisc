@@ -3,13 +3,15 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - Logger.h
  *
- * This file converts packets from a monitor format to promiscuous format.
+ * This file converts packets from a monitor format to promiscuous format and vice versa.
  *
  **/
 
 #include <string_view>
 
-
+/**
+ * This class converts packets from a monitor format to promiscuous format and vice versa.
+ */
 class PacketConverter
 {
 public:
