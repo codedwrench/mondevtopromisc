@@ -173,8 +173,12 @@ void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char
            aData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength).data(),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
-    uint32_t lBSSID = PacketConverter::MacToInt(aBSSID);
-    memcpy(&lIeee80211Header.addr3[0], &lBSSID, sizeof(uint32_t));
+    uint64_t lBSSID = PacketConverter::MacToInt(aBSSID);
+
+    // Little- to Big endian
+    lBSSID = bswap_64(lBSSID);
+    lBSSID = lBSSID >> 16u;
+    memcpy(&lIeee80211Header.addr3[0], &lBSSID, Net_80211_Constants::cBSSIDLength * sizeof(uint8_t));
 
     memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
 }
