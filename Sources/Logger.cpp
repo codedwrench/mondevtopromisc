@@ -1,5 +1,7 @@
 #include "../Includes/Logger.h"
 
+/* Copyright (c) 2020 [Rick de Bondt] - Logger.cpp */
+
 #include <chrono>
 #include <ctime>
 #include <iomanip>

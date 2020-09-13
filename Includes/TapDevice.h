@@ -1,9 +1,9 @@
 #ifndef TAPDEVICE_H
 #define TAPDEVICE_H
 
-/* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
+/* Copyright (c) 2020 [Rick de Bondt] - TapDevice.h
  *
- * This file contains an interface for wrappers around a linux device, for example a TUN/TAP interface.
+ * This file contains an interface for wrappers around a tap device.
  *
  * */
 

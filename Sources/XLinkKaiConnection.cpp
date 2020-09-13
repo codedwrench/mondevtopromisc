@@ -1,5 +1,7 @@
 #include "../Includes/XLinkKaiConnection.h"
 
+/* Copyright (c) 2020 [Rick de Bondt] - XLinkKaiConnection.cpp */
+
 #include <cstring>
 #include <iostream>
 #include <utility>

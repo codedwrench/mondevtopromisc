@@ -3,7 +3,8 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - NetworkingHeaders.h
  *
- * This file contains networking headers needed to convert packets between the different formats.  
+ * This file contains networking headers needed to convert packets between the different formats.
+ *
  **/
 
 #include <cstdint>

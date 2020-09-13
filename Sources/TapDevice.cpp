@@ -1,8 +1,10 @@
 #include "../Includes/TapDevice.h"
 
-#include <cstring>
-#include <iostream>
+/* Copyright (c) 2020 [Rick de Bondt] - TapDevice.cpp */
 
+#include <cstring>
+
+#include <iostream>
 #include <linux/if_tun.h>
 #include <sys/ioctl.h>
 

@@ -1,5 +1,7 @@
 #include "../Includes/PacketConverter.h"
 
+/* Copyright (c) 2020 [Rick de Bondt] - PacketConverter.cpp */
+
 #ifdef _MSC_VER
 #include <stdlib.h>
 #define bswap_16(x) _byteswap_ushort(x)

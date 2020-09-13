@@ -1,5 +1,7 @@
 #include "../Includes/WirelessMonitorDevice.h"
 
+/* Copyright (c) 2020 [Rick de Bondt] - WirelessMonitorDevice.cpp */
+
 #include <chrono>
 #include <functional>
 #include <iomanip>
