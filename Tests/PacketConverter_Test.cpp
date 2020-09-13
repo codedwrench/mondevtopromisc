@@ -24,10 +24,12 @@ TEST_F(PacketConverterTest, MacToInt)
 TEST_F(PacketConverterTest, PromiscuousToMonitor)
 {
     PCapReader lPCapReader{};
+    PCapReader lPCapExpectedReader{};
     pcap_t*           lHandler       = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
-    const std::string lOutputFileName = "../Tests/Output/PromisciousToMonitorOutput.pcap";
+    const std::string lOutputFileName = "../Tests/Output/PromiscuousToMonitorOutput.pcap";
     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
-    lPCapReader.Open("../Tests/Input/promisc_hello_world.pcapng");
+    lPCapReader.Open("../Tests/Input/PromiscuousHelloWorld.pcapng");
+    lPCapExpectedReader.Open("../Tests/Input/PromiscuousToMonitorOutput_Expected.pcap");
 
     while(lPCapReader.ReadNextPacket()) {
         std::string lDataToConvert = lPCapReader.DataToString();
@@ -37,8 +39,13 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
         lHeader.caplen = lDataToConvert.size();
         lHeader.len = lDataToConvert.size();
 
+        // Output a file with the results as well so the results can be further inspected
         pcap_dump((u_char*) lDumper, &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
+        // It should never be the case that there is no next packet available, then the expected output doesn't match.
+        ASSERT_TRUE(lPCapExpectedReader.ReadNextPacket());
+
+        ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
     }
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
