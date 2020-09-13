@@ -47,6 +47,10 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
 
         ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
     }
+
+    // No new packets should be available on the expected output.
+    ASSERT_FALSE(lPCapExpectedReader.ReadNextPacket());
+
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
 }
