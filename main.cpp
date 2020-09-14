@@ -67,6 +67,7 @@ int main(int argc, char** argv)
         if (lVariableMap.count("xlink_kai")) {
             std::shared_ptr<XLinkKaiConnection> lXLinkKai = std::make_shared<XLinkKaiConnection>();
             if (lXLinkKai->Open(XLinkKai_Constants::cIp)) {
+                lXLinkKai->SetSendReceiveDevice(lMonitorDevice);
                 if (lXLinkKai->StartReceiverThread()) {
                     lOutputDevice = lXLinkKai;
                 } else {
