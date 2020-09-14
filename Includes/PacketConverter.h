@@ -39,6 +39,13 @@ public:
     bool Is80211Data(std::string_view aData);
 
     /**
+     * Checks if the provided data is part of a quality of service packet.
+     * Only works on packets containing a 802.11 header.
+     * @return true if packet is a quality of service packet.
+     */
+    bool Is80211QOS(std::string_view aData);
+
+    /**
      * Check if provided packet matches BSSID.
      * @param aData - Data to inspect.
      * @param aBSSID - BSSID to compare against.
