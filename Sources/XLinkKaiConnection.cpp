@@ -39,7 +39,7 @@ bool XLinkKaiConnection::Connect()
 {
     bool lReturn{true};
 
-    if (Send(cConnectString)) {
+    if (Send(cConnectString, "")) {
         // Start the timer for receiving a confirmation from XLink Kai.
         mConnectInitiated = true;
         mConnectionTimerStart += (std::chrono::system_clock::now() - mConnectionTimerStart);
@@ -50,19 +50,19 @@ bool XLinkKaiConnection::Connect()
     return lReturn;
 }
 
-bool XLinkKaiConnection::Send(std::string_view aMessage)
+bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
 {
     bool lReturn{true};
 
     // We only allow connection/disconnection requests to be sent, when XLink Kai has not confirmed the connection yet.
     if (mSocket.is_open()) {
-        if ((mConnected || aMessage == cConnectString || aMessage == cDisconnectString)) {
+        if ((mConnected || aCommand == cConnectString || aCommand == cDisconnectString)) {
             try {
-                Logger::GetInstance().Log("Sent: " + std::string(aMessage), Logger::TRACE);
-                mSocket.send_to(buffer(std::string(aMessage)), mRemote);
+                Logger::GetInstance().Log("Sent: " + std::string(aData), Logger::TRACE);
+                mSocket.send_to(buffer(std::string(aCommand) + aData.data()), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log(
-                    "Could not send message! " + std::string(aMessage) + std::string(lException.what()), Logger::ERR);
+                    "Could not send message! " + std::string(aData) + std::string(lException.what()), Logger::ERR);
                 lReturn = false;
             }
         } else {
@@ -76,13 +76,31 @@ bool XLinkKaiConnection::Send(std::string_view aMessage)
     return lReturn;
 }
 
+bool XLinkKaiConnection::Send(std::string_view aData)
+{
+    return Send(cEthernetDataString, aData);
+}
+
 bool XLinkKaiConnection::HandleKeepAlive()
 {
     bool lReturn{true};
-    if (!Send(cKeepAliveString)) {
+    if (!Send(cKeepAliveString, "")) {
         // Logging in send function.
         lReturn = false;
     }
+    return lReturn;
+}
+
+bool XLinkKaiConnection::ReadNextData()
+{
+    bool lReturn{true};
+
+    size_t lBytesReceived{mSocket.receive_from(buffer(mData, cMaxLength), mRemote)};
+
+    if (lBytesReceived > 0) {
+        ReceiveCallback(boost::system::error_code(), lBytesReceived);
+    }
+
     return lReturn;
 }
 
@@ -119,6 +137,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                         // Strip e;e;
                         lData =
                             lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
+                        mEthernetData = lData;
                         mPCapDevice->Send(lData);
                     }
                 }
@@ -172,13 +191,11 @@ bool XLinkKaiConnection::StartReceiverThread()
     return lReturn;
 }
 
-bool XLinkKaiConnection::Close()
+void XLinkKaiConnection::Close()
 {
-    bool lReturn{true};
-
     try {
         if (mConnected || mConnectInitiated) {
-            Send(cDisconnectString);
+            Send(cDisconnectString, "");
         }
 
         if (mReceiverThread != nullptr) {
@@ -194,10 +211,7 @@ bool XLinkKaiConnection::Close()
         }
     } catch (...) {
         std::cout << "Failed to disconnect :( " + boost::current_exception_diagnostic_information() << std::endl;
-        lReturn = false;
     }
-
-    return lReturn;
 }
 
 bool XLinkKaiConnection::IsDisconnected() const
@@ -208,4 +222,14 @@ bool XLinkKaiConnection::IsDisconnected() const
 bool XLinkKaiConnection::IsConnecting() const
 {
     return (!mConnected && !mConnectInitiated);
+}
+
+std::string XLinkKaiConnection::DataToString()
+{
+    std::string lData{mEthernetData};
+
+    // After receiving data clear string so you can't get data twice.
+    mEthernetData.clear();
+
+    return lData;
 }

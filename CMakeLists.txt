@@ -54,8 +54,8 @@ add_executable(mondevtopromisc main.cpp
         Sources/PCapReader.cpp
         Sources/WirelessMonitorDevice.cpp
         Sources/XLinkKaiConnection.cpp
-        Includes/ILinuxDevice.h
         Includes/IPCapDevice.h
+        Includes/ISendReceiveDevice.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h
         Includes/PacketConverter.h

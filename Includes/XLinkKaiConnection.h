@@ -51,7 +51,7 @@ using namespace XLinkKai_Constants;
 /**
  * Class that connects to XLink Kai and sends and receives data from and to XLink Kai.
  */
-class XLinkKaiConnection
+class XLinkKaiConnection : public ISendReceiveDevice
 {
 public:
     XLinkKaiConnection() = default;
@@ -77,16 +77,28 @@ public:
     bool Connect();
 
     /**
-     * Starts receiving network messages from Xlink Kai.
+     * Synchronous receive of network messages from XLink Kai, may hang if nothing received!.
+     * @return True if successful.
+     */
+    bool ReadNextData() override;
+
+    std::string DataToString() override;
+
+    /**
+     * Starts receiving network messages from XLink Kai.
      * @return True if successful.
      */
     bool StartReceiverThread();
 
     /**
      * Sends a message to Xlink Kai.
+     * @param aCommand - Command that should be added to the XLink Kai message (for example connect).
+     * @param aData - Data to be sent to XLink Kai.
      * @return True if successful.
      */
-    bool Send(std::string_view aMessage);
+    bool Send(std::string_view aCommand, std::string_view aData);
+
+    bool Send(std::string_view aData) override;
 
     /**
      * Check if XLink Kai connection has been interrupted.
@@ -104,7 +116,7 @@ public:
      * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
      * @return True if successful.
      */
-    bool Close();
+    void Close() final;
 
 private:
     /**
@@ -122,7 +134,9 @@ private:
     bool                                               mConnectInitiated{false};
     std::chrono::time_point<std::chrono::system_clock> mConnectionTimerStart{std::chrono::seconds{0}};
 
-    std::array<char, cMaxLength>   mData{};
+    std::array<char, cMaxLength> mData{};
+    // Raw ethernet data received from XLink Kai
+    std::string                    mEthernetData{};
     std::string                    mIp{cIp};
     unsigned int                   mPort{cPort};
     boost::asio::io_service        mIoService{};

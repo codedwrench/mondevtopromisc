@@ -21,7 +21,7 @@ public:
 
     bool Open(const std::string& aName) override;
 
-    bool ReadNextPacket() override;
+    bool ReadNextData() override;
 
     const unsigned char* GetData() override;
 
@@ -45,7 +45,7 @@ public:
      * @param aHasRadioTap - If the file has radiotap headers.
      * @return pair with amount of packets sent and whether it has fully replayed them or not.
      */
-    std::pair<bool, unsigned int> ReplayPackets(XLinkKaiConnection& aConnection,
+    std::pair<bool, unsigned int> ReplayPackets(ISendReceiveDevice& aConnection,
                                                 bool                aMonitorCapture = false,
                                                 bool                aHasRadioTap    = false);
 
@@ -57,7 +57,7 @@ private:
      * @param aMonitorCapture - Whether the capture was made in monitor mode.
      * @return a pair containing, succesfully sent (or ignored) and whether the packet was useful enough to be sent.
      */
-    std::pair<bool, bool> ConstructAndReplayPacket(XLinkKaiConnection& aConnection,
+    std::pair<bool, bool> ConstructAndReplayPacket(ISendReceiveDevice& aConnection,
                                                    PacketConverter     aPacketConverter,
                                                    bool                aMonitorCapture);
 

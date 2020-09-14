@@ -32,7 +32,7 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
     lPCapReader.Open("../Tests/Input/PromiscuousHelloWorld.pcapng");
     lPCapExpectedReader.Open("../Tests/Input/PromiscuousToMonitorOutput_Expected.pcap");
 
-    while (lPCapReader.ReadNextPacket()) {
+    while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.DataToString();
         lDataToConvert             = mPacketConverter.ConvertPacketTo80211(lDataToConvert, "01:23:45:67:AB:CD");
 
@@ -45,13 +45,13 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
         pcap_dump((u_char*) lDumper, &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
         // It should never be the case that there is no next packet available, then the expected output doesn't match.
-        ASSERT_TRUE(lPCapExpectedReader.ReadNextPacket());
+        ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
         ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
     }
 
     // No new packets should be available on the expected output.
-    ASSERT_FALSE(lPCapExpectedReader.ReadNextPacket());
+    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
@@ -70,7 +70,7 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
     lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng");
     lPCapExpectedReader.Open("../Tests/Input/MonitorToPromiscuousOutput_Expected.pcap");
 
-    while (lPCapReader.ReadNextPacket()) {
+    while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.DataToString();
         if (mPacketConverter.Is80211Data(lDataToConvert) &&
             mPacketConverter.IsForBSSID(lDataToConvert, "62:58:c5:07:95:5e")) {
@@ -84,15 +84,16 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
             // Output a file with the results as well so the results can be further inspected
             pcap_dump((u_char*) lDumper, &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
-            // It should never be the case that there is no next packet available, then the expected output doesn't match.
-            ASSERT_TRUE(lPCapExpectedReader.ReadNextPacket());
+            // It should never be the case that there is no next packet available, then the expected output doesn't
+            // match.
+            ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
             ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
         }
     }
 
     // No new packets should be available on the expected output.
-    ASSERT_FALSE(lPCapExpectedReader.ReadNextPacket());
+    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);

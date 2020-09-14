@@ -1,7 +1,7 @@
 #ifndef IPCAPDEVCE_H
 #define IPCAPDEVCE_H
 
-/* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
+/* Copyright (c) 2020 [Rick de Bondt] - IPCapDevice.h
  *
  * This file contains an interface for pcap devices, either file based or device based.
  *
@@ -11,29 +11,24 @@
 
 #include <pcap/pcap.h>
 
+#include "ISendReceiveDevice.h"
+
 /**
  * Interface for pcap devices, either file based or device based.
  */
-class IPCapDevice
+class IPCapDevice : public ISendReceiveDevice
 {
 public:
-    /**
-     * Closes a pcap device/file.
-     */
-    virtual void Close() = 0;
+    void Close() override = 0;
 
     /**
      * Opens the device/file.
      * @param aName - the name of the device to capture or the path of the file to open.
      * @return true on success.
      */
-    virtual bool Open(const std::string& aName) = 0;
+    bool Open(const std::string& aName) override = 0;
 
-    /**
-     * Reads the next packet from the device or file.
-     * @return true on success.
-     */
-    virtual bool ReadNextPacket() = 0;
+    bool ReadNextData() override = 0;
 
     /**
      * Gets data from last read packet.
@@ -47,11 +42,7 @@ public:
      */
     virtual const pcap_pkthdr* GetHeader() = 0;
 
-    /**
-     * Returns data as string.
-     * @return a string containing the data.
-     */
-    virtual std::string DataToString() = 0;
+    std::string DataToString() override = 0;
 
     /**
      * Prints data in a pretty format.
@@ -65,12 +56,7 @@ public:
      */
     virtual void SetBSSID(std::string_view aBssid) = 0;
 
-    /**
-     * Sends data over packet capture device if supported.
-     * @param aData - Data to send.
-     * @return true if successful, false on failure or unsupported.
-     */
-    virtual bool Send(std::string_view aData) = 0;
+    bool Send(std::string_view aData) override = 0;
 };
 
 

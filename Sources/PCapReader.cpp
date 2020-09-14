@@ -30,11 +30,11 @@ void PCapReader::Close()
     mHeader = nullptr;
 }
 
-bool PCapReader::ReadNextPacket()
+bool PCapReader::ReadNextData()
 {
     bool lReturn = true;
 
-    if(mHandler != nullptr) {
+    if (mHandler != nullptr) {
         if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
             ++mPacketCount;
             Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
@@ -104,7 +104,7 @@ std::string PCapReader::DataToString()
     return lData;
 }
 
-std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& aConnection,
+std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(ISendReceiveDevice& aConnection,
                                                            PacketConverter     aPacketConverter,
                                                            bool                aMonitorCapture)
 {
@@ -125,7 +125,6 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& a
     }
 
     if (lSuccesfulPacket && lUsefulPacket) {
-        lData.insert(0, XLinkKai_Constants::cEthernetDataString);
         if (!aConnection.Send(lData)) {
             lSuccesfulPacket = false;
         }
@@ -136,7 +135,7 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(XLinkKaiConnection& a
 
 
 // TODO: Needs to be some interface with send function for all interfaces
-std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aConnection,
+std::pair<bool, unsigned int> PCapReader::ReplayPackets(ISendReceiveDevice& aConnection,
                                                         bool                aMonitorCapture,
                                                         bool                aHasRadioTap)
 {
@@ -145,7 +144,7 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aCon
     unsigned int lPacketsSent{0};
 
     // Read the first packet
-    if (ReadNextPacket()) {
+    if (ReadNextData()) {
         PacketConverter lPacketConverter{aHasRadioTap};
         microseconds    lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 
@@ -156,7 +155,7 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(XLinkKaiConnection& aCon
             lPacketsSent++;
         }
 
-        while (ReadNextPacket()) {
+        while (ReadNextData()) {
             // Get time offset.
             microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
             lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);

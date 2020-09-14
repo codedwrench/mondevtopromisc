@@ -43,7 +43,7 @@ void WirelessMonitorDevice::Close()
     mHeader = nullptr;
 }
 
-bool WirelessMonitorDevice::ReadNextPacket()
+bool WirelessMonitorDevice::ReadNextData()
 {
     bool lReturn{false};
 

@@ -28,7 +28,7 @@ public:
     // TODO: If too many copied functions, create base class.
     void                 Close() override;
     bool                 Open(const std::string& aName) override;
-    bool                 ReadNextPacket() override;
+    bool                 ReadNextData() override;
     const unsigned char* GetData() override;
 
     const pcap_pkthdr* GetHeader() override;
