@@ -19,7 +19,7 @@ class PCapReader : public IPCapDevice
 public:
     void Close() override;
 
-    bool Open(const std::string& aName) override;
+    bool Open(std::string_view aName) override;
 
     bool ReadNextData() override;
 
@@ -49,6 +49,8 @@ public:
                                                 bool                aMonitorCapture = false,
                                                 bool                aHasRadioTap    = false);
 
+    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+
 private:
     /**
      * Constructs and replays a packet to given interface.
@@ -61,10 +63,11 @@ private:
                                                    PacketConverter     aPacketConverter,
                                                    bool                aMonitorCapture);
 
-    const unsigned char* mData{nullptr};
-    pcap_t*              mHandler{nullptr};
-    pcap_pkthdr*         mHeader{nullptr};
-    unsigned int         mPacketCount{0};
+    const unsigned char*                mData{nullptr};
+    pcap_t*                             mHandler{nullptr};
+    pcap_pkthdr*                        mHeader{nullptr};
+    unsigned int                        mPacketCount{0};
+    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
 };
 
 

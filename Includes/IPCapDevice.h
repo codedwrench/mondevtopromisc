@@ -26,7 +26,7 @@ public:
      * @param aName - the name of the device to capture or the path of the file to open.
      * @return true on success.
      */
-    bool Open(const std::string& aName) override = 0;
+    bool Open(std::string_view aName) override = 0;
 
     bool ReadNextData() override = 0;
 

@@ -11,11 +11,11 @@
 #include "../Includes/Logger.h"
 using namespace std::chrono;
 
-bool PCapReader::Open(const std::string& aName)
+bool PCapReader::Open(std::string_view aName)
 {
     bool lReturn{true};
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
-    mHandler = pcap_open_offline(aName.c_str(), lErrorBuffer);
+    mHandler = pcap_open_offline(aName.data(), lErrorBuffer);
     if (mHandler == nullptr) {
         lReturn = false;
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::ERR);
@@ -179,4 +179,9 @@ bool PCapReader::Send(std::string_view aData)
 {
     // Maybe make it possible to inject a packet into the capture file here, but not sure if that's beneficial.
     return false;
+}
+
+void PCapReader::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+{
+    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
 }

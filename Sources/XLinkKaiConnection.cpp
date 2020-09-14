@@ -15,7 +15,12 @@ XLinkKaiConnection::~XLinkKaiConnection()
     Close();
 }
 
-bool XLinkKaiConnection::Open(std::shared_ptr<IPCapDevice> aPCapDevice, std::string_view aIp, unsigned int aPort)
+bool XLinkKaiConnection::Open(std::string_view aIp)
+{
+    return Open(aIp, cPort);
+}
+
+bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
 {
     bool lReturn{true};
 
@@ -23,10 +28,8 @@ bool XLinkKaiConnection::Open(std::shared_ptr<IPCapDevice> aPCapDevice, std::str
 
     try {
         mSocket.open(ip::udp::v4());
-        mIp         = aIp;
-        mPort       = aPort;
-        mPCapDevice = std::move(aPCapDevice);
-
+        mIp   = aIp;
+        mPort = aPort;
     } catch (const boost::system::system_error& lException) {
         Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::ERR);
         lReturn = false;
@@ -133,12 +136,12 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                 // is e;e;
                 lCommand = lData.substr(0, cEthernetDataString.size());
                 if (lCommand == cEthernetDataString) {
-                    if (mPCapDevice != nullptr) {
+                    if (mSendReceiveDevice != nullptr) {
                         // Strip e;e;
                         lData =
                             lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
                         mEthernetData = lData;
-                        mPCapDevice->Send(lData);
+                        mSendReceiveDevice->Send(lData);
                     }
                 }
             } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
@@ -232,4 +235,14 @@ std::string XLinkKaiConnection::DataToString()
     mEthernetData.clear();
 
     return lData;
+}
+
+void XLinkKaiConnection::SetPort(unsigned int aPort)
+{
+    mPort = aPort;
+}
+
+void XLinkKaiConnection::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+{
+    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
 }

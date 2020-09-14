@@ -59,16 +59,15 @@ public:
     XLinkKaiConnection(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
     XLinkKaiConnection& operator=(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
 
+    bool Open(std::string_view aIp) override;
+
     /**
      * Creates a connection.
-     * @param aPCapDevice - Pointer to a pcap device that will be able to send packets. (optional)
      * @param aIp - IP Address of the XLink Kai engine.
      * @param aPort - Port of the XLink Kai engine.
      * @return True if successful.
      */
-    bool Open(std::shared_ptr<IPCapDevice> aPCapDevice = nullptr,
-              std::string_view             aIp         = cIp,
-              unsigned int                 aPort       = cPort);
+    bool Open(std::string_view aIp, unsigned int aPort);
 
     /**
      * Connects to XLink Kai.
@@ -118,6 +117,14 @@ public:
      */
     void Close() final;
 
+    /**
+     * Sets port to XLink Kai interface.
+     * @param aPort - Port to connect to.
+     */
+    void SetPort(unsigned int aPort);
+
+    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+
 private:
     /**
      * Handles traffic from XLink Kai.
@@ -136,14 +143,14 @@ private:
 
     std::array<char, cMaxLength> mData{};
     // Raw ethernet data received from XLink Kai
-    std::string                    mEthernetData{};
-    std::string                    mIp{cIp};
-    unsigned int                   mPort{cPort};
-    boost::asio::io_service        mIoService{};
-    boost::asio::ip::udp::socket   mSocket{mIoService};
-    boost::asio::ip::udp::endpoint mRemote{};
-    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
-    std::shared_ptr<IPCapDevice>   mPCapDevice{nullptr};
+    std::string                         mEthernetData{};
+    std::string                         mIp{cIp};
+    unsigned int                        mPort{cPort};
+    boost::asio::io_service             mIoService{};
+    boost::asio::ip::udp::socket        mSocket{mIoService};
+    boost::asio::ip::udp::endpoint      mRemote{};
+    std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
+    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
 };
 
 #endif  // XLINKKAICONNECTION_H

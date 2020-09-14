@@ -7,6 +7,8 @@
  *
  * */
 
+#include <memory>
+
 #include "IPCapDevice.h"
 #include "PacketConverter.h"
 
@@ -27,7 +29,7 @@ class WirelessMonitorDevice : public IPCapDevice
 public:
     // TODO: If too many copied functions, create base class.
     void                 Close() override;
-    bool                 Open(const std::string& aName) override;
+    bool                 Open(std::string_view aName) override;
     bool                 ReadNextData() override;
     const unsigned char* GetData() override;
 
@@ -41,13 +43,16 @@ public:
 
     bool Send(std::string_view aData) override;
 
+    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+
 private:
-    PacketConverter      mPacketConverter{true};
-    const unsigned char* mData{nullptr};
-    std::string          mBSSID;
-    pcap_t*              mHandler{nullptr};
-    pcap_pkthdr*         mHeader{nullptr};
-    unsigned int         mPacketCount{0};
+    PacketConverter                     mPacketConverter{true};
+    const unsigned char*                mData{nullptr};
+    std::string                         mBSSID;
+    pcap_t*                             mHandler{nullptr};
+    pcap_pkthdr*                        mHeader{nullptr};
+    unsigned int                        mPacketCount{0};
+    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
 };
 
 

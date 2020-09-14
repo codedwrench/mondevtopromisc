@@ -13,12 +13,12 @@
 
 using namespace std::chrono;
 
-bool WirelessMonitorDevice::Open(const std::string& aName)
+bool WirelessMonitorDevice::Open(std::string_view aName)
 {
     bool lReturn{true};
     char lErrorBuffer[PCAP_ERRBUF_SIZE];
 
-    mHandler = pcap_create(aName.c_str(), lErrorBuffer);
+    mHandler = pcap_create(aName.data(), lErrorBuffer);
     pcap_set_rfmon(mHandler, 1);
     pcap_set_snaplen(mHandler, cSnapshotLength);
     pcap_set_promisc(mHandler, 1);
@@ -138,4 +138,9 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
     }
 
     return lReturn;
+}
+
+void WirelessMonitorDevice::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+{
+    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
 }

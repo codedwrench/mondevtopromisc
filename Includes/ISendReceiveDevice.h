@@ -31,7 +31,7 @@ public:
      * @param aName - the name of the device to capture or the path of the file to open.
      * @return true on success.
      */
-    virtual bool Open(const std::string& aName) = 0;
+    virtual bool Open(std::string_view aName) = 0;
 
     /**
      * Reads the next data from the device or file.
@@ -45,6 +45,12 @@ public:
      * @return true if successful, false on failure or unsupported.
      */
     virtual bool Send(std::string_view aData) = 0;
+
+    /**
+     * Allows sending or receiving over different device.
+     * @param aDevice - Device to use.
+     */
+    virtual void SetSendReceiveDevice(ISendReceiveDevice& aDevice) = 0;
 };
 
 
