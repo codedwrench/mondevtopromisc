@@ -173,7 +173,7 @@ bool WirelessMonitorDevice::StartReceiverThread()
                             mSendReceiveDevice->Send(lConvertedData);
                         }
                     }
-                    std::this_thread::sleep_for(milliseconds(1));
+                    std::this_thread::sleep_for(microseconds(100));
                 }
             });
         }
