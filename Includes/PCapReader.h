@@ -46,7 +46,7 @@ public:
      */
     std::pair<bool, unsigned int> ReplayPackets(bool aMonitorCapture = false, bool aHasRadioTap = false);
 
-    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+    void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
 
 private:
     /**

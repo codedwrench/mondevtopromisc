@@ -99,22 +99,6 @@ public:
 
     bool Send(std::string_view aData) override;
 
-    /**
-     * Check if XLink Kai connection has been interrupted.
-     * @return True if disconnected.
-     */
-    [[nodiscard]] bool IsDisconnected() const;
-
-    /**
-     * Check if XLink Kai is connecting.
-     * @return True if connecting.
-     */
-    [[nodiscard]] bool IsConnecting() const;
-
-    /**
-     * Closes the connection, this function should not throw exceptions! As it is used in a destructor.
-     * @return True if successful.
-     */
     void Close() final;
 
     /**
@@ -123,7 +107,7 @@ public:
      */
     void SetPort(unsigned int aPort);
 
-    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+    void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
 
 private:
     /**

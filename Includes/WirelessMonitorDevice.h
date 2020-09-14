@@ -9,6 +9,8 @@
 
 #include <memory>
 
+#include <boost/thread.hpp>
+
 #include "IPCapDevice.h"
 #include "PacketConverter.h"
 
@@ -43,9 +45,17 @@ public:
 
     bool Send(std::string_view aData) override;
 
-    void SetSendReceiveDevice(ISendReceiveDevice& aDevice) override;
+    void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
+
+    // TODO: Put in ISendReceiveDevice, all types of devices can use this.
+    /**
+     * Starts receiving network messages from monitor device.
+     * @return True if successful.
+     */
+    bool StartReceiverThread();
 
 private:
+    bool                                mConnected{false};
     PacketConverter                     mPacketConverter{true};
     const unsigned char*                mData{nullptr};
     std::string                         mBSSID;
@@ -53,6 +63,7 @@ private:
     pcap_pkthdr*                        mHeader{nullptr};
     unsigned int                        mPacketCount{0};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
+    std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
 };
 
 

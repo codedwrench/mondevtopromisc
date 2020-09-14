@@ -138,8 +138,8 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
     bool         lSuccesfulPacket{false};
     unsigned int lPacketsSent{0};
 
-    if(mSendReceiveDevice != nullptr) {
-        bool         lUsefulPacket{true};
+    if (mSendReceiveDevice != nullptr) {
+        bool lUsefulPacket{true};
         // Read the first packet
         if (ReadNextData()) {
             PacketConverter lPacketConverter{aHasRadioTap};
@@ -181,7 +181,7 @@ bool PCapReader::Send(std::string_view aData)
     return false;
 }
 
-void PCapReader::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+void PCapReader::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
 {
-    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
+    mSendReceiveDevice = aDevice;
 }

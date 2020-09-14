@@ -61,8 +61,8 @@ bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
     if (mSocket.is_open()) {
         if ((mConnected || aCommand == cConnectString || aCommand == cDisconnectString)) {
             try {
-                Logger::GetInstance().Log("Sent: " + std::string(aData), Logger::TRACE);
-                mSocket.send_to(buffer(std::string(aCommand) + aData.data()), mRemote);
+                Logger::GetInstance().Log("Sent: " + std::string(aCommand) + std::string(aData), Logger::TRACE);
+                mSocket.send_to(buffer(std::string(aCommand) + std::string(aData)), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log(
                     "Could not send message! " + std::string(aData) + std::string(lException.what()), Logger::ERR);
@@ -149,7 +149,6 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                 if (lCommand == cDisconnectedString) {
                     Logger::GetInstance().Log("Xlink Kai has disconnected us! " + lCommand, Logger::ERR);
                     mConnected = false;
-                    mIoService.stop();
                 }
             }
         }
@@ -172,17 +171,20 @@ bool XLinkKaiConnection::StartReceiverThread()
             mReceiverThread = std::make_shared<boost::thread>([&] {
                 mIoService.restart();
                 while (!mIoService.stopped()) {
-                    if ((!mConnected) && mConnectInitiated &&
-                        (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
+                    if ((!mConnected && !mConnectInitiated)) {
+                        // Lost connection somewhere, reconnect.
+                        Connect();
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                    } else if ((!mConnected) && mConnectInitiated &&
+                               (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
                         Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERR);
                         mIoService.stop();
                         mConnectInitiated = false;
                         mConnected        = false;
+                    } else {
+                        mIoService.poll();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     }
-                    mIoService.poll();
-
-                    // Do not turn the computer into a toaster.
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
             });
         }
@@ -199,6 +201,8 @@ void XLinkKaiConnection::Close()
     try {
         if (mConnected || mConnectInitiated) {
             Send(cDisconnectString, "");
+            mConnected = false;
+            mConnectInitiated = false;
         }
 
         if (mReceiverThread != nullptr) {
@@ -217,16 +221,6 @@ void XLinkKaiConnection::Close()
     }
 }
 
-bool XLinkKaiConnection::IsDisconnected() const
-{
-    return (!mConnected);
-}
-
-bool XLinkKaiConnection::IsConnecting() const
-{
-    return (!mConnected && !mConnectInitiated);
-}
-
 std::string XLinkKaiConnection::DataToString()
 {
     std::string lData{mEthernetData};
@@ -242,7 +236,7 @@ void XLinkKaiConnection::SetPort(unsigned int aPort)
     mPort = aPort;
 }
 
-void XLinkKaiConnection::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+void XLinkKaiConnection::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
 {
-    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
+    mSendReceiveDevice = aDevice;
 }

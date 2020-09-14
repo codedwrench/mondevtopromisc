@@ -41,7 +41,6 @@ int main(int argc, char** argv)
             ("bssid,b", po::value<std::string>(&lBssid)->required(), "The BSSID to listen to.")
             ("capture_interface,c", po::value<std::string>(&lCaptureInterface)->required(),
              "The interface that will be in monitor mode listening to packets.")
-            ("tap_device,t", "Enable TAP device")
             ("injection_interface,i", po::value<std::string>(&lInjectionInterface),
              "If your interface does not support packet injection, another interface can be used")
             ("xlink_kai,x", "Enables the XLink Kai interface, so packets will be sent there directly");
@@ -62,48 +61,46 @@ int main(int argc, char** argv)
 
 
         Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        std::shared_ptr<WirelessMonitorDevice> lCaptureDevice = std::make_shared<WirelessMonitorDevice>();
-        XLinkKaiConnection                     lXLinkKaiConnection;
-        PacketConverter                        lPacketConverter{true};
+        std::shared_ptr<WirelessMonitorDevice> lMonitorDevice = std::make_shared<WirelessMonitorDevice>();
+        std::shared_ptr<ISendReceiveDevice>    lOutputDevice  = nullptr;
 
-        if (lCaptureDevice->Open(lCaptureInterface)) {
-            if (lXLinkKaiConnection.Open(lCaptureDevice)) {
-                lCaptureDevice->SetBSSID(lBssid);
+        if (lVariableMap.count("xlink_kai")) {
+            std::shared_ptr<XLinkKaiConnection> lXLinkKai = std::make_shared<XLinkKaiConnection>();
+            if (lXLinkKai->Open(XLinkKai_Constants::cIp)) {
+                if (lXLinkKai->StartReceiverThread()) {
+                    lOutputDevice = lXLinkKai;
+                } else {
+                    lOutputDevice->Close();
+                }
+            } else {
+                Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::ERR);
+            }
+        }
 
-                lXLinkKaiConnection.Connect();
-                lXLinkKaiConnection.StartReceiverThread();
+        if (lOutputDevice != nullptr) {
+            if (lMonitorDevice->Open(lCaptureInterface)) {
+                lMonitorDevice->SetBSSID(lBssid);
+                lMonitorDevice->SetSendReceiveDevice(lOutputDevice);
+                if (lMonitorDevice->StartReceiverThread()) {
+                    std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
 
-                std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
-
-                // Wait 60 seconds, this is just for testing.
-                while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
-                    if (lXLinkKaiConnection.IsDisconnected() && (!lXLinkKaiConnection.IsConnecting())) {
-                        // Try reconnecting if connection has failed.
-                        lXLinkKaiConnection.Close();
-                        lXLinkKaiConnection.Open(lCaptureDevice);
-                        lXLinkKaiConnection.Connect();
-                        lXLinkKaiConnection.StartReceiverThread();
+                    // Wait 60 seconds, this is just for testing.
+                    while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     }
-
-                    // TODO: Needs to be a nicer send function in WirelessMonitorDevice
-                    if (lCaptureDevice->ReadNextPacket()) {
-                        std::string lData = lPacketConverter.ConvertPacketTo8023(lCaptureDevice->DataToString());
-                        if (!lData.empty()) {
-                            lData.insert(0, XLinkKai_Constants::cEthernetDataString);
-                            lXLinkKaiConnection.Send(lData);
-                        }
-                    }
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
 
-                lSignalIoService.stop();
-                lThread.join();
-                lCaptureDevice->Close();
+                lOutputDevice->Close();
+                lMonitorDevice->Close();
+            } else {
+                std::cerr << "Could not open capture interface" << std::endl;
             }
         } else {
-            std::cerr << "could not open capture interface" << std::endl;
+            std::cerr << "Output device not specified!" << std::endl << "Supported options: --xlink_kai" << std::endl;
         }
+
+        lSignalIoService.stop();
+        lThread.join();
     }
 
     exit(0);

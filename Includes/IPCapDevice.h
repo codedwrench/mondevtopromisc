@@ -19,17 +19,6 @@
 class IPCapDevice : public ISendReceiveDevice
 {
 public:
-    void Close() override = 0;
-
-    /**
-     * Opens the device/file.
-     * @param aName - the name of the device to capture or the path of the file to open.
-     * @return true on success.
-     */
-    bool Open(std::string_view aName) override = 0;
-
-    bool ReadNextData() override = 0;
-
     /**
      * Gets data from last read packet.
      * @return pointer to data as an unsigned char array.
@@ -42,8 +31,6 @@ public:
      */
     virtual const pcap_pkthdr* GetHeader() = 0;
 
-    std::string DataToString() override = 0;
-
     /**
      * Prints data in a pretty format.
      * @return a string containing the data in the following format (in hex) XX XX XX XX.
@@ -55,8 +42,6 @@ public:
      * @return true on success.
      */
     virtual void SetBSSID(std::string_view aBssid) = 0;
-
-    bool Send(std::string_view aData) override = 0;
 };
 
 

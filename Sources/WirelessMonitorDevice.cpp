@@ -7,9 +7,11 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <thread>
+
+#include <boost/thread.hpp>
 
 #include "../Includes/Logger.h"
-
 
 using namespace std::chrono;
 
@@ -27,7 +29,9 @@ bool WirelessMonitorDevice::Open(std::string_view aName)
     int lStatus;
     lStatus = pcap_activate(mHandler);
 
-    if (lStatus != 0) {
+    if (lStatus == 0) {
+        mConnected = true;
+    } else {
         lReturn = false;
         Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)), Logger::ERR);
     }
@@ -36,11 +40,19 @@ bool WirelessMonitorDevice::Open(std::string_view aName)
 
 void WirelessMonitorDevice::Close()
 {
+    mConnected = false;
+
+    if (mReceiverThread->joinable()) {
+        mReceiverThread->join();
+    }
+
     if (mHandler != nullptr) {
         pcap_close(mHandler);
     }
-    mData   = nullptr;
-    mHeader = nullptr;
+
+    mHandler = nullptr;
+    mData    = nullptr;
+    mHeader  = nullptr;
 }
 
 bool WirelessMonitorDevice::ReadNextData()
@@ -135,12 +147,40 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
                 Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)), Logger::ERR);
             }
         }
+    } else {
+        Logger::GetInstance().Log("Cannot send packets on a device that has not been opened yet!", Logger::ERR);
     }
 
     return lReturn;
 }
 
-void WirelessMonitorDevice::SetSendReceiveDevice(ISendReceiveDevice& aDevice)
+void WirelessMonitorDevice::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
 {
-    mSendReceiveDevice = std::shared_ptr<ISendReceiveDevice>(&aDevice);
+    mSendReceiveDevice = aDevice;
+}
+
+bool WirelessMonitorDevice::StartReceiverThread()
+{
+    bool lReturn{true};
+    if (mHandler != nullptr) {
+        // Run
+        if (mReceiverThread == nullptr) {
+            mReceiverThread = std::make_shared<boost::thread>([&] {
+                while (mConnected) {
+                    if (ReadNextData()) {
+                        std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(DataToString());
+                        if ((mSendReceiveDevice != nullptr) && (!lConvertedData.empty())) {
+                            mSendReceiveDevice->Send(lConvertedData);
+                        }
+                    }
+                    std::this_thread::sleep_for(milliseconds(1));
+                }
+            });
+        }
+    } else {
+        Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::ERR);
+        lReturn = false;
+    }
+
+    return lReturn;
 }

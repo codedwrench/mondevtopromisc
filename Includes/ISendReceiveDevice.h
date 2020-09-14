@@ -7,6 +7,7 @@
  *
  **/
 
+#include <memory>
 #include <string>
 
 /**
@@ -50,7 +51,7 @@ public:
      * Allows sending or receiving over different device.
      * @param aDevice - Device to use.
      */
-    virtual void SetSendReceiveDevice(ISendReceiveDevice& aDevice) = 0;
+    virtual void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) = 0;
 };
 
 
