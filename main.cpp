@@ -71,7 +71,7 @@ int main(int argc, char** argv)
                 if (lXLinkKai->StartReceiverThread()) {
                     lOutputDevice = lXLinkKai;
                 } else {
-                    lOutputDevice->Close();
+                    lXLinkKai->Close();
                 }
             } else {
                 Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::ERR);
