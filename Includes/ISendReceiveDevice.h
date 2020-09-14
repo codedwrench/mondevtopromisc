@@ -38,6 +38,7 @@ public:
      * @return true on success.
      */
     virtual bool ReadNextData() = 0;
+
     /**
      * Sends data over device/file if supported.
      * @param aData - Data to send.

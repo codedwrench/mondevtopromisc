@@ -38,8 +38,7 @@ public:
         DEBUG,     /**< Debug level */
         INFO,      /**< Info level */
         WARNING,   /**< Warning level */
-        // ERROR is already defined in windows
-        ERR        /**< Lowest level */
+        ERR        /**< Lowest level, ERROR is already defined in Windows, hence ERR */
     };
 
     /**
