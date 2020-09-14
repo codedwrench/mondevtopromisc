@@ -72,9 +72,10 @@ if (ENABLE_TESTS)
     include(GoogleTest)
     enable_testing()
     add_executable(tests Tests/PacketConverter_Test.cpp
+            Sources/Logger.cpp
             Sources/PacketConverter.cpp
             Sources/PCapReader.cpp
-            Sources/Logger.cpp)
+            Sources/XLinkKaiConnection.cpp)
     target_include_directories(tests PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
     target_link_libraries(tests gtest gmock gtest_main ${PCAP_LIBRARY} ${Boost_LIBRARIES})
     gtest_discover_tests(tests)

@@ -194,15 +194,26 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
         unsigned int lDataSize{
             static_cast<unsigned int>(aData.size() - (Net_8023_Constants::cHeaderLength * sizeof(char)))};
 
-        std::vector<char> lFullPacket;
-        lFullPacket.reserve(RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
-        lFullPacket.resize(RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize + lDataSize);
+        unsigned int lReserveSize{lIeee80211HeaderSize + lLLCHeaderSize + lDataSize};
+        if (mRadioTap) {
+            lReserveSize += RadioTap_Constants::cRadioTapSize;
+        }
 
-        // RadioTap Header
-        InsertRadioTapHeader(aData, &lFullPacket[0]);
+        std::vector<char> lFullPacket;
+        lFullPacket.reserve(lReserveSize);
+        lFullPacket.resize(lReserveSize);
+
+        unsigned int lIndex{0};
+
+        if (mRadioTap) {
+            // RadioTap Header
+            InsertRadioTapHeader(aData, &lFullPacket[0]);
+            lIndex += RadioTap_Constants::cRadioTapSize;
+        }
 
         // IEEE80211 Header
-        InsertIeee80211Header(aData, aBSSID, &lFullPacket[0], RadioTap_Constants::cRadioTapSize);
+        InsertIeee80211Header(aData, aBSSID, &lFullPacket[0], lIndex);
+        lIndex += lIeee80211HeaderSize;
 
         // Logical Link Control (LLC) header
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
@@ -213,10 +224,11 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 
         lLLC |= lEtherType << 48LLU;
 
-        memcpy(&lFullPacket[0] + RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize, &lLLC, sizeof(lLLC));
+        memcpy(&lFullPacket[0] + lIndex, &lLLC, sizeof(lLLC));
+        lIndex += lLLCHeaderSize;
 
         // Data, without header included
-        memcpy(&lFullPacket[0] + RadioTap_Constants::cRadioTapSize + lIeee80211HeaderSize + lLLCHeaderSize,
+        memcpy(&lFullPacket[0] + lIndex,
                aData.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
                aData.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
 

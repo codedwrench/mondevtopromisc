@@ -61,7 +61,7 @@ public:
      * @param aBSSID - The BSSID to use when constructing the packet.
      * @return converted packet data, empty string if failed.
      */
-    static std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
+    std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
 
     /**
      * Sets whether this converter should convert keeping a radiotap header in mind.
