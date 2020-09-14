@@ -133,46 +133,46 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(ISendReceiveDevice& a
     return {lSuccesfulPacket, lUsefulPacket};
 }
 
-
-// TODO: Needs to be some interface with send function for all interfaces
-std::pair<bool, unsigned int> PCapReader::ReplayPackets(ISendReceiveDevice& aConnection,
-                                                        bool                aMonitorCapture,
-                                                        bool                aHasRadioTap)
+std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bool aHasRadioTap)
 {
     bool         lSuccesfulPacket{false};
-    bool         lUsefulPacket{true};
     unsigned int lPacketsSent{0};
 
-    // Read the first packet
-    if (ReadNextData()) {
-        PacketConverter lPacketConverter{aHasRadioTap};
-        microseconds    lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
-
-        std::tie(lSuccesfulPacket, lUsefulPacket) =
-            ConstructAndReplayPacket(aConnection, lPacketConverter, aMonitorCapture);
-
-        if (lSuccesfulPacket && lUsefulPacket) {
-            lPacketsSent++;
-        }
-
-        while (ReadNextData()) {
-            // Get time offset.
-            microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
-            lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
-
-            // Wait for next send.
-            std::this_thread::sleep_for(lSleepFor);
+    if(mSendReceiveDevice != nullptr) {
+        bool         lUsefulPacket{true};
+        // Read the first packet
+        if (ReadNextData()) {
+            PacketConverter lPacketConverter{aHasRadioTap};
+            microseconds    lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 
             std::tie(lSuccesfulPacket, lUsefulPacket) =
-                ConstructAndReplayPacket(aConnection, lPacketConverter, aMonitorCapture);
+                ConstructAndReplayPacket(*mSendReceiveDevice, lPacketConverter, aMonitorCapture);
 
             if (lSuccesfulPacket && lUsefulPacket) {
                 lPacketsSent++;
             }
+
+            while (ReadNextData()) {
+                // Get time offset.
+                microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
+                lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
+
+                // Wait for next send.
+                std::this_thread::sleep_for(lSleepFor);
+
+                std::tie(lSuccesfulPacket, lUsefulPacket) =
+                    ConstructAndReplayPacket(*mSendReceiveDevice, lPacketConverter, aMonitorCapture);
+
+                if (lSuccesfulPacket && lUsefulPacket) {
+                    lPacketsSent++;
+                }
+            }
         }
+    } else {
+        Logger::GetInstance().Log("Cannot replay packets wihout a send/receive device set!", Logger::ERR);
     }
 
-    return std::pair{!lSuccesfulPacket, lPacketsSent};
+    return std::pair{lSuccesfulPacket, lPacketsSent};
 }
 
 bool PCapReader::Send(std::string_view aData)
