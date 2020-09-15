@@ -6,6 +6,7 @@ As of right now it is a working proof of concept where you can receive and send 
 ## Wifi cards this has been tested and found working on:
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
 - Intel Pro Wireless 5100 AGN (iwlwifi)
+- WTXUP Ralink RT3070 (rt2800usb)
 
 ## How to compile
 
