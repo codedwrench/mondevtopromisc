@@ -1,23 +1,124 @@
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
+
+#include <ncurses.h>
+#undef timeout
 
 #include "Includes/Logger.h"
 #include "Includes/WirelessMonitorDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 
-namespace
+constexpr unsigned int cKeyQ{113};
+
+std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainWindow{nullptr};
+std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mNetworkingWindow{nullptr};
+std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mXLinkWindow{nullptr};
+bool                                                  gRunning{true};
+int                                                   mScreen{0};
+int                                                   mLastKeyPressed{0};
+int                                                   mWindowWidth{0};
+int                                                   mWindowHeight{0};
+bool                                                  mDimensionsChanged{false};
+
+int  ProcessNetworkPanel();
+int  ProcessXLinkPanel();
+void ClearLine(WINDOW& aWindow, int aYCoord, int aLength);
+
+int Process()
 {
-    constexpr Logger::Level cLogLevel{Logger::Level::DEBUG};
-    constexpr char          cLogFileName[]{"log.txt"};
-    constexpr bool          cLogToDisk{true};
+    // Get window size
+    int lHeight{0};
+    int lWidth{0};
+    getmaxyx(mMainWindow.get(), lHeight, lWidth);
+    if ((mWindowWidth != lWidth) || (mWindowHeight != lHeight))
+    {
+        mWindowWidth = lWidth;
+        mWindowHeight = lHeight;
+        mDimensionsChanged = true;
+    }
 
-    // Indicates if the program should be running or not, used to gracefully exit the program.
-    bool gRunning{true};
-}  // namespace
+    switch (mScreen) {
+        default:
+            ProcessNetworkPanel();
+            ProcessXLinkPanel();
+    }
 
-namespace po = boost::program_options;
+    if (mLastKeyPressed == cKeyQ) {
+        gRunning = false;
+    }
+
+    refresh();
+
+    return 1;
+}
+
+int ProcessNetworkPanel()
+{
+    if (mDimensionsChanged)
+    {
+        wresize(mNetworkingWindow.get(), mWindowHeight/2, mWindowWidth);
+    }
+
+    // Clear background
+    wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
+    for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
+        ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
+    }
+
+    // Draw header
+    ClearLine(*mNetworkingWindow, 0, mWindowWidth);
+    box(mNetworkingWindow.get(), 0, 0);
+    wattrset(mNetworkingWindow.get(), COLOR_PAIR(7));
+    std::string lHeaderText{"Network adapter options:"};
+    mvwaddstr(mNetworkingWindow.get(), 0, 0, lHeaderText.c_str());
+
+    curs_set(0);
+
+    wrefresh(mNetworkingWindow.get());
+
+    return 1;
+}
+
+int ProcessXLinkPanel()
+{
+    if (mDimensionsChanged)
+    {
+        mvwin(mXLinkWindow.get(), mWindowHeight/2, 0);
+        wresize(mXLinkWindow.get(), mWindowHeight/2, mWindowWidth);
+    }
+
+    // Clear background
+    wattrset(mXLinkWindow.get(), COLOR_PAIR(1));
+    for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
+        ClearLine(*mXLinkWindow, lLine, mWindowWidth);
+    }
+
+    // Draw header
+    ClearLine(*mXLinkWindow, 0, mWindowWidth);
+    box(mXLinkWindow.get(), 0, 0);
+    wattrset(mXLinkWindow.get(), COLOR_PAIR(7));
+    std::string lHeaderText{"XLink Kai options:"};
+    mvwaddstr(mXLinkWindow.get(), 0, 0, lHeaderText.c_str());
+
+    curs_set(0);
+
+    wrefresh(mXLinkWindow.get());
+
+    return 1;
+}
+
+void ClearLine(WINDOW& aWindow, int aYCoord, int aLength)
+{
+    move(aYCoord, 1);
+    aLength++;
+    std::string lEmptySpace;
+    lEmptySpace.resize(aLength, ' ');
+    mvwaddstr(&aWindow, aYCoord, 0, lEmptySpace.c_str());
+}
 
 static void SignalHandler(const boost::system::error_code& aError, int aSignalNumber)
 {
@@ -29,8 +130,9 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
     }
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
+<<<<<<< HEAD
     std::string             lBssid{};
     std::string             lCaptureInterface{};
     std::string             lInjectionInterface{};
@@ -77,32 +179,54 @@ int main(int argc, char** argv)
                 Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::Level::ERROR);
             }
         }
+=======
+    // Handle quit signals gracefully.
+    boost::asio::io_service lSignalIoService{};
+    boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
+    lSignals.async_wait(&SignalHandler);
+    boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
 
-        if (lOutputDevice != nullptr) {
-            if (lMonitorDevice->Open(lCaptureInterface)) {
-                lMonitorDevice->SetBSSID(lBssid);
-                lMonitorDevice->SetSendReceiveDevice(lOutputDevice);
-                if (lMonitorDevice->StartReceiverThread()) {
-                    std::chrono::time_point<std::chrono::system_clock> lStartTime{std::chrono::system_clock::now()};
+    initscr();
+    keypad(stdscr, true);
+    nonl();
+    cbreak();
+    noecho();
 
-                    // Wait 60 seconds, this is just for testing.
-                    while (gRunning && (std::chrono::system_clock::now() < (lStartTime + std::chrono::minutes{60}))) {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    }
-                }
+    mMainWindow =
+        std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, 0, 0), [](WINDOW* aWin) { delwin(aWin); });
 
-                lOutputDevice->Close();
-                lMonitorDevice->Close();
-            } else {
-                std::cerr << "Could not open capture interface" << std::endl;
-            }
-        } else {
-            std::cerr << "Output device not specified!" << std::endl << "Supported options: --xlink_kai" << std::endl;
-        }
+    getmaxyx(mMainWindow.get(), mWindowHeight, mWindowWidth);
 
-        lSignalIoService.stop();
-        lThread.join();
+    mNetworkingWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(mWindowHeight / 2, 0, 0, 0),
+                                                                              [](WINDOW* aWin) { delwin(aWin); });
+
+    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, mWindowHeight / 2, 0),
+                                                                              [](WINDOW* aWin) { delwin(aWin); });
+
+    if (has_colors()) {
+        start_color();
+        init_pair(1, COLOR_WHITE, COLOR_BLACK);
+        init_pair(2, COLOR_WHITE, COLOR_BLUE);
+        init_pair(3, COLOR_BLACK, COLOR_CYAN);
+        init_pair(4, COLOR_BLUE, COLOR_BLACK);
+        init_pair(5, COLOR_CYAN, COLOR_BLACK);
+        init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(7, COLOR_BLACK, COLOR_WHITE);
+    }
+>>>>>>> 6a3c640... Added basic TUI code.
+
+    while (gRunning) {
+        Process();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    exit(0);
+    endwin();
+
+    mMainWindow = nullptr;
+
+    lSignalIoService.stop();
+    if (lThread.joinable()) {
+        lThread.join();
+    }
 }
+
