@@ -128,7 +128,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 
         lConvertedPacket.append(aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
     } else {
-        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::WARNING);
+        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::Level::WARNING);
     }
 
     // [ Destination MAC | Source MAC | EtherType ] [ Payload ]
@@ -257,7 +257,7 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 
         lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     } else {
-        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::WARNING);
+        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::Level::WARNING);
     }
 
     return lReturn;

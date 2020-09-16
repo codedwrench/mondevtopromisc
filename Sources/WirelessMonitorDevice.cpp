@@ -33,7 +33,7 @@ bool WirelessMonitorDevice::Open(std::string_view aName)
         mConnected = true;
     } else {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)), Logger::ERR);
+        Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)), Logger::Level::ERROR);
     }
     return lReturn;
 }
@@ -63,23 +63,23 @@ bool WirelessMonitorDevice::ReadNextData()
         std::string lData = DataToString();
         if (mPacketConverter.Is80211Data(lData) && (mBSSID.empty() || mPacketConverter.IsForBSSID(lData, mBSSID))) {
             ++mPacketCount;
-            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
+            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 
             // Show the size in bytes of the packet
-            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::TRACE);
+            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::Level::TRACE);
 
 
             // Show a warning if the length captured is different
             if (mHeader->len != mHeader->caplen) {
                 Logger::GetInstance().Log(
                     "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
-                    Logger::WARNING);
+                    Logger::Level::WARNING);
             }
 
             // Show Epoch Time
             Logger::GetInstance().Log(
                 "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
-                Logger::TRACE);
+                Logger::Level::TRACE);
 
             lReturn = true;
         }
@@ -139,16 +139,16 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
     if (mHandler != nullptr) {
         std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mBSSID);
         if (!lData.empty()) {
-            Logger::GetInstance().Log("Sent: " + lData, Logger::TRACE);
+            Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 
             if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
                 lReturn = true;
             } else {
-                Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)), Logger::ERR);
+                Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)), Logger::Level::ERROR);
             }
         }
     } else {
-        Logger::GetInstance().Log("Cannot send packets on a device that has not been opened yet!", Logger::ERR);
+        Logger::GetInstance().Log("Cannot send packets on a device that has not been opened yet!", Logger::Level::ERROR);
     }
 
     return lReturn;
@@ -178,7 +178,7 @@ bool WirelessMonitorDevice::StartReceiverThread()
             });
         }
     } else {
-        Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::ERR);
+        Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::Level::ERROR);
         lReturn = false;
     }
 

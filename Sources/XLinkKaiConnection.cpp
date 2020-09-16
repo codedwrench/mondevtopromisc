@@ -31,7 +31,7 @@ bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
         mIp   = aIp;
         mPort = aPort;
     } catch (const boost::system::system_error& lException) {
-        Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::ERR);
+        Logger::GetInstance().Log("Failed to open socket: " + std::string(lException.what()), Logger::Level::ERROR);
         lReturn = false;
     }
 
@@ -61,19 +61,19 @@ bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
     if (mSocket.is_open()) {
         if ((mConnected || aCommand == cConnectString || aCommand == cDisconnectString)) {
             try {
-                Logger::GetInstance().Log("Sent: " + std::string(aCommand) + std::string(aData), Logger::TRACE);
+                Logger::GetInstance().Log("Sent: " + std::string(aCommand) + std::string(aData), Logger::Level::TRACE);
                 mSocket.send_to(buffer(std::string(aCommand) + std::string(aData)), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log(
-                    "Could not send message! " + std::string(aData) + std::string(lException.what()), Logger::ERR);
+                    "Could not send message! " + std::string(aData) + std::string(lException.what()), Logger::Level::ERROR);
                 lReturn = false;
             }
         } else {
-            Logger::GetInstance().Log("No other messages before Xlink Kai has connected!", Logger::DEBUG);
+            Logger::GetInstance().Log("No other messages before Xlink Kai has connected!", Logger::Level::DEBUG);
             lReturn = false;
         }
     } else {
-        Logger::GetInstance().Log("Could not send message on closed socket.", Logger::DEBUG);
+        Logger::GetInstance().Log("Could not send message on closed socket.", Logger::Level::DEBUG);
         lReturn = false;
     }
     return lReturn;
@@ -113,7 +113,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
 
     // If we actually received anything useful, react.
     if (!lData.empty()) {
-        Logger::GetInstance().Log("Received: " + lData, Logger::TRACE);
+        Logger::GetInstance().Log("Received: " + lData, Logger::Level::TRACE);
         std::size_t lFirstSeparator{lData.find(cSeparator)};
         std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
@@ -121,7 +121,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
         if (!mConnected && (lCommand == std::string(cConnectedFormat) + cSeparator.data())) {
             lCommand = lData.substr(0, cConnectedString.size());
             if (lCommand == cConnectedString) {
-                Logger::GetInstance().Log("XLink Kai succesfully connected: " + lCommand, Logger::INFO);
+                Logger::GetInstance().Log("XLink Kai succesfully connected: " + lCommand, Logger::Level::INFO);
                 mConnectInitiated = false;
                 mConnected        = true;
             }
@@ -147,7 +147,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
             } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
                 lCommand = lData.substr(0, cDisconnectedString.size());
                 if (lCommand == cDisconnectedString) {
-                    Logger::GetInstance().Log("Xlink Kai has disconnected us! " + lCommand, Logger::ERR);
+                    Logger::GetInstance().Log("Xlink Kai has disconnected us! " + lCommand, Logger::Level::ERROR);
                     mConnected = false;
                 }
             }
@@ -177,7 +177,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                         std::this_thread::sleep_for(std::chrono::seconds(1));
                     } else if ((!mConnected) && mConnectInitiated &&
                                (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
-                        Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::ERR);
+                        Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::Level::ERROR);
                         mIoService.stop();
                         mConnectInitiated = false;
                         mConnected        = false;
@@ -189,7 +189,7 @@ bool XLinkKaiConnection::StartReceiverThread()
             });
         }
     } else {
-        Logger::GetInstance().Log("Can't start receiving without an opened socket!", Logger::ERR);
+        Logger::GetInstance().Log("Can't start receiving without an opened socket!", Logger::Level::ERROR);
         lReturn = false;
     }
 

@@ -44,6 +44,8 @@ include(FindPCAP.cmake)
 
 find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
 
+find_package(Curses)
+
 if (NOT APPLE AND NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif ()
@@ -64,8 +66,8 @@ add_executable(mondevtopromisc main.cpp
         Includes/XLinkKaiConnection.h
         ${EXTRA_INCLUDES})
 
-target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES})
+target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
+target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES})
 
 if (ENABLE_TESTS)
     find_package(GTest REQUIRED)

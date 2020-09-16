@@ -71,7 +71,7 @@ void Logger::Log(const std::string& aText, Level aLevel)
 
 #if defined(__GNUC__) || defined(__GNUG__)
         lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') << std::setw(3)
-                  << lTimeMs.count() << ": " << mLogLevelTexts.at(aLevel) << ": " << aLocation.file_name() << ":"
+                  << lTimeMs.count() << ": " << mLogLevelTexts.at(static_cast<unsigned long>(aLevel)) << ": " << aLocation.file_name() << ":"
                   << aLocation.line() << ":" << aText;
 #else
         lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') << std::setw(3)

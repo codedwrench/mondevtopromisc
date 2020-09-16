@@ -18,7 +18,7 @@ bool PCapReader::Open(std::string_view aName)
     mHandler = pcap_open_offline(aName.data(), lErrorBuffer);
     if (mHandler == nullptr) {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::ERR);
+        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::Level::ERROR);
     }
     return lReturn;
 }
@@ -37,28 +37,28 @@ bool PCapReader::ReadNextData()
     if (mHandler != nullptr) {
         if (pcap_next_ex(mHandler, &mHeader, &mData) >= 0) {
             ++mPacketCount;
-            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::TRACE);
+            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 
             // Show the size in bytes of the packet
-            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::TRACE);
+            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::Level::TRACE);
 
 
             // Show a warning if the length captured is different
             if (mHeader->len != mHeader->caplen) {
                 Logger::GetInstance().Log(
                     "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
-                    Logger::WARNING);
+                    Logger::Level::WARNING);
             }
 
             // Show Epoch Time
             Logger::GetInstance().Log(
                 "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
-                Logger::TRACE);
+                Logger::Level::TRACE);
         } else {
             lReturn = false;
         }
     } else {
-        Logger::GetInstance().Log("Handler not initialized before call", Logger::DEBUG);
+        Logger::GetInstance().Log("Handler not initialized before call", Logger::Level::DEBUG);
         lReturn = false;
     }
 
@@ -169,7 +169,7 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
             }
         }
     } else {
-        Logger::GetInstance().Log("Cannot replay packets wihout a send/receive device set!", Logger::ERR);
+        Logger::GetInstance().Log("Cannot replay packets wihout a send/receive device set!", Logger::Level::ERROR);
     }
 
     return std::pair{lSuccesfulPacket, lPacketsSent};

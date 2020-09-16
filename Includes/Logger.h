@@ -32,13 +32,13 @@ public:
     /**
      * Contains loglevels, used to suppress logging based on level.
      */
-    enum Level
+    enum class Level
     {
         TRACE = 0, /**< Highest level */
         DEBUG,     /**< Debug level */
         INFO,      /**< Info level */
         WARNING,   /**< Warning level */
-        ERR        /**< Lowest level, ERROR is already defined in Windows, hence ERR */
+        ERROR      /**< Lowest level, ERROR is already defined in Windows, hence ERROR */
     };
 
     /**
@@ -97,7 +97,7 @@ private:
     ~Logger();
 
     std::string                mFileName{"log.txt"};
-    Level                      mLogLevel{Level::ERR};
+    Level                      mLogLevel{Logger::Level::ERROR};
     std::array<std::string, 5> mLogLevelTexts{"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
     std::ofstream              mLogOutputStream{};
     bool                       mLogToDisk{false};
