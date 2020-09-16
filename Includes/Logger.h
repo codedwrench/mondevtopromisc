@@ -38,7 +38,7 @@ public:
         DEBUG,     /**< Debug level */
         INFO,      /**< Info level */
         WARNING,   /**< Warning level */
-        ERROR      /**< Lowest level, ERROR is already defined in Windows, hence ERROR */
+        ERROR      /**< Lowest level */
     };
 
     /**
