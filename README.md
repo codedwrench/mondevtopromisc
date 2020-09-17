@@ -7,6 +7,7 @@ As of right now it is a working proof of concept where you can receive and send 
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
 - Intel Pro Wireless 5100 AGN (iwlwifi)
 - WTXUP Ralink RT3070 (rt2800usb)
+- TP-Link TL-WN823N V2 (Realtek rtl8192eu (kimocoder/rtl8192eu)) <= Has bad lag, monitor mode seems to be very unstable on this.
 
 ## How to compile
 
