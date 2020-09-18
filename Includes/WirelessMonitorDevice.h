@@ -29,7 +29,6 @@ using namespace WirelessMonitorDevice_Constants;
 class WirelessMonitorDevice : public IPCapDevice
 {
 public:
-    // TODO: If too many copied functions, create base class.
     void                 Close() override;
     bool                 Open(std::string_view aName) override;
     bool                 ReadNextData() override;
@@ -55,6 +54,7 @@ public:
     bool StartReceiverThread();
 
 private:
+    bool                                ReadCallback();
     bool                                mConnected{false};
     PacketConverter                     mPacketConverter{true};
     const unsigned char*                mData{nullptr};

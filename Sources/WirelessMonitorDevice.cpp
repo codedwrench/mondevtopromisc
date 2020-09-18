@@ -33,7 +33,8 @@ bool WirelessMonitorDevice::Open(std::string_view aName)
         mConnected = true;
     } else {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)), Logger::Level::ERROR);
+        Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)),
+                                  Logger::Level::ERROR);
     }
     return lReturn;
 }
@@ -58,8 +59,27 @@ void WirelessMonitorDevice::Close()
 bool WirelessMonitorDevice::ReadNextData()
 {
     bool lReturn{false};
+    int  lSuccess{pcap_next_ex(mHandler, &mHeader, &mData)};
 
-    if ((mHandler != nullptr) && pcap_next_ex(mHandler, &mHeader, &mData) > 0) {
+    if (lSuccess == 1) {
+        lReturn = ReadCallback();
+    } else if (lSuccess == 0) {
+        Logger::GetInstance().Log("Packet Timeout", Logger::Level::DEBUG);
+    } else if (lSuccess == -1) {
+        Logger::GetInstance().Log("Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
+                                  Logger::Level::DEBUG);
+    } else {
+        Logger::GetInstance().Log("Unknown error occurred while reading packet", Logger::Level::DEBUG);
+    }
+
+    return lReturn;
+}
+
+bool WirelessMonitorDevice::ReadCallback()
+{
+    bool lReturn{false};
+
+    if (mHandler != nullptr) {
         std::string lData = DataToString();
         if (mPacketConverter.Is80211Data(lData) && (mBSSID.empty() || mPacketConverter.IsForBSSID(lData, mBSSID))) {
             ++mPacketCount;
@@ -144,11 +164,13 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
             if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
                 lReturn = true;
             } else {
-                Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)), Logger::Level::ERROR);
+                Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)),
+                                          Logger::Level::ERROR);
             }
         }
     } else {
-        Logger::GetInstance().Log("Cannot send packets on a device that has not been opened yet!", Logger::Level::ERROR);
+        Logger::GetInstance().Log("Cannot send packets on a device that has not been opened yet!",
+                                  Logger::Level::ERROR);
     }
 
     return lReturn;

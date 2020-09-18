@@ -9,7 +9,7 @@
 
 namespace
 {
-    constexpr Logger::Level cLogLevel{Logger::DEBUG};
+    constexpr Logger::Level cLogLevel{Logger::Level::DEBUG};
     constexpr char          cLogFileName[]{"log.txt"};
     constexpr bool          cLogToDisk{true};
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
                     lXLinkKai->Close();
                 }
             } else {
-                Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::ERR);
+                Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::Level::ERROR);
             }
         }
 
