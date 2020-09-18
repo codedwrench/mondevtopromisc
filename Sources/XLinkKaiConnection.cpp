@@ -184,7 +184,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                         mConnected        = false;
                     } else {
                         mIoService.poll();
-                        std::this_thread::sleep_for(std::chrono::microseconds(10));
+                        std::this_thread::sleep_for(std::chrono::microseconds(1));
                     }
                 }
             });
