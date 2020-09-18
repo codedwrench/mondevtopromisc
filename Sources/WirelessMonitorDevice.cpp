@@ -94,17 +94,17 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
             Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 
             // Show the size in bytes of the packet
-            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::Level::TRACE);
+            Logger::GetInstance().Log("Packet size: " + std::to_string(aHeader->len) + " bytes", Logger::Level::TRACE);
 
             // Show Epoch Time
             Logger::GetInstance().Log(
-                "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
+                "Epoch time: " + std::to_string(aHeader->ts.tv_sec) + ":" + std::to_string(aHeader->ts.tv_usec),
                 Logger::Level::TRACE);
 
             // Show a warning if the length captured is different
-            if (mHeader->len != mHeader->caplen) {
+            if (aHeader->len != aHeader->caplen) {
                 Logger::GetInstance().Log(
-                    "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
+                    "Capture size different than packet size:" + std::to_string(aHeader->len) + " bytes",
                     Logger::Level::TRACE);
             }
         }
