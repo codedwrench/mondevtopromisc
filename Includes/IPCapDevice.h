@@ -20,6 +20,14 @@ class IPCapDevice : public ISendReceiveDevice
 {
 public:
     /**
+     * Returns data as string.
+     * @param aData - Data from pcap functions
+     * @param aHeader - Header from pcap functions
+     * @return Data as string
+     */
+    virtual std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) = 0;
+
+    /**
      * Gets data from last read packet.
      * @return pointer to data as an unsigned char array.
      */
@@ -30,12 +38,6 @@ public:
      * @return pointer to header as pcap_pkthdr type.
      */
     virtual const pcap_pkthdr* GetHeader() = 0;
-
-    /**
-     * Prints data in a pretty format.
-     * @return a string containing the data in the following format (in hex) XX XX XX XX.
-     */
-    virtual std::string DataToFormattedString() = 0;
 
     /**
      * Set BSSID to specified BSSID, this is used for sending packets and filtering.

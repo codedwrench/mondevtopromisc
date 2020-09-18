@@ -183,7 +183,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                         mConnected        = false;
                     } else {
                         mIoService.poll();
-                        std::this_thread::sleep_for(std::chrono::microseconds(100));
+                        std::this_thread::sleep_for(std::chrono::microseconds(10));
                     }
                 }
             });
@@ -221,7 +221,7 @@ void XLinkKaiConnection::Close()
     }
 }
 
-std::string XLinkKaiConnection::DataToString()
+std::string XLinkKaiConnection::LastDataToString()
 {
     std::string lData{mEthernetData};
 

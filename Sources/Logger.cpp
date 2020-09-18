@@ -37,6 +37,11 @@ void Logger::SetFileName(const std::string& aFileName)
     }
 }
 
+Logger::Level Logger::GetLogLevel()
+{
+    return mLogLevel;
+}
+
 void Logger::SetLogLevel(Level aLevel)
 {
     mLogLevel = aLevel;

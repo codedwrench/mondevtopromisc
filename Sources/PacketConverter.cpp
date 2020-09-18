@@ -42,93 +42,105 @@ PacketConverter::PacketConverter(bool aRadioTap)
     mRadioTap = aRadioTap;
 }
 
-void PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
+bool PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
 {
+    bool lReturn{true};
+
     if (mRadioTap) {
         mIndexAfterRadioTap =
             *reinterpret_cast<const uint16_t*>(aData.data() + Net_80211_Constants::cRadioTapLengthIndex);
+
+        if (mIndexAfterRadioTap > RadioTap_Constants::cMaxRadioTapLength) {
+            // Invalid length, failed to read index.
+            lReturn = false;
+        }
+    } else {
+        mIndexAfterRadioTap = 0;
     }
+
+    return lReturn;
 }
 
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
     bool lReturn{false};
-    UpdateIndexAfterRadioTap(aData);
-
-    // Sometimes it seems to send malformed packets. UINT8_MAX is an arbitrary number.
-    if (mIndexAfterRadioTap <= UINT8_MAX) {
+    if (UpdateIndexAfterRadioTap(aData)) {
         // Do not care about subtype!
         lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0x0Fu) ==
                   Net_80211_Constants::cDataType;
-    } else {
-        lReturn = false;
     }
+
     return lReturn;
 }
 
 bool PacketConverter::Is80211QOS(std::string_view aData)
 {
     bool lReturn{false};
-    UpdateIndexAfterRadioTap(aData);
 
-    // Sometimes it seems to send malformed packets. UINT8_MAX is an arbitrary number.
-    if (mIndexAfterRadioTap <= UINT8_MAX) {
+    if (UpdateIndexAfterRadioTap(aData)) {
+        // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
         lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0xF0u) ==
                   Net_80211_Constants::cDataQOSType;
-    } else {
-        lReturn = false;
     }
+
     return lReturn;
 }
 
-bool PacketConverter::IsForBSSID(std::string_view aData, std::string_view aBSSID)
+bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
 {
-    UpdateIndexAfterRadioTap(aData);
+    bool lReturn{false};
 
-    uint64_t lMac =
-        *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
-    lMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1);  // it's actually a uint48.
+    if (UpdateIndexAfterRadioTap(aData)) {
+        uint64_t lMac =
+            *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
+        lMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1);  // it's actually a uint48.
 
-    // Big- to Little endian
-    lMac = bswap_64(lMac);
-    lMac = lMac >> 16u;
+        // Big- to Little endian
+        lMac = bswap_64(lMac);
+        lMac = lMac >> 16u;
 
-    return lMac == MacToInt(aBSSID);
+        lReturn = lMac == aBSSID;
+    }
+
+    return lReturn;
 }
 
 std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 {
-    UpdateIndexAfterRadioTap(aData);
-
     std::string lConvertedPacket{};
 
-    unsigned int lSourceAddressIndex      = Net_80211_Constants::cSourceAddressIndex + mIndexAfterRadioTap;
-    unsigned int lDestinationAddressIndex = Net_80211_Constants::cDestinationAddressIndex + mIndexAfterRadioTap;
-    unsigned int lTypeIndex               = Net_80211_Constants::cTypeIndex + mIndexAfterRadioTap;
-    unsigned int lDataIndex               = Net_80211_Constants::cDataIndex + mIndexAfterRadioTap;
+    if (UpdateIndexAfterRadioTap(aData)) {
+        unsigned int lSourceAddressIndex      = Net_80211_Constants::cSourceAddressIndex + mIndexAfterRadioTap;
+        unsigned int lDestinationAddressIndex = Net_80211_Constants::cDestinationAddressIndex + mIndexAfterRadioTap;
+        unsigned int lTypeIndex               = Net_80211_Constants::cTypeIndex + mIndexAfterRadioTap;
+        unsigned int lDataIndex               = Net_80211_Constants::cDataIndex + mIndexAfterRadioTap;
 
-    // If there is QOS data added to the 80211 header, we need to skip past that as well
-    if (Is80211QOS(aData)) {
-        lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
-        lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
-    }
+        // If there is QOS data added to the 80211 header, we need to skip past that as well
+        if (Is80211QOS(aData)) {
+            lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+            lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+        }
 
-    // The header should have it's complete size for the packet to be valid.
-    if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
-        // Strip framecheck sequence as well.
-        lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
-                                 Net_80211_Constants::cFCSLength);
+        // The header should have it's complete size for the packet to be valid.
+        if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
+            // Strip framecheck sequence as well.
+            lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
+                                     Net_80211_Constants::cFCSLength);
 
-        lConvertedPacket.append(aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
+            lConvertedPacket.append(
+                aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
 
-        lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
+            lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
 
-        lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cTypeLength));
+            lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cTypeLength));
 
-        lConvertedPacket.append(aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
-    } else {
-        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::Level::WARNING);
+            lConvertedPacket.append(
+                aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
+        } else {
+            Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
+                                      Logger::Level::WARNING);
+        }
     }
 
     // [ Destination MAC | Source MAC | EtherType ] [ Payload ]
@@ -175,7 +187,7 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
 }
 
 // Helper function for ConvertPacketTo80211, adds the ieee80211 header.
-void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char* aPacket, unsigned int aPacketIndex)
+void InsertIeee80211Header(std::string_view aData, uint64_t aBSSID, char* aPacket, unsigned int aPacketIndex)
 {
     // Then comes the IEEE80211 header
     ieee80211_hdr lIeee80211Header{};
@@ -198,7 +210,7 @@ void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char
            aData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength).data(),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
-    uint64_t lBSSID = PacketConverter::MacToInt(aBSSID);
+    uint64_t lBSSID = aBSSID;
 
     // Little- to Big endian
     lBSSID = bswap_64(lBSSID);
@@ -208,7 +220,7 @@ void InsertIeee80211Header(std::string_view aData, std::string_view aBSSID, char
     memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
 }
 
-std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID)
+std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID)
 {
     std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
@@ -257,7 +269,8 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, std::s
 
         lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     } else {
-        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet", Logger::Level::WARNING);
+        Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
+                                  Logger::Level::WARNING);
     }
 
     return lReturn;

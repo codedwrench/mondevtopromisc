@@ -81,7 +81,7 @@ public:
      */
     bool ReadNextData() override;
 
-    std::string DataToString() override;
+    std::string LastDataToString() override;
 
     /**
      * Starts receiving network messages from XLink Kai.

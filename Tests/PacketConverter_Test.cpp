@@ -33,7 +33,7 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
     lPCapExpectedReader.Open("../Tests/Input/PromiscuousToMonitorOutput_Expected.pcap");
 
     while (lPCapReader.ReadNextData()) {
-        std::string lDataToConvert = lPCapReader.DataToString();
+        std::string lDataToConvert = lPCapReader.LastDataToString();
         lDataToConvert             = mPacketConverter.ConvertPacketTo80211(lDataToConvert, "01:23:45:67:AB:CD");
 
         pcap_pkthdr lHeader{};
@@ -47,7 +47,7 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
         // It should never be the case that there is no next packet available, then the expected output doesn't match.
         ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
-        ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
+        ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
     }
 
     // No new packets should be available on the expected output.
@@ -71,7 +71,7 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
     lPCapExpectedReader.Open("../Tests/Input/MonitorToPromiscuousOutput_Expected.pcap");
 
     while (lPCapReader.ReadNextData()) {
-        std::string lDataToConvert = lPCapReader.DataToString();
+        std::string lDataToConvert = lPCapReader.LastDataToString();
         if (mPacketConverter.Is80211Data(lDataToConvert) &&
             mPacketConverter.IsForBSSID(lDataToConvert, "62:58:c5:07:95:5e")) {
             lDataToConvert = mPacketConverter.ConvertPacketTo8023(lDataToConvert);
@@ -88,7 +88,7 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
             // match.
             ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
-            ASSERT_EQ(lPCapExpectedReader.DataToString(), lDataToConvert);
+            ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
         }
     }
 

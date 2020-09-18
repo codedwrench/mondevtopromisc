@@ -25,6 +25,7 @@ bool WirelessMonitorDevice::Open(std::string_view aName)
     pcap_set_snaplen(mHandler, cSnapshotLength);
     pcap_set_promisc(mHandler, 1);
     pcap_set_timeout(mHandler, cTimeout);
+    pcap_set_immediate_mode(mHandler, 1);
 
     int lStatus;
     lStatus = pcap_activate(mHandler);
@@ -43,6 +44,10 @@ void WirelessMonitorDevice::Close()
 {
     mConnected = false;
 
+    if (mHandler != nullptr) {
+        pcap_breakloop(mHandler);
+    }
+
     if (mReceiverThread->joinable()) {
         mReceiverThread->join();
     }
@@ -54,15 +59,16 @@ void WirelessMonitorDevice::Close()
     mHandler = nullptr;
     mData    = nullptr;
     mHeader  = nullptr;
+    mReceiverThread = nullptr;
 }
 
 bool WirelessMonitorDevice::ReadNextData()
 {
     bool lReturn{false};
-    int  lSuccess{pcap_next_ex(mHandler, &mHeader, &mData)};
+    int  lSuccess{pcap_next_ex(mHandler, const_cast<pcap_pkthdr**>(&mHeader), &mData)};
 
     if (lSuccess == 1) {
-        lReturn = ReadCallback();
+        lReturn = ReadCallback(mData, mHeader);
     } else if (lSuccess == 0) {
         Logger::GetInstance().Log("Packet Timeout", Logger::Level::DEBUG);
     } else if (lSuccess == -1) {
@@ -75,34 +81,47 @@ bool WirelessMonitorDevice::ReadNextData()
     return lReturn;
 }
 
-bool WirelessMonitorDevice::ReadCallback()
+bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader)
 {
     bool lReturn{false};
 
-    if (mHandler != nullptr) {
-        std::string lData = DataToString();
-        if (mPacketConverter.Is80211Data(lData) && (mBSSID.empty() || mPacketConverter.IsForBSSID(lData, mBSSID))) {
-            ++mPacketCount;
+    std::string lData = DataToString(aData, aHeader);
+    if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
+        ++mPacketCount;
+
+        // Don't even bother setting up these strings if loglevel is not trace.
+        if (Logger::GetInstance().GetLogLevel() == Logger::Level::TRACE) {
             Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 
             // Show the size in bytes of the packet
             Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::Level::TRACE);
-
-
-            // Show a warning if the length captured is different
-            if (mHeader->len != mHeader->caplen) {
-                Logger::GetInstance().Log(
-                    "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
-                    Logger::Level::WARNING);
-            }
 
             // Show Epoch Time
             Logger::GetInstance().Log(
                 "Epoch time: " + std::to_string(mHeader->ts.tv_sec) + ":" + std::to_string(mHeader->ts.tv_usec),
                 Logger::Level::TRACE);
 
-            lReturn = true;
+            // Show a warning if the length captured is different
+            if (mHeader->len != mHeader->caplen) {
+                Logger::GetInstance().Log(
+                    "Capture size different than packet size:" + std::to_string(mHeader->len) + " bytes",
+                    Logger::Level::TRACE);
+            }
         }
+
+        // Data is good so save as member
+        mData = aData;
+        mHeader = aHeader;
+
+        if (mSendReceivedData && (mSendReceiveDevice != nullptr))
+        {
+            std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
+            if (!lConvertedData.empty()) {
+                mSendReceiveDevice->Send(lConvertedData);
+            }
+        }
+
+        lReturn = true;
     }
 
     return lReturn;
@@ -118,39 +137,29 @@ const pcap_pkthdr* WirelessMonitorDevice::GetHeader()
     return mHeader;
 }
 
-std::string WirelessMonitorDevice::DataToFormattedString()
-{
-    std::stringstream lFormattedString;
-    // Loop through the packet and print it as hexidecimal representations of octets
-    for (unsigned int lCount = 0; lCount < mHeader->caplen; lCount++) {
-        // Start printing on the next line after every 16 octets
-        if (lCount % 16 == 0) {
-            lFormattedString << std::endl;
-        }
-
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
-                         << " ";
-    }
-
-    return lFormattedString.str();
-}
-
-std::string WirelessMonitorDevice::DataToString()
+std::string WirelessMonitorDevice::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)
 {
     // Convert from char* to string
     std::string lData{};
-    lData.reserve(mHeader->caplen);
-    for (unsigned int lCount = 0; lCount < mHeader->caplen; lCount++) {
-        lData += mData[lCount];
+
+    if((aData != nullptr) && (aHeader != nullptr)) {
+        lData.resize(aHeader->caplen);
+        for (unsigned int lCount = 0; lCount < aHeader->caplen; lCount++) {
+            lData.at(lCount) = mData[lCount];
+        }
     }
 
     return lData;
 }
 
+std::string WirelessMonitorDevice::LastDataToString()
+{
+    return DataToString(mData, mHeader);
+}
+
 void WirelessMonitorDevice::SetBSSID(std::string_view aBSSID)
 {
-    // Sadly a BPF filter won't work here, so for now just do filtering in userspace :(
-    mBSSID = std::string(aBSSID);
+    mBSSID = mPacketConverter.MacToInt(aBSSID);
 }
 
 bool WirelessMonitorDevice::Send(std::string_view aData)
@@ -188,15 +197,28 @@ bool WirelessMonitorDevice::StartReceiverThread()
         // Run
         if (mReceiverThread == nullptr) {
             mReceiverThread = std::make_shared<boost::thread>([&] {
-                while (mConnected) {
-                    if (ReadNextData()) {
-                        std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(DataToString());
-                        if ((mSendReceiveDevice != nullptr) && (!lConvertedData.empty())) {
-                            mSendReceiveDevice->Send(lConvertedData);
-                        }
+                // If we're receiving data from the receiver thread, send it off as well.
+                bool lSendReceivedDataOld = mSendReceivedData;
+                mSendReceivedData = true;
+
+                auto lCallbackFunction =
+                    [](unsigned char* aThis, const pcap_pkthdr* aHeader, const unsigned char* aPacket) {
+                        auto* lThis = reinterpret_cast<WirelessMonitorDevice*>(aThis);
+                        lThis->ReadCallback(aPacket, aHeader);
+                    };
+
+                while (mConnected && (mHandler != nullptr)) {
+                    // Use pcap_dispatch instead of pcap_next_ex so that as many packets as possible will be processed
+                    // in a single cycle.
+                    if (pcap_dispatch(mHandler, -1, lCallbackFunction, reinterpret_cast<u_char*>(this)) == -1) {
+                        Logger::GetInstance().Log(
+                            "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
+                            Logger::Level::DEBUG);
                     }
-                    std::this_thread::sleep_for(microseconds(100));
+                    // No sleep here should be okay
                 }
+
+              mSendReceivedData = lSendReceivedDataOld;
             });
         }
     } else {

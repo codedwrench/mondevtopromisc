@@ -72,6 +72,10 @@ public:
 #else
     void Log(const std::string& aText, Level aLevel);
 #endif
+    /**
+     * Gets the loglevel
+     */
+    Level GetLogLevel();
 
     /**
      * Sets the loglevel to debug, warning or error, based upon this variable certain logmessages will be shown or not

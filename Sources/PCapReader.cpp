@@ -75,33 +75,24 @@ const pcap_pkthdr* PCapReader::GetHeader()
     return mHeader;
 }
 
-std::string PCapReader::DataToFormattedString()
-{
-    std::stringstream lFormattedString;
-    // Loop through the packet and print it as hexidecimal representations of octets
-    for (unsigned int lCount = 0; lCount < mHeader->caplen; lCount++) {
-        // Start printing on the next line after every 16 octets
-        if (lCount % 16 == 0) {
-            lFormattedString << std::endl;
-        }
-
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(mData[lCount])
-                         << " ";
-    }
-
-    return lFormattedString.str();
-}
-
-std::string PCapReader::DataToString()
+std::string PCapReader::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)
 {
     // Convert from char* to string
     std::string lData{};
-    lData.reserve(mHeader->caplen);
-    for (unsigned int lCount = 0; lCount < mHeader->caplen; lCount++) {
-        lData += mData[lCount];
+
+    if((aData != nullptr) && (aHeader != nullptr)) {
+        lData.resize(aHeader->caplen);
+        for (unsigned int lCount = 0; lCount < aHeader->caplen; lCount++) {
+            lData.at(lCount) = mData[lCount];
+        }
     }
 
     return lData;
+}
+
+std::string PCapReader::LastDataToString()
+{
+    return DataToString(mData, mHeader);
 }
 
 std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(ISendReceiveDevice& aConnection,
@@ -110,7 +101,7 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(ISendReceiveDevice& a
 {
     bool        lUsefulPacket{true};
     bool        lSuccesfulPacket{true};
-    std::string lData{DataToString()};
+    std::string lData{LastDataToString()};
 
     // Convert to promiscuous packet and proceed as normal.
     if (aMonitorCapture) {

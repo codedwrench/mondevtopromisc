@@ -51,7 +51,7 @@ public:
      * @param aBSSID - BSSID to compare against.
      * @return true if packet is for this BSSID.
      */
-    bool IsForBSSID(std::string_view aData, std::string_view aBSSID);
+    bool IsForBSSID(std::string_view aData, uint64_t aBSSID);
 
     /**
      * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
@@ -68,7 +68,7 @@ public:
      * @param aBSSID - The BSSID to use when constructing the packet.
      * @return converted packet data, empty string if failed.
      */
-    std::string ConvertPacketTo80211(std::string_view aData, std::string_view aBSSID);
+    std::string ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID);
 
     /**
      * Sets whether this converter should convert keeping a radiotap header in mind.
@@ -78,9 +78,9 @@ public:
     void SetRadioTap(bool aRadioTap);
 
 private:
-    void     UpdateIndexAfterRadioTap(std::string_view aData);
+    bool     UpdateIndexAfterRadioTap(std::string_view aData);
     bool     mRadioTap{false};
-    uint16_t mIndexAfterRadioTap{0};
+    uint64_t  mIndexAfterRadioTap{0};
 };
 
 

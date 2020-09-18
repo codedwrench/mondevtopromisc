@@ -27,9 +27,9 @@ public:
 
     const pcap_pkthdr* GetHeader() override;
 
-    std::string DataToFormattedString() override;
+    std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
 
-    std::string DataToString() override;
+    std::string LastDataToString() override;
 
     // TODO: Implement
     void SetBSSID(std::string_view aBSSID) override{};

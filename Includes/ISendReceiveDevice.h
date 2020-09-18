@@ -25,7 +25,7 @@ public:
      * Returns last received data as string.
      * @return a string containing the data.
      */
-    virtual std::string DataToString() = 0;
+    virtual std::string LastDataToString() = 0;
 
     /**
      * Opens the device/file.

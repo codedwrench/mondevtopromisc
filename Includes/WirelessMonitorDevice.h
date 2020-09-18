@@ -18,7 +18,7 @@
 namespace WirelessMonitorDevice_Constants
 {
     constexpr unsigned int cSnapshotLength{2048};
-    constexpr unsigned int cTimeout{512};
+    constexpr unsigned int cTimeout{10};
 }  // namespace WirelessMonitorDevice_Constants
 
 using namespace WirelessMonitorDevice_Constants;
@@ -36,9 +36,8 @@ public:
 
     const pcap_pkthdr* GetHeader() override;
 
-    std::string DataToFormattedString() override;
-
-    std::string DataToString() override;
+    std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
+    std::string LastDataToString() override;
 
     void SetBSSID(std::string_view aBSSID) override;
 
@@ -54,13 +53,14 @@ public:
     bool StartReceiverThread();
 
 private:
-    bool                                ReadCallback();
+    bool                                ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
+    bool                                mSendReceivedData{false};
     bool                                mConnected{false};
     PacketConverter                     mPacketConverter{true};
     const unsigned char*                mData{nullptr};
-    std::string                         mBSSID;
+    uint64_t                            mBSSID;
     pcap_t*                             mHandler{nullptr};
-    pcap_pkthdr*                        mHeader{nullptr};
+    const pcap_pkthdr*                  mHeader{nullptr};
     unsigned int                        mPacketCount{0};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
     std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
