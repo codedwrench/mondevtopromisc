@@ -172,19 +172,19 @@ bool XLinkKaiConnection::StartReceiverThread()
             mReceiverThread = std::make_shared<boost::thread>([&] {
                 mIoService.restart();
                 while (!mIoService.stopped()) {
-                    if (mConnected) {
-                        mIoService.poll();
-                        std::this_thread::sleep_for(std::chrono::microseconds(1));
-                    } else if (!mConnectInitiated) {
+                    if ((!mConnected && !mConnectInitiated)) {
                         // Lost connection somewhere, reconnect.
                         Connect();
                         std::this_thread::sleep_for(std::chrono::seconds(1));
-                    } else if (mConnectInitiated &&
+                    } else if ((!mConnected) && mConnectInitiated &&
                                (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
                         Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::Level::ERROR);
                         mIoService.stop();
                         mConnectInitiated = false;
                         mConnected        = false;
+                    } else {
+                        mIoService.poll();
+                        std::this_thread::sleep_for(std::chrono::microseconds(10));
                     }
                 }
             });
