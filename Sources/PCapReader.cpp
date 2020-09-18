@@ -83,7 +83,7 @@ std::string PCapReader::DataToString(const unsigned char* aData, const pcap_pkth
     if((aData != nullptr) && (aHeader != nullptr)) {
         lData.resize(aHeader->caplen);
         for (unsigned int lCount = 0; lCount < aHeader->caplen; lCount++) {
-            lData.at(lCount) = mData[lCount];
+            lData.at(lCount) = aData[lCount];
         }
     }
 

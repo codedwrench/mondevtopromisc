@@ -65,7 +65,8 @@ bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
                 mSocket.send_to(buffer(std::string(aCommand) + std::string(aData)), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log(
-                    "Could not send message! " + std::string(aData) + std::string(lException.what()), Logger::Level::ERROR);
+                    "Could not send message! " + std::string(aData) + std::string(lException.what()),
+                    Logger::Level::ERROR);
                 lReturn = false;
             }
         } else {
@@ -171,19 +172,19 @@ bool XLinkKaiConnection::StartReceiverThread()
             mReceiverThread = std::make_shared<boost::thread>([&] {
                 mIoService.restart();
                 while (!mIoService.stopped()) {
-                    if ((!mConnected && !mConnectInitiated)) {
+                    if (mConnected) {
+                        mIoService.poll();
+                        std::this_thread::sleep_for(std::chrono::microseconds(1));
+                    } else if (!mConnectInitiated) {
                         // Lost connection somewhere, reconnect.
                         Connect();
                         std::this_thread::sleep_for(std::chrono::seconds(1));
-                    } else if ((!mConnected) && mConnectInitiated &&
+                    } else if (mConnectInitiated &&
                                (std::chrono::system_clock::now() > (mConnectionTimerStart + cConnectionTimeout))) {
                         Logger::GetInstance().Log("Timeout waiting for XLink Kai to connect", Logger::Level::ERROR);
                         mIoService.stop();
                         mConnectInitiated = false;
                         mConnected        = false;
-                    } else {
-                        mIoService.poll();
-                        std::this_thread::sleep_for(std::chrono::microseconds(10));
                     }
                 }
             });
@@ -201,7 +202,7 @@ void XLinkKaiConnection::Close()
     try {
         if (mConnected || mConnectInitiated) {
             Send(cDisconnectString, "");
-            mConnected = false;
+            mConnected        = false;
             mConnectInitiated = false;
         }
 
