@@ -87,5 +87,5 @@ private:
     bool UpdateIndexAfterRadioTap(std::string_view aData);
 
     bool     mRadioTap{false};
-    uint64_t  mIndexAfterRadioTap{0};
+    uint64_t mIndexAfterRadioTap{0};
 };

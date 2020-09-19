@@ -23,10 +23,14 @@ int                                                   mLastKeyPressed{0};
 int                                                   mWindowWidth{0};
 int                                                   mWindowHeight{0};
 bool                                                  mDimensionsChanged{false};
+std::vector<std::pair<bool, std::string>>             mNetworkCheckboxes{
+    {{false, std::string("PSP/Vita Autoscan")},
+     {false, std::string("Automatically try to put adapter in monitor mode")}}};
 
 int  ProcessNetworkPanel();
 int  ProcessXLinkPanel();
 void ClearLine(WINDOW& aWindow, int aYCoord, int aLength);
+void AddCheckBoxes(WINDOW& aWindow, int aStartingYCoord, std::vector<std::pair<bool, std::string>> aCheckBoxes);
 
 int Process()
 {
@@ -34,10 +38,9 @@ int Process()
     int lHeight{0};
     int lWidth{0};
     getmaxyx(mMainWindow.get(), lHeight, lWidth);
-    if ((mWindowWidth != lWidth) || (mWindowHeight != lHeight))
-    {
-        mWindowWidth = lWidth;
-        mWindowHeight = lHeight;
+    if ((mWindowWidth != lWidth) || (mWindowHeight != lHeight)) {
+        mWindowWidth       = lWidth;
+        mWindowHeight      = lHeight;
         mDimensionsChanged = true;
     }
 
@@ -56,11 +59,31 @@ int Process()
     return 1;
 }
 
+void ProcessCheckBoxes(WINDOW&                                    aWindow,
+                       unsigned int                               aStartingYCoord,
+                       unsigned int                               xCoord,
+                       std::vector<std::pair<bool, std::string>>& aCheckBoxes,
+                       int                                        aSelection)
+{
+    unsigned int lSelectionIndex{0};
+    unsigned int lIndex{aStartingYCoord};
+    for (const auto& lCheckBox : aCheckBoxes) {
+        if (lSelectionIndex == aSelection) {
+            wattrset(mNetworkingWindow.get(), COLOR_PAIR(7));
+        } else {
+            wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
+        }
+        std::string lStringToDraw{std::string("[") + (lCheckBox.first ? "X" : " ") + "]  " + lCheckBox.second};
+        mvwaddstr(&aWindow, lIndex, xCoord, lStringToDraw.c_str());
+        lIndex++;
+        lSelectionIndex++;
+    }
+}
+
 int ProcessNetworkPanel()
 {
-    if (mDimensionsChanged)
-    {
-        wresize(mNetworkingWindow.get(), mWindowHeight/2, mWindowWidth);
+    if (mDimensionsChanged) {
+        wresize(mNetworkingWindow.get(), mWindowHeight / 2, mWindowWidth);
     }
 
     // Clear background
@@ -68,6 +91,9 @@ int ProcessNetworkPanel()
     for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
         ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
     }
+
+    // Draw checkboxes
+    ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mNetworkCheckboxes, 1);
 
     // Draw header
     ClearLine(*mNetworkingWindow, 0, mWindowWidth);
@@ -85,10 +111,9 @@ int ProcessNetworkPanel()
 
 int ProcessXLinkPanel()
 {
-    if (mDimensionsChanged)
-    {
-        mvwin(mXLinkWindow.get(), mWindowHeight/2, 0);
-        wresize(mXLinkWindow.get(), mWindowHeight/2, mWindowWidth);
+    if (mDimensionsChanged) {
+        mvwin(mXLinkWindow.get(), mWindowHeight / 2, 0);
+        wresize(mXLinkWindow.get(), mWindowHeight / 2, mWindowWidth);
     }
 
     // Clear background
@@ -96,6 +121,9 @@ int ProcessXLinkPanel()
     for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
         ClearLine(*mXLinkWindow, lLine, mWindowWidth);
     }
+
+    // Draw checkboxes
+    ProcessCheckBoxes(*mXLinkWindow, 2, 2, mNetworkCheckboxes);
 
     // Draw header
     ClearLine(*mXLinkWindow, 0, mWindowWidth);
@@ -132,54 +160,6 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
 
 int main(int argc, char* argv[])
 {
-<<<<<<< HEAD
-    std::string             lBssid{};
-    std::string             lCaptureInterface{};
-    std::string             lInjectionInterface{};
-    po::options_description lDescription("Options");
-    // clang-format off
-    lDescription.add_options()
-            ("help,h", "Shows this help message.")
-            ("bssid,b", po::value<std::string>(&lBssid)->required(), "The BSSID to listen to.")
-            ("capture_interface,c", po::value<std::string>(&lCaptureInterface)->required(),
-             "The interface that will be in monitor mode listening to packets.")
-            ("injection_interface,i", po::value<std::string>(&lInjectionInterface),
-             "If your interface does not support packet injection, another interface can be used")
-            ("xlink_kai,x", "Enables the XLink Kai interface, so packets will be sent there directly");
-    // clang-format on
-    po::variables_map lVariableMap;
-    po::store(po::command_line_parser(argc, argv).options(lDescription).run(), lVariableMap);
-
-    if (lVariableMap.count("help") || lVariableMap.count("h")) {
-        std::cout << lDescription << std::endl;
-    } else {
-        po::notify(lVariableMap);
-
-        // Handle quit signals gracefully.
-        boost::asio::io_service lSignalIoService{};
-        boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
-        lSignals.async_wait(&SignalHandler);
-        boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
-
-
-        Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
-        std::shared_ptr<WirelessMonitorDevice> lMonitorDevice = std::make_shared<WirelessMonitorDevice>();
-        std::shared_ptr<ISendReceiveDevice>    lOutputDevice  = nullptr;
-
-        if (lVariableMap.count("xlink_kai")) {
-            std::shared_ptr<XLinkKaiConnection> lXLinkKai = std::make_shared<XLinkKaiConnection>();
-            if (lXLinkKai->Open(XLinkKai_Constants::cIp)) {
-                lXLinkKai->SetSendReceiveDevice(lMonitorDevice);
-                if (lXLinkKai->StartReceiverThread()) {
-                    lOutputDevice = lXLinkKai;
-                } else {
-                    lXLinkKai->Close();
-                }
-            } else {
-                Logger::GetInstance().Log("Opening of XLink Kai device failed!", Logger::Level::ERROR);
-            }
-        }
-=======
     // Handle quit signals gracefully.
     boost::asio::io_service lSignalIoService{};
     boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
@@ -201,7 +181,7 @@ int main(int argc, char* argv[])
                                                                               [](WINDOW* aWin) { delwin(aWin); });
 
     mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, mWindowHeight / 2, 0),
-                                                                              [](WINDOW* aWin) { delwin(aWin); });
+                                                                         [](WINDOW* aWin) { delwin(aWin); });
 
     if (has_colors()) {
         start_color();
@@ -213,7 +193,6 @@ int main(int argc, char* argv[])
         init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
         init_pair(7, COLOR_BLACK, COLOR_WHITE);
     }
->>>>>>> 6a3c640... Added basic TUI code.
 
     while (gRunning) {
         Process();
@@ -229,4 +208,3 @@ int main(int argc, char* argv[])
         lThread.join();
     }
 }
-

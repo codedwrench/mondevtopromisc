@@ -56,9 +56,9 @@ void WirelessMonitorDevice::Close()
         pcap_close(mHandler);
     }
 
-    mHandler = nullptr;
-    mData    = nullptr;
-    mHeader  = nullptr;
+    mHandler        = nullptr;
+    mData           = nullptr;
+    mHeader         = nullptr;
     mReceiverThread = nullptr;
 }
 
@@ -110,11 +110,10 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         }
 
         // Data is good so save as member
-        mData = aData;
+        mData   = aData;
         mHeader = aHeader;
 
-        if (mSendReceivedData && (mSendReceiveDevice != nullptr))
-        {
+        if (mSendReceivedData && (mSendReceiveDevice != nullptr)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
             if (!lConvertedData.empty()) {
                 mSendReceiveDevice->Send(lConvertedData);
@@ -142,7 +141,7 @@ std::string WirelessMonitorDevice::DataToString(const unsigned char* aData, cons
     // Convert from char* to string
     std::string lData{};
 
-    if((aData != nullptr) && (aHeader != nullptr)) {
+    if ((aData != nullptr) && (aHeader != nullptr)) {
         lData.resize(aHeader->caplen);
         for (unsigned int lCount = 0; lCount < aHeader->caplen; lCount++) {
             lData.at(lCount) = aData[lCount];
@@ -199,7 +198,7 @@ bool WirelessMonitorDevice::StartReceiverThread()
             mReceiverThread = std::make_shared<boost::thread>([&] {
                 // If we're receiving data from the receiver thread, send it off as well.
                 bool lSendReceivedDataOld = mSendReceivedData;
-                mSendReceivedData = true;
+                mSendReceivedData         = true;
 
                 auto lCallbackFunction =
                     [](unsigned char* aThis, const pcap_pkthdr* aHeader, const unsigned char* aPacket) {
@@ -218,7 +217,7 @@ bool WirelessMonitorDevice::StartReceiverThread()
                     // No sleep here should be okay
                 }
 
-              mSendReceivedData = lSendReceivedDataOld;
+                mSendReceivedData = lSendReceivedDataOld;
             });
         }
     } else {
