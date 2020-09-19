@@ -27,6 +27,10 @@ std::vector<std::pair<bool, std::string>>             mNetworkCheckboxes{
     {{false, std::string("PSP/Vita Autoscan")},
      {false, std::string("Automatically try to put adapter in monitor mode")}}};
 
+std::vector<unsigned int> mWindowSelections{0,0};
+unsigned int mWindowSelector{0};
+bool mFirstTime{true};
+
 int  ProcessNetworkPanel();
 int  ProcessXLinkPanel();
 void ClearLine(WINDOW& aWindow, int aYCoord, int aLength);
@@ -34,6 +38,34 @@ void AddCheckBoxes(WINDOW& aWindow, int aStartingYCoord, std::vector<std::pair<b
 
 int Process()
 {
+    refresh();
+    if (!mFirstTime) {
+        int mLastKeyPressed = getch();
+        switch (mLastKeyPressed) {
+            case cKeyQ:
+                gRunning = false;
+                break;
+            case KEY_STAB:
+                mWindowSelector++;
+                if (mWindowSelector == mWindowSelections.size()) {
+                    mWindowSelector = 0;
+                }
+                break;
+            case KEY_UP:
+                if (mWindowSelections.at(mWindowSelector) != 0) {
+                    mWindowSelections.at(mWindowSelector)--;
+                }
+                break;
+            case KEY_DOWN:
+                if (mWindowSelections.at(mWindowSelector) != 0) {
+                    mWindowSelections.at(mWindowSelector)++;
+                }
+                break;
+            default:
+                mLastKeyPressed = 0;
+        }
+    }
+
     // Get window size
     int lHeight{0};
     int lWidth{0};
@@ -50,11 +82,7 @@ int Process()
             ProcessXLinkPanel();
     }
 
-    if (mLastKeyPressed == cKeyQ) {
-        gRunning = false;
-    }
-
-    refresh();
+    mFirstTime = false;
 
     return 1;
 }
@@ -69,12 +97,13 @@ void ProcessCheckBoxes(WINDOW&                                    aWindow,
     unsigned int lIndex{aStartingYCoord};
     for (const auto& lCheckBox : aCheckBoxes) {
         if (lSelectionIndex == aSelection) {
-            wattrset(mNetworkingWindow.get(), COLOR_PAIR(7));
+            wattrset(&aWindow, COLOR_PAIR(7));
         } else {
-            wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
+            wattrset(&aWindow, COLOR_PAIR(1));
         }
         std::string lStringToDraw{std::string("[") + (lCheckBox.first ? "X" : " ") + "]  " + lCheckBox.second};
         mvwaddstr(&aWindow, lIndex, xCoord, lStringToDraw.c_str());
+        wattrset(&aWindow, COLOR_PAIR(1));
         lIndex++;
         lSelectionIndex++;
     }
@@ -82,6 +111,8 @@ void ProcessCheckBoxes(WINDOW&                                    aWindow,
 
 int ProcessNetworkPanel()
 {
+    int lCheckboxesSelection{-1};
+
     if (mDimensionsChanged) {
         wresize(mNetworkingWindow.get(), mWindowHeight / 2, mWindowWidth);
     }
@@ -92,8 +123,12 @@ int ProcessNetworkPanel()
         ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
     }
 
+    if (mWindowSelections.at(0) < mNetworkCheckboxes.size() - 1) {
+        lCheckboxesSelection = mWindowSelections.at(0);
+    }
+
     // Draw checkboxes
-    ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mNetworkCheckboxes, 1);
+    ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mNetworkCheckboxes, lCheckboxesSelection);
 
     // Draw header
     ClearLine(*mNetworkingWindow, 0, mWindowWidth);
@@ -123,7 +158,7 @@ int ProcessXLinkPanel()
     }
 
     // Draw checkboxes
-    ProcessCheckBoxes(*mXLinkWindow, 2, 2, mNetworkCheckboxes);
+    ProcessCheckBoxes(*mXLinkWindow, 2, 2, mNetworkCheckboxes, 1);
 
     // Draw header
     ClearLine(*mXLinkWindow, 0, mWindowWidth);
