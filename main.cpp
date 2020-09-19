@@ -13,6 +13,7 @@
 #include "Includes/XLinkKaiConnection.h"
 
 constexpr unsigned int cKeyQ{113};
+constexpr unsigned int cKeyTab{9};
 
 std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainWindow{nullptr};
 std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mNetworkingWindow{nullptr};
@@ -23,9 +24,11 @@ int                                                   mLastKeyPressed{0};
 int                                                   mWindowWidth{0};
 int                                                   mWindowHeight{0};
 bool                                                  mDimensionsChanged{false};
-std::vector<std::pair<bool, std::string>>             mNetworkCheckboxes{
+
+std::vector<std::vector<std::pair<bool, std::string>>> mCheckboxes{
     {{false, std::string("PSP/Vita Autoscan")},
-     {false, std::string("Automatically try to put adapter in monitor mode")}}};
+     {false, std::string("Automatically try to put adapter in monitor mode")}},
+     {{{false, std::string("Scan for XLink Kai instances automatically")}}}};
 
 std::vector<unsigned int> mWindowSelections{0,0};
 unsigned int mWindowSelector{0};
@@ -45,7 +48,7 @@ int Process()
             case cKeyQ:
                 gRunning = false;
                 break;
-            case KEY_STAB:
+            case cKeyTab:
                 mWindowSelector++;
                 if (mWindowSelector == mWindowSelections.size()) {
                     mWindowSelector = 0;
@@ -57,7 +60,7 @@ int Process()
                 }
                 break;
             case KEY_DOWN:
-                if (mWindowSelections.at(mWindowSelector) != 0) {
+                if (mWindowSelections.at(mWindowSelector) < mCheckboxes.at(mWindowSelector).size() - 1) {
                     mWindowSelections.at(mWindowSelector)++;
                 }
                 break;
@@ -81,6 +84,15 @@ int Process()
             ProcessNetworkPanel();
             ProcessXLinkPanel();
     }
+
+    std::string lStringToDraw{"Press TAB to switch panes"};
+    mvwaddstr(mXLinkWindow.get(), (mWindowHeight / 2), 1, lStringToDraw.c_str());
+    lStringToDraw = "Press q to quit";
+    mvwaddstr(mXLinkWindow.get(), (mWindowHeight / 2), mWindowWidth - lStringToDraw.length() - 1, lStringToDraw.c_str());
+
+    wrefresh(mMainWindow.get());
+    wrefresh(mNetworkingWindow.get());
+    wrefresh(mXLinkWindow.get());
 
     mFirstTime = false;
 
@@ -119,16 +131,16 @@ int ProcessNetworkPanel()
 
     // Clear background
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
-    for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
+    for (int lLine = 0; lLine <= mWindowHeight/2; lLine++) {
         ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
     }
 
-    if (mWindowSelections.at(0) < mNetworkCheckboxes.size() - 1) {
+    if ((mWindowSelector == 0) && (mWindowSelections.at(0) < mCheckboxes.at(0).size())) {
         lCheckboxesSelection = mWindowSelections.at(0);
     }
 
     // Draw checkboxes
-    ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mNetworkCheckboxes, lCheckboxesSelection);
+    ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mCheckboxes.at(0), lCheckboxesSelection);
 
     // Draw header
     ClearLine(*mNetworkingWindow, 0, mWindowWidth);
@@ -136,29 +148,34 @@ int ProcessNetworkPanel()
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(7));
     std::string lHeaderText{"Network adapter options:"};
     mvwaddstr(mNetworkingWindow.get(), 0, 0, lHeaderText.c_str());
+    wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
 
     curs_set(0);
-
-    wrefresh(mNetworkingWindow.get());
 
     return 1;
 }
 
 int ProcessXLinkPanel()
 {
+    int lCheckboxesSelection{-1};
+
     if (mDimensionsChanged) {
-        mvwin(mXLinkWindow.get(), mWindowHeight / 2, 0);
         wresize(mXLinkWindow.get(), mWindowHeight / 2, mWindowWidth);
+        mvwin(mXLinkWindow.get(), mWindowHeight / 2, mWindowWidth);
     }
 
     // Clear background
     wattrset(mXLinkWindow.get(), COLOR_PAIR(1));
-    for (int lLine = 0; lLine <= mWindowHeight; lLine++) {
+    for (int lLine = 0; lLine <= mWindowHeight / 2; lLine++) {
         ClearLine(*mXLinkWindow, lLine, mWindowWidth);
     }
 
+    if ((mWindowSelector == 1) && (mWindowSelections.at(1) < mCheckboxes.at(1).size())) {
+        lCheckboxesSelection = mWindowSelections.at(1);
+    }
+
     // Draw checkboxes
-    ProcessCheckBoxes(*mXLinkWindow, 2, 2, mNetworkCheckboxes, 1);
+    ProcessCheckBoxes(*mXLinkWindow, 2, 2, mCheckboxes.at(1), lCheckboxesSelection);
 
     // Draw header
     ClearLine(*mXLinkWindow, 0, mWindowWidth);
@@ -166,10 +183,9 @@ int ProcessXLinkPanel()
     wattrset(mXLinkWindow.get(), COLOR_PAIR(7));
     std::string lHeaderText{"XLink Kai options:"};
     mvwaddstr(mXLinkWindow.get(), 0, 0, lHeaderText.c_str());
+    wattrset(mXLinkWindow.get(), COLOR_PAIR(1));
 
     curs_set(0);
-
-    wrefresh(mXLinkWindow.get());
 
     return 1;
 }
