@@ -85,10 +85,13 @@ int Process()
             ProcessXLinkPanel();
     }
 
+    int lXLinkPaneHeight{0};
+    int lXLinkPaneWidth{0};
+    getmaxyx(mXLinkWindow.get(), lXLinkPaneHeight, lXLinkPaneWidth);
     std::string lStringToDraw{"Press TAB to switch panes"};
-    mvwaddstr(mXLinkWindow.get(), (mWindowHeight / 2), 1, lStringToDraw.c_str());
+    mvwaddstr(mXLinkWindow.get(), lXLinkPaneHeight - 1, 1, lStringToDraw.c_str());
     lStringToDraw = "Press q to quit";
-    mvwaddstr(mXLinkWindow.get(), (mWindowHeight / 2), mWindowWidth - lStringToDraw.length() - 1, lStringToDraw.c_str());
+    mvwaddstr(mXLinkWindow.get(), lXLinkPaneHeight - 1, lXLinkPaneWidth - lStringToDraw.length() - 1, lStringToDraw.c_str());
 
     wrefresh(mMainWindow.get());
     wrefresh(mNetworkingWindow.get());
@@ -124,14 +127,20 @@ void ProcessCheckBoxes(WINDOW&                                    aWindow,
 int ProcessNetworkPanel()
 {
     int lCheckboxesSelection{-1};
+    int lHeight{0};
+    int lWidth{0};
+
+    getmaxyx(mNetworkingWindow.get(), lHeight, lWidth);
 
     if (mDimensionsChanged) {
         wresize(mNetworkingWindow.get(), mWindowHeight / 2, mWindowWidth);
+        lHeight = mWindowHeight / 2;
     }
 
     // Clear background
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
-    for (int lLine = 0; lLine <= mWindowHeight/2; lLine++) {
+    
+    for (int lLine = 0; lLine <= lHeight; lLine++) {
         ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
     }
 
@@ -143,14 +152,11 @@ int ProcessNetworkPanel()
     ProcessCheckBoxes(*mNetworkingWindow, 2, 2, mCheckboxes.at(0), lCheckboxesSelection);
 
     // Draw header
-    ClearLine(*mNetworkingWindow, 0, mWindowWidth);
     box(mNetworkingWindow.get(), 0, 0);
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(7));
     std::string lHeaderText{"Network adapter options:"};
     mvwaddstr(mNetworkingWindow.get(), 0, 0, lHeaderText.c_str());
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
-
-    curs_set(0);
 
     return 1;
 }
@@ -158,15 +164,22 @@ int ProcessNetworkPanel()
 int ProcessXLinkPanel()
 {
     int lCheckboxesSelection{-1};
+    int lHeight{0};
+    int lWidth{0};
+
+    getmaxyx(mXLinkWindow.get(), lHeight, lWidth);
+
 
     if (mDimensionsChanged) {
-        wresize(mXLinkWindow.get(), mWindowHeight / 2, mWindowWidth);
-        mvwin(mXLinkWindow.get(), mWindowHeight / 2, mWindowWidth);
+        wresize(mXLinkWindow.get(), (mWindowHeight / 2), mWindowWidth);
+        mvwin(mXLinkWindow.get(), (mWindowHeight / 2), 0);
+        lHeight = mWindowHeight / 2;
     }
 
     // Clear background
     wattrset(mXLinkWindow.get(), COLOR_PAIR(1));
-    for (int lLine = 0; lLine <= mWindowHeight / 2; lLine++) {
+
+    for (int lLine = 0; lLine < lHeight; lLine++) {
         ClearLine(*mXLinkWindow, lLine, mWindowWidth);
     }
 
@@ -178,7 +191,6 @@ int ProcessXLinkPanel()
     ProcessCheckBoxes(*mXLinkWindow, 2, 2, mCheckboxes.at(1), lCheckboxesSelection);
 
     // Draw header
-    ClearLine(*mXLinkWindow, 0, mWindowWidth);
     box(mXLinkWindow.get(), 0, 0);
     wattrset(mXLinkWindow.get(), COLOR_PAIR(7));
     std::string lHeaderText{"XLink Kai options:"};
@@ -222,6 +234,7 @@ int main(int argc, char* argv[])
     nonl();
     cbreak();
     noecho();
+    nodelay(stdscr, true);
 
     mMainWindow =
         std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, 0, 0), [](WINDOW* aWin) { delwin(aWin); });
@@ -231,7 +244,7 @@ int main(int argc, char* argv[])
     mNetworkingWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(mWindowHeight / 2, 0, 0, 0),
                                                                               [](WINDOW* aWin) { delwin(aWin); });
 
-    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, mWindowHeight / 2, 0),
+    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin((mWindowHeight / 2), 0, (mWindowHeight / 2), 0),
                                                                          [](WINDOW* aWin) { delwin(aWin); });
 
     if (has_colors()) {

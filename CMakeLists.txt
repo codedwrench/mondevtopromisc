@@ -4,7 +4,7 @@ project(mondevtopromisc)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(BUILD_DOC "Build doxygen" ON)
+option(BUILD_DOC "Build doxygen" OFF)
 option(ENABLE_TESTS "Build unittests" OFF)
 
 include_directories(Sources)
@@ -12,7 +12,7 @@ include_directories(Tests)
 
 # check if Doxygen is installed
 find_package(Doxygen)
-if (DOXYGEN_FOUND)
+if (BUILD_DOC AND DOXYGEN_FOUND)
     # set input and output files
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Doxyfile.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
@@ -28,7 +28,7 @@ if (DOXYGEN_FOUND)
             VERBATIM)
 else (DOXYGEN_FOUND)
     message("Doxygen need to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
+endif (BUILD_DOC AND DOXYGEN_FOUND)
 
 if (MSVC)
     message("You're running Windows! Make sure your paths are set correctly.")
@@ -59,6 +59,14 @@ add_executable(mondevtopromisc main.cpp
         Sources/PCapReader.cpp
         Sources/WirelessMonitorDevice.cpp
         Sources/XLinkKaiConnection.cpp
+        Sources/Userinterface/Button.cpp
+        Sources/Userinterface/CheckBox.cpp
+        Sources/Userinterface/MainWindow.cpp
+        Sources/Userinterface/NetworkingWindow.cpp
+        Sources/Userinterface/TextField.cpp
+        Sources/Userinterface/UIObject.cpp
+        Sources/Userinterface/Window.cpp
+        Sources/Userinterface/XLinkWindow.cpp
         Includes/IPCapDevice.h
         Includes/ISendReceiveDevice.h
         Includes/Logger.h
@@ -67,6 +75,16 @@ add_executable(mondevtopromisc main.cpp
         Includes/PCapReader.h
         Includes/WirelessMonitorDevice.h
         Includes/XLinkKaiConnection.h
+        Includes/Userinterface/Button.h
+        Includes/Userinterface/CheckBox.h
+        Includes/Userinterface/IUIObject.h
+        Includes/Userinterface/IWindow.h
+        Includes/Userinterface/MainWindow.h
+        Includes/Userinterface/NetworkingWindow.h
+        Includes/Userinterface/TextField.h
+        Includes/Userinterface/UIObject.h
+        Includes/Userinterface/Window.h
+        Includes/Userinterface/XLinkWindow.h
         ${EXTRA_INCLUDES})
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
