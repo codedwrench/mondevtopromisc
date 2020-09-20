@@ -59,14 +59,14 @@ add_executable(mondevtopromisc main.cpp
         Sources/PCapReader.cpp
         Sources/WirelessMonitorDevice.cpp
         Sources/XLinkKaiConnection.cpp
-        Sources/Userinterface/Button.cpp
-        Sources/Userinterface/CheckBox.cpp
-        Sources/Userinterface/MainWindow.cpp
-        Sources/Userinterface/NetworkingWindow.cpp
-        Sources/Userinterface/TextField.cpp
-        Sources/Userinterface/UIObject.cpp
-        Sources/Userinterface/Window.cpp
-        Sources/Userinterface/XLinkWindow.cpp
+        Sources/UserInterface/Button.cpp
+        Sources/UserInterface/CheckBox.cpp
+        Sources/UserInterface/MainWindow.cpp
+        Sources/UserInterface/NetworkingWindow.cpp
+        Sources/UserInterface/TextField.cpp
+        Sources/UserInterface/UIObject.cpp
+        Sources/UserInterface/Window.cpp
+        Sources/UserInterface/XLinkWindow.cpp
         Includes/IPCapDevice.h
         Includes/ISendReceiveDevice.h
         Includes/Logger.h
@@ -75,16 +75,16 @@ add_executable(mondevtopromisc main.cpp
         Includes/PCapReader.h
         Includes/WirelessMonitorDevice.h
         Includes/XLinkKaiConnection.h
-        Includes/Userinterface/Button.h
-        Includes/Userinterface/CheckBox.h
-        Includes/Userinterface/IUIObject.h
-        Includes/Userinterface/IWindow.h
-        Includes/Userinterface/MainWindow.h
-        Includes/Userinterface/NetworkingWindow.h
-        Includes/Userinterface/TextField.h
-        Includes/Userinterface/UIObject.h
-        Includes/Userinterface/Window.h
-        Includes/Userinterface/XLinkWindow.h
+        Includes/UserInterface/Button.h
+        Includes/UserInterface/CheckBox.h
+        Includes/UserInterface/IUIObject.h
+        Includes/UserInterface/IWindow.h
+        Includes/UserInterface/MainWindow.h
+        Includes/UserInterface/NetworkingWindow.h
+        Includes/UserInterface/TextField.h
+        Includes/UserInterface/UIObject.h
+        Includes/UserInterface/Window.h
+        Includes/UserInterface/XLinkWindow.h
         ${EXTRA_INCLUDES})
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
