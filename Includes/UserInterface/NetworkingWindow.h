@@ -7,4 +7,4 @@
  *
  **/
 
-#endif // NETWORKINGWINDOW_H
+#endif  // NETWORKINGWINDOW_H

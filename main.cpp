@@ -28,11 +28,11 @@ bool                                                  mDimensionsChanged{false};
 std::vector<std::vector<std::pair<bool, std::string>>> mCheckboxes{
     {{false, std::string("PSP/Vita Autoscan")},
      {false, std::string("Automatically try to put adapter in monitor mode")}},
-     {{{false, std::string("Scan for XLink Kai instances automatically")}}}};
+    {{{false, std::string("Scan for XLink Kai instances automatically")}}}};
 
-std::vector<unsigned int> mWindowSelections{0,0};
-unsigned int mWindowSelector{0};
-bool mFirstTime{true};
+std::vector<unsigned int> mWindowSelections{0, 0};
+unsigned int              mWindowSelector{0};
+bool                      mFirstTime{true};
 
 int  ProcessNetworkPanel();
 int  ProcessXLinkPanel();
@@ -91,7 +91,8 @@ int Process()
     std::string lStringToDraw{"Press TAB to switch panes"};
     mvwaddstr(mXLinkWindow.get(), lXLinkPaneHeight - 1, 1, lStringToDraw.c_str());
     lStringToDraw = "Press q to quit";
-    mvwaddstr(mXLinkWindow.get(), lXLinkPaneHeight - 1, lXLinkPaneWidth - lStringToDraw.length() - 1, lStringToDraw.c_str());
+    mvwaddstr(
+        mXLinkWindow.get(), lXLinkPaneHeight - 1, lXLinkPaneWidth - lStringToDraw.length() - 1, lStringToDraw.c_str());
 
     wrefresh(mMainWindow.get());
     wrefresh(mNetworkingWindow.get());
@@ -139,7 +140,7 @@ int ProcessNetworkPanel()
 
     // Clear background
     wattrset(mNetworkingWindow.get(), COLOR_PAIR(1));
-    
+
     for (int lLine = 0; lLine <= lHeight; lLine++) {
         ClearLine(*mNetworkingWindow, lLine, mWindowWidth);
     }
@@ -244,8 +245,8 @@ int main(int argc, char* argv[])
     mNetworkingWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(mWindowHeight / 2, 0, 0, 0),
                                                                               [](WINDOW* aWin) { delwin(aWin); });
 
-    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin((mWindowHeight / 2), 0, (mWindowHeight / 2), 0),
-                                                                         [](WINDOW* aWin) { delwin(aWin); });
+    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(
+        newwin((mWindowHeight / 2), 0, (mWindowHeight / 2), 0), [](WINDOW* aWin) { delwin(aWin); });
 
     if (has_colors()) {
         start_color();

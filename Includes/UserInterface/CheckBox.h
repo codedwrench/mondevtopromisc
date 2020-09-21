@@ -7,4 +7,4 @@
  *
  **/
 
-#endif // CHECKBOX_H
+#endif  // CHECKBOX_H

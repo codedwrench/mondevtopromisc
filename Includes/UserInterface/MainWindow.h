@@ -7,4 +7,13 @@
  *
  **/
 
-#endif // MAINWINDOW_H
+#include "Window.h"
+
+class MainWindow : public Window
+{
+public:
+    MainWindow()  = default;
+    ~MainWindow() = default;
+};
+
+#endif  // MAINWINDOW_H

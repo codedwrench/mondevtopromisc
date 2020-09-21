@@ -1,5 +1,5 @@
-#ifndef IWINDOW_H
-#define IWINDOW_H
+#ifndef WINDOW_H
+#define WINDOW_H
 
 /* Copyright (c) 2020 [Rick de Bondt] - Window.h
  *
@@ -7,4 +7,9 @@
  *
  **/
 
-#endif // IWINDOW_H
+#include "IWindow.h"
+
+class Window : public IWindow
+{};
+
+#endif  // WINDOW_H

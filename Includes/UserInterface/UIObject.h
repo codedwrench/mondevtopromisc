@@ -7,4 +7,4 @@
  *
  **/
 
-#endif // UIOBJECT_H
+#endif  // UIOBJECT_H

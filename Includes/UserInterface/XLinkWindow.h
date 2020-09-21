@@ -7,4 +7,4 @@
  *
  **/
 
-#endif // XLINKWINDOW_H
+#endif  // XLINKWINDOW_H
