@@ -40,6 +40,9 @@ if (MSVC)
     add_definitions( -DBOOST_ALL_DYN_LINK )
 endif ()
 
+# Concepts seems to break on a bunch of compilers, see: https://github.com/boostorg/asio/issues/312
+add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
+
 include(FindPCAP.cmake)
 
 find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
