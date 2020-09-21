@@ -1,5 +1,4 @@
-#ifndef WIRELESS_MONITOR_DEVICE_H
-#define WIRELESS_MONITOR_DEVICE_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - WirelessMonitorDevice.h
  *
@@ -65,6 +64,3 @@ private:
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
     std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
 };
-
-
-#endif  // WIRELESS_MONITOR_DEVICE_H

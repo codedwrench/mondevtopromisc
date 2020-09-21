@@ -1,5 +1,4 @@
-#ifndef IPCAPDEVCE_H
-#define IPCAPDEVCE_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - IPCapDevice.h
  *
@@ -45,6 +44,3 @@ public:
      */
     virtual void SetBSSID(std::string_view aBssid) = 0;
 };
-
-
-#endif  // IPCAPDEVICE_H

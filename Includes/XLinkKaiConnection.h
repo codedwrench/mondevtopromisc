@@ -1,5 +1,4 @@
-#ifndef XLINKKAICONNECTION_H
-#define XLINKKAICONNECTION_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - XLinkKaiConnection.h
  *
@@ -136,5 +135,3 @@ private:
     std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
 };
-
-#endif  // XLINKKAICONNECTION_H

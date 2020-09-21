@@ -1,5 +1,4 @@
-#ifndef NETWORKINGHEADERS_H
-#define NETWORKINGHEADERS_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - NetworkingHeaders.h
  *
@@ -129,6 +128,3 @@ namespace RadioTap_Constants
 
 
 }  // namespace RadioTap_Constants
-
-
-#endif  // NETWORKINGHEADERS_H

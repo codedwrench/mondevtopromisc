@@ -1,5 +1,4 @@
-#ifndef PACKETCONVERTER_H
-#define PACKETCONVERTER_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - Logger.h
  *
@@ -82,6 +81,3 @@ private:
     bool     mRadioTap{false};
     uint64_t  mIndexAfterRadioTap{0};
 };
-
-
-#endif  // PACKETCONVERTER_H

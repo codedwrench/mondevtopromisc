@@ -1,5 +1,4 @@
-#ifndef ISENDRECEIVEDEVCE_H
-#define ISENDRECEIVEDEVCE_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - ISendReceiveDevice.h
  *
@@ -53,6 +52,3 @@ public:
      */
     virtual void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) = 0;
 };
-
-
-#endif  // ISENDRECEIVEDEVICE_H

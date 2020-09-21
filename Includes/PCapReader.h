@@ -1,5 +1,4 @@
-#ifndef PCAPREADER_H
-#define PCAPREADER_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - ILinuxDevice.h
  *
@@ -66,6 +65,3 @@ private:
     unsigned int                        mPacketCount{0};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
 };
-
-
-#endif  // PCAPREADER_H

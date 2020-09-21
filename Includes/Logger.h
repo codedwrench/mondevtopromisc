@@ -1,5 +1,4 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - Logger.h
  *
@@ -106,6 +105,3 @@ private:
     std::ofstream              mLogOutputStream{};
     bool                       mLogToDisk{false};
 };
-
-
-#endif  // LOGGER_H
