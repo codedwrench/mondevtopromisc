@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - MainWindow.h
  *
@@ -15,5 +14,3 @@ public:
     MainWindow()  = default;
     ~MainWindow() = default;
 };
-
-#endif  // MAINWINDOW_H

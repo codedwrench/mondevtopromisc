@@ -1,5 +1,4 @@
-#ifndef IWINDOW_H
-#define IWINDOW_H
+#pragma once
 
 /* Copyright (c) 2020 [Rick de Bondt] - IWindow.h
  *
@@ -62,5 +61,3 @@ public:
      */
     virtual bool DoSelection() = 0;
 };
-
-#endif  // IWINDOW_H
