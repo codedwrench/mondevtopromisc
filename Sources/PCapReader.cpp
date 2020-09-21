@@ -13,12 +13,13 @@ using namespace std::chrono;
 
 bool PCapReader::Open(std::string_view aName)
 {
-    bool lReturn{true};
-    char lErrorBuffer[PCAP_ERRBUF_SIZE];
-    mHandler = pcap_open_offline(aName.data(), lErrorBuffer);
+    bool                               lReturn{true};
+    std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
+    mHandler = pcap_open_offline(aName.data(), lErrorBuffer.data());
     if (mHandler == nullptr) {
         lReturn = false;
-        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer), Logger::Level::ERROR);
+        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
+                                  Logger::Level::ERROR);
     }
     return lReturn;
 }

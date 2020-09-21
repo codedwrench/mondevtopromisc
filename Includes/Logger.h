@@ -28,6 +28,9 @@ public:
     Logger(const Logger& aLogger) = delete;
     Logger& operator=(const Logger& aLogger) = delete;
 
+    Logger& operator=(Logger&& aLogger) = delete;
+    Logger(Logger&& aLogger)            = delete;
+
     /**
      * Contains loglevels, used to suppress logging based on level.
      */

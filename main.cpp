@@ -9,6 +9,7 @@
 #undef timeout
 
 #include "Includes/Logger.h"
+#include "Includes/UserInterface/WindowController.h"
 #include "Includes/WirelessMonitorDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 
@@ -230,43 +231,13 @@ int main(int argc, char* argv[])
     lSignals.async_wait(&SignalHandler);
     boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
 
-    initscr();
-    keypad(stdscr, true);
-    nonl();
-    cbreak();
-    noecho();
-    nodelay(stdscr, true);
-
-    mMainWindow =
-        std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, 0, 0), [](WINDOW* aWin) { delwin(aWin); });
-
-    getmaxyx(mMainWindow.get(), mWindowHeight, mWindowWidth);
-
-    mNetworkingWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(mWindowHeight / 2, 0, 0, 0),
-                                                                              [](WINDOW* aWin) { delwin(aWin); });
-
-    mXLinkWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(
-        newwin((mWindowHeight / 2), 0, (mWindowHeight / 2), 0), [](WINDOW* aWin) { delwin(aWin); });
-
-    if (has_colors()) {
-        start_color();
-        init_pair(1, COLOR_WHITE, COLOR_BLACK);
-        init_pair(2, COLOR_WHITE, COLOR_BLUE);
-        init_pair(3, COLOR_BLACK, COLOR_CYAN);
-        init_pair(4, COLOR_BLUE, COLOR_BLACK);
-        init_pair(5, COLOR_CYAN, COLOR_BLACK);
-        init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
-        init_pair(7, COLOR_BLACK, COLOR_WHITE);
-    }
+    WindowController lController;
+    lController.SetUp();
 
     while (gRunning) {
-        Process();
+        lController.Process();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
-    endwin();
-
-    mMainWindow = nullptr;
 
     lSignalIoService.stop();
     if (lThread.joinable()) {

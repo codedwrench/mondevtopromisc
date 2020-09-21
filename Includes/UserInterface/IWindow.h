@@ -6,6 +6,10 @@
  *
  **/
 
+#include <memory>
+
+#include "IUIObject.h"
+
 /**
  * Interface for Window classes.
  */
@@ -20,7 +24,7 @@ public:
     /**
      * Add objects to window.
      */
-    virtual void AddObject() = 0;
+    virtual void AddObject(std::unique_ptr<IUIObject> aObject) = 0;
 
     /**
      * Refreshes window.
@@ -33,7 +37,7 @@ public:
      * @param aXCoord - X coordinate to move window to.
      * @return true if successful.
      */
-    virtual bool Move(unsigned int aYCoord, unsigned int aXcoord) = 0;
+    virtual bool Move(int aYCoord, int aXcoord) = 0;
 
     /**
      * Resizes window. Note: You cannot resize a Window beyond the screen boundaries.
@@ -41,7 +45,7 @@ public:
      * @param aColumns - Amount of columns to resize the window to.
      * @return true if successful.
      */
-    virtual bool Resize(unsigned int aLines, unsigned int aColumns) = 0;
+    virtual bool Resize(int aLines, int aColumns) = 0;
 
     /**
      * Advances cursor position to next selection.
@@ -60,4 +64,28 @@ public:
      * @return true if successful.
      */
     virtual bool DoSelection() = 0;
+
+    /**
+     * Makes a window exclusive, other windows stop being processed.
+     * @param aExclusive - Wether the window should be exclusive or not.
+     */
+    virtual void SetExclusive(bool aExclusive) = 0;
+
+    /**
+     * Gets if window is exclusive.
+     * @return true if exclusive.
+     */
+    virtual bool IsExclusive() = 0;
+
+    /**
+     * Makes a window visible.
+     * @param aVisible - Wether the window should be visible or not.
+     */
+    virtual void SetVisible(bool aVisible) = 0;
+
+    /**
+     * Gets if window is visible.
+     * @return true if visible.
+     */
+    virtual bool IsVisible() = 0;
 };
