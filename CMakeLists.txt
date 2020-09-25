@@ -63,7 +63,6 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/CheckBox.cpp
         Sources/UserInterface/NetworkingWindow.cpp
         Sources/UserInterface/TextField.cpp
-        Sources/UserInterface/UIObject.cpp
         Sources/UserInterface/Window.cpp
         Sources/UserInterface/WindowController.cpp
         Sources/UserInterface/XLinkWindow.cpp
@@ -81,7 +80,6 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/IWindow.h
         Includes/UserInterface/NetworkingWindow.h
         Includes/UserInterface/TextField.h
-        Includes/UserInterface/UIObject.h
         Includes/UserInterface/Window.h
         Includes/UserInterface/WindowController.h
         Includes/UserInterface/XLinkWindow.h

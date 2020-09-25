@@ -34,7 +34,8 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
 
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
-        lDataToConvert             = mPacketConverter.ConvertPacketTo80211(lDataToConvert, "01:23:45:67:AB:CD");
+        lDataToConvert =
+            mPacketConverter.ConvertPacketTo80211(lDataToConvert, mPacketConverter.MacToInt("01:23:45:67:AB:CD"));
 
         pcap_pkthdr lHeader{};
         lHeader.caplen = lDataToConvert.size();
@@ -73,7 +74,7 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
         if (mPacketConverter.Is80211Data(lDataToConvert) &&
-            mPacketConverter.IsForBSSID(lDataToConvert, "62:58:c5:07:95:5e")) {
+            mPacketConverter.IsForBSSID(lDataToConvert, mPacketConverter.MacToInt("62:58:c5:07:95:5e"))) {
             lDataToConvert = mPacketConverter.ConvertPacketTo8023(lDataToConvert);
 
             pcap_pkthdr lHeader{};

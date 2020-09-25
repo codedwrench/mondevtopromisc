@@ -34,7 +34,6 @@ public:
 
     /**
      * Sets up the layout and assigns the keybinds and such.
-     *
      * @return true if successful
      */
     bool SetUp();
@@ -47,7 +46,6 @@ public:
 private:
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas{nullptr};
 
-    std::vector<std::unique_ptr<IWindow>> mWindows{};
-    bool                                  mHasExclusiveAndVisibleWindow{false};
-    int                                   mExclusiveWindowIndex{0};
+    std::vector<std::shared_ptr<IWindow>> mWindows{};
+    std::shared_ptr<IWindow>              mExclusiveWindow{nullptr};
 };

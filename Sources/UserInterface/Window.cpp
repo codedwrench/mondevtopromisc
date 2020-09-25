@@ -9,15 +9,30 @@ Window::Window(
 {
     mNCursesWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(aLines, aColumns, aYCoord, aXCoord),
                                                                            [](WINDOW* aWin) { delwin(aWin); });
+    SetUp();
+}
+
+void Window::SetUp()
+{
+    // Base window has no setup yet.
 }
 
 void Window::Draw()
 {
     box(mNCursesWindow.get(), 0, 0);
-    wattrset(mNCursesWindow.get(), COLOR_PAIR(7));
-    mvwaddstr(mNCursesWindow.get(), 0, 0, mTitle.c_str());
-    wattrset(mNCursesWindow.get(), COLOR_PAIR(1));
+    DrawString(0, 0, 7, mTitle);
     Refresh();
+
+    for (auto& lObject : mObjects) {
+        lObject->Draw();
+    }
+}
+
+void Window::DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString)
+{
+    wattrset(mNCursesWindow.get(), COLOR_PAIR(aColorPair));
+    mvwaddstr(mNCursesWindow.get(), aYCoord, aXCoord, aString.data());
+    wattrset(mNCursesWindow.get(), COLOR_PAIR(1));
 }
 
 void Window::AddObject(std::unique_ptr<IUIObject> aObject)
@@ -40,12 +55,22 @@ bool Window::Resize(int aLines, int aColumns)
     return false;
 }
 
-bool Window::AdvanceSelection()
+bool Window::AdvanceSelectionVertical()
 {
     return false;
 }
 
-bool Window::RecedeSelection()
+bool Window::RecedeSelectionVertical()
+{
+    return false;
+}
+
+bool Window::AdvanceSelectionHorizontal()
+{
+    return false;
+}
+
+bool Window::RecedeSelectionHorizontal()
 {
     return false;
 }

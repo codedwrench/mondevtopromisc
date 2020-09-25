@@ -5,9 +5,9 @@
  * This file contains an interface for a userinterface object.
  *
  **/
-
 class IUIObject
 {
+public:
     /**
      * Draws object on screen.
      */

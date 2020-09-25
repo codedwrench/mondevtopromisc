@@ -13,10 +13,9 @@
 #undef timeout
 
 #include "IWindow.h"
-#include "UIObject.h"
 
 /**
- * Abstract class with basic functions to setup a window.
+ * Class with basic functions to setup a window.
  */
 class Window : public IWindow
 {
@@ -37,7 +36,11 @@ public:
 
     ~Window() = default;
 
+    void SetUp() override;
+
     void Draw() override;
+
+    void DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString);
 
     void AddObject(std::unique_ptr<IUIObject> aObject) override;
 
@@ -47,9 +50,13 @@ public:
 
     bool Resize(int aLines, int aColumns) override;
 
-    bool AdvanceSelection() override;
+    bool AdvanceSelectionVertical() override;
 
-    bool RecedeSelection() override;
+    bool RecedeSelectionVertical() override;
+
+    bool AdvanceSelectionHorizontal() override;
+
+    bool RecedeSelectionHorizontal() override;
 
     bool DoSelection() override;
 

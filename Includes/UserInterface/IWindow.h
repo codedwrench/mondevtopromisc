@@ -7,6 +7,7 @@
  **/
 
 #include <memory>
+#include <string_view>
 
 #include "IUIObject.h"
 
@@ -17,6 +18,11 @@ class IWindow
 {
 public:
     /**
+     * Sets the window up.
+     */
+    virtual void SetUp() = 0;
+
+    /**
      * Draws window on screen.
      */
     virtual void Draw() = 0;
@@ -25,6 +31,16 @@ public:
      * Add objects to window.
      */
     virtual void AddObject(std::unique_ptr<IUIObject> aObject) = 0;
+
+    /**
+     * Draws a string on the Window at specified position.
+     *
+     * @param aYCoord - Y coordinate to draw the window at.
+     * @param aXCoord - X coordinate to draw the window at.
+     * @param aColorPair - Color to draw the string with.
+     * @param aString - String to draw on the screen.
+     */
+    virtual void DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString) = 0;
 
     /**
      * Refreshes window.
@@ -48,16 +64,28 @@ public:
     virtual bool Resize(int aLines, int aColumns) = 0;
 
     /**
-     * Advances cursor position to next selection.
+     * Advances cursor position to next selection vertically.
      * @return true if successful.
      */
-    virtual bool AdvanceSelection() = 0;
+    virtual bool AdvanceSelectionVertical() = 0;
 
     /**
-     * Recedes cursor position to previous selection.
+     * Recedes cursor position to previous selection vertically.
      * @return true if successful.
      */
-    virtual bool RecedeSelection() = 0;
+    virtual bool RecedeSelectionVertical() = 0;
+
+    /**
+     * Advances cursor position to next selection horizontally.
+     * @return true if successful.
+     */
+    virtual bool AdvanceSelectionHorizontal() = 0;
+
+    /**
+     * Recedes cursor position to previous selection horizontally.
+     * @return true if successful.
+     */
+    virtual bool RecedeSelectionHorizontal() = 0;
 
     /**
      * Do action for object at selection.

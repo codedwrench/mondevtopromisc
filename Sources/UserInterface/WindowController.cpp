@@ -4,6 +4,8 @@
 
 #include <cmath>
 
+#include "../../Includes/UserInterface/XLinkWindow.h"
+
 bool WindowController::SetUp()
 {
     initscr();
@@ -30,12 +32,12 @@ bool WindowController::SetUp()
     int lHeight{0};
     int lWidth{0};
     getmaxyx(mMainCanvas.get(), lHeight, lWidth);
-    mWindows.emplace_back(std::make_unique<Window>("Networking pane:", 0U, 0U, (floor(lHeight / 2.0)), lWidth));
+    mWindows.emplace_back(std::make_shared<Window>("Networking pane:", 0, 0, (floor(lHeight / 2.0)), lWidth));
 
     mWindows.emplace_back(
-        std::make_unique<Window>("XLink Kai pane:", floor(lHeight / 2.0), 0U, floor(lHeight / 2.0), lWidth));
+        std::make_shared<XLinkWindow>("XLink Kai pane:", floor(lHeight / 2.0), 0, floor(lHeight / 2.0), lWidth));
 
-    mWindows.emplace_back(std::make_unique<Window>("SSID Selection:", 10, 10, lHeight - 10, lWidth - 10, true, false));
+    mWindows.emplace_back(std::make_shared<Window>("SSID Selection:", 10, 10, lHeight - 10, lWidth - 10, false, false));
 
     return true;
 }
@@ -44,9 +46,22 @@ void WindowController::Process()
 {
     wrefresh(mMainCanvas.get());
 
-    for (auto& lWindow : mWindows) {
-        if (lWindow->IsVisible()) {
-            lWindow->Draw();
+    if (mExclusiveWindow != nullptr) {
+        if (!mExclusiveWindow->IsVisible() || !(mExclusiveWindow->IsExclusive())) {
+            mExclusiveWindow = nullptr;
+        } else {
+            mExclusiveWindow->Draw();
+        }
+    }
+
+    if (mExclusiveWindow == nullptr) {
+        for (auto& lWindow : mWindows) {
+            if (lWindow->IsVisible()) {
+                lWindow->Draw();
+                if (lWindow->IsExclusive()) {
+                    mExclusiveWindow = lWindow;
+                }
+            }
         }
     }
 
