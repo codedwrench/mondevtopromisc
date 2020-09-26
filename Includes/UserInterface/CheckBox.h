@@ -6,13 +6,13 @@
  *
  **/
 
-#include "IUIObject.h"
+#include "UIObject.h"
 #include "IWindow.h"
 
-class CheckBox : public IUIObject
+class CheckBox : public UIObject
 {
 public:
-    CheckBox(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aChecked, bool aSelected);
+    CheckBox(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aChecked = false, bool aSelected = false, bool aVisible = true);
     void Draw() override;
     bool DoAction() override;
 
@@ -23,10 +23,6 @@ public:
     [[nodiscard]] bool IsSelected() const;
 
 private:
-    IWindow&    mWindow;
-    std::string mName;
-    bool        mChecked;
-    bool        mSelected;
-    int         mYCoord;
-    int         mXCoord;
+    bool mSelected;
+    bool mChecked;
 };

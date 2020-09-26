@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include <ncurses.h>
 #undef timeout
@@ -46,9 +47,13 @@ public:
 
     void Refresh() override;
 
-    bool Move(int aYCoord, int aXcoord) override;
+    bool Move(int aYCoord, int aXCoord) override;
+
+    std::pair<int, int> GetSize() override;
 
     bool Resize(int aLines, int aColumns) override;
+
+    bool Scale(int aMaxHeight, int aMaxWidth) override;
 
     bool AdvanceSelectionVertical() override;
 
@@ -71,6 +76,9 @@ public:
 private:
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mNCursesWindow;
     std::string                                           mTitle;
+    int                                                   mLines;
+    int                                                   mColumns;
+    bool                                                  mDimensionsChanged;
     bool                                                  mExclusive;
     bool                                                  mVisible;
     std::vector<std::unique_ptr<IUIObject>>               mObjects;

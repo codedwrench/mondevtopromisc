@@ -8,6 +8,10 @@
 
 #include "Window.h"
 
+
+/**
+ * Class that will setup and draw an XLink window.
+ **/
 class XLinkWindow : public Window
 {
 public:
@@ -20,4 +24,5 @@ public:
                 bool             aVisible   = true);
 
     void SetUp() override;
+    void Draw() override;
 };

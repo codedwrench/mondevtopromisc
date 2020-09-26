@@ -46,6 +46,9 @@ public:
 private:
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas{nullptr};
 
+    int mHeight{0};
+    int mWidth{0};
+    bool mDimensionsChanged{false};
     std::vector<std::shared_ptr<IWindow>> mWindows{};
     std::shared_ptr<IWindow>              mExclusiveWindow{nullptr};
 };

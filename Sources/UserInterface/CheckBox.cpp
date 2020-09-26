@@ -4,15 +4,15 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - CheckBox.cpp */
 
-CheckBox::CheckBox(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aChecked, bool aSelected) :
-    mWindow(aWindow), mName(aName), mYCoord(aYCoord), mXCoord(aXCoord), mChecked(aChecked), mSelected(aSelected)
+CheckBox::CheckBox(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aChecked, bool aSelected, bool aVisible) :
+    UIObject(aWindow, aName, aYCoord, aXCoord, aVisible, true), mChecked(aChecked), mSelected(aSelected)
 {}
 
 void CheckBox::Draw()
 {
-    std::string lCheckBoxString{std::string("[") + (mChecked ? "X" : " ") + "]  " + mName};
+    std::string lCheckBoxString{std::string("[") + (mChecked ? "X" : " ") + "]  " + GetName().data()};
     int         lColorPair{mSelected ? 7 : 1};
-    mWindow.DrawString(mYCoord, mXCoord, lColorPair, lCheckBoxString);
+    GetWindow().DrawString(GetYCoord(), GetXCoord(), lColorPair, lCheckBoxString);
 }
 
 bool CheckBox::DoAction()

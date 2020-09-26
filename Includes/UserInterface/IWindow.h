@@ -53,7 +53,13 @@ public:
      * @param aXCoord - X coordinate to move window to.
      * @return true if successful.
      */
-    virtual bool Move(int aYCoord, int aXcoord) = 0;
+    virtual bool Move(int aYCoord, int aXCoord) = 0;
+
+    /**
+     * Gets the size of the window.
+     * @return pair with size of the window in order height, width.
+     **/
+    virtual std::pair<int, int> GetSize() = 0; 
 
     /**
      * Resizes window. Note: You cannot resize a Window beyond the screen boundaries.
@@ -62,6 +68,12 @@ public:
      * @return true if successful.
      */
     virtual bool Resize(int aLines, int aColumns) = 0;
+
+    /**
+     * Scales window using size hints built into window.
+     * @return true if successful.
+     */
+    virtual bool Scale(int aMaxHeight, int aMaxWidth) = 0;
 
     /**
      * Advances cursor position to next selection vertically.
