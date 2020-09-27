@@ -6,6 +6,7 @@
  *
  **/
 
+#include <functional>
 #include <memory>
 #include <string_view>
 
@@ -59,7 +60,7 @@ public:
      * Gets the size of the window.
      * @return pair with size of the window in order height, width.
      **/
-    virtual std::pair<int, int> GetSize() = 0; 
+    virtual std::pair<int, int> GetSize() = 0;
 
     /**
      * Resizes window. Note: You cannot resize a Window beyond the screen boundaries.
@@ -73,7 +74,7 @@ public:
      * Scales window using size hints built into window.
      * @return true if successful.
      */
-    virtual bool Scale(int aMaxHeight, int aMaxWidth) = 0;
+    virtual bool Scale() = 0;
 
     /**
      * Advances cursor position to next selection vertically.
@@ -128,4 +129,16 @@ public:
      * @return true if visible.
      */
     virtual bool IsVisible() = 0;
+
+    /**
+     * Clears a line, up to length.
+     * @param aYCoord - Y coord to clear the line at.
+     * @param aLength - Length to clear.
+     */
+    virtual void ClearLine(int aYCoord, int aLength) = 0;
+
+    /**
+     * Clears window.
+     */
+    virtual void ClearWindow() = 0;
 };

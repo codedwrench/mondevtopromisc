@@ -15,7 +15,12 @@
 class UIObject : public IUIObject
 {
 public:
-    UIObject(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aVisible = true, bool aSelectable = false);
+    UIObject(IWindow&         aWindow,
+             std::string_view aName,
+             int              aYCoord,
+             int              aXCoord,
+             bool             aVisible    = true,
+             bool             aSelectable = false);
 
     void Move(int aYCoord, int aXCoord) override;
     bool DoAction() override;
@@ -23,15 +28,15 @@ public:
     void               SetVisible(bool aVisible);
     [[nodiscard]] bool IsVisible() const;
 
-    void SetSelected(bool aSelected) override;
+    void               SetSelected(bool aSelected) override;
     [[nodiscard]] bool IsSelectable() const override;
     [[nodiscard]] bool IsSelected() const override;
 
 protected:
-    IWindow& GetWindow();
+    IWindow&         GetWindow();
     std::string_view GetName();
-    int GetYCoord() const;
-    int GetXCoord() const;
+    int              GetYCoord() const;
+    int              GetXCoord() const;
 
 private:
     IWindow&    mWindow;

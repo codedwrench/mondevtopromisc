@@ -15,13 +15,10 @@
 class XLinkWindow : public Window
 {
 public:
-    XLinkWindow(std::string_view aTitle,
-                int              aYCoord,
-                int              aXCoord,
-                int              aLines,
-                int              aColumns,
-                bool             aExclusive = false,
-                bool             aVisible   = true);
+    XLinkWindow(std::string_view                                                 aTitle,
+                const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
+                const int&                                                       aMaxHeight,
+                const int&                                                       aMaxWidth);
 
     void SetUp() override;
     void Draw() override;

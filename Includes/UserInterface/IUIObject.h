@@ -18,7 +18,7 @@ public:
      * @param aSelected - Whether the object should be selected or not.
      **/
     virtual void SetSelected(bool aSelected) = 0;
-    
+
     /**
      * Gets whether object is selectable.
      * @return true if object is selectable.

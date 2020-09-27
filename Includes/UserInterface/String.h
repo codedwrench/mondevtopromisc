@@ -6,8 +6,8 @@
  *
  **/
 
-#include "UIObject.h"
 #include "IWindow.h"
+#include "UIObject.h"
 
 class String : public UIObject
 {

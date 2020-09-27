@@ -1,14 +1,27 @@
 #include "../../Includes/UserInterface/Window.h"
 
+#include <iostream>
+
+#include "../../Includes/Logger.h"
+
+
 /* Copyright (c) 2020 [Rick de Bondt] - Window.cpp */
 
-Window::Window(
-    std::string_view aTitle, int aYCoord, int aXCoord, int aLines, int aColumns, bool aExclusive, bool aVisible) :
-    mTitle{aTitle}, mLines{aLines}, mColumns{aColumns}, mDimensionsChanged{false},
-    mNCursesWindow{nullptr}, mExclusive{aExclusive}, mVisible{aVisible}, mObjects{}
+Window::Window(std::string_view                                                 aTitle,
+               const std::function<std::array<int, 4>(const int&, const int&)>& aCalculation,
+               const int&                                                       aMaxHeight,
+               const int&                                                       aMaxWidth,
+               bool                                                             aDrawBorder,
+               bool                                                             aExclusive,
+               bool                                                             aVisible) :
+    mTitle{aTitle},
+    mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight), mMaxWidth(aMaxWidth), mNCursesWindow{nullptr},
+    mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mObjects{}
 {
-    mNCursesWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(aLines, aColumns, aYCoord, aXCoord),
-                                                                           [](WINDOW* aWin) { delwin(aWin); });
+    std::array<int, 4> lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
+    mNCursesWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(
+        newwin(lWindowParameters.at(2), lWindowParameters.at(3), lWindowParameters.at(0), lWindowParameters.at(1)),
+        [](WINDOW* aWin) { delwin(aWin); });
     SetUp();
 }
 
@@ -19,14 +32,23 @@ void Window::SetUp()
 
 void Window::Draw()
 {
-    box(mNCursesWindow.get(), 0, 0);
-    DrawString(0, 0, 7, mTitle);
+    if (mDrawBorder) {
+        box(mNCursesWindow.get(), 0, 0);
+        DrawString(0, 0, 7, mTitle);
+    }
 
     for (auto& lObject : mObjects) {
         lObject->Draw();
     }
 
     Refresh();
+}
+
+void Window::ClearLine(int aYCoord, int aLength)
+{
+    std::string lEmptySpace;
+    lEmptySpace.resize(aLength, ' ');
+    DrawString(aYCoord, 0, 1, lEmptySpace);
 }
 
 void Window::DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString)
@@ -48,7 +70,14 @@ void Window::Refresh()
 
 bool Window::Move(int aYCoord, int aXCoord)
 {
-    return wmove(mNCursesWindow.get(), aYCoord, aXCoord) != ERR;
+    bool lReturn{true};
+
+    if (mvwin(mNCursesWindow.get(), aYCoord, aXCoord) == ERR) {
+        Logger::GetInstance().Log("Could not move window to desired spot", Logger::Level::TRACE);
+        lReturn = false;
+    }
+
+    return lReturn;
 }
 
 std::pair<int, int> Window::GetSize()
@@ -56,24 +85,35 @@ std::pair<int, int> Window::GetSize()
     int lHeight{0};
     int lWidth{0};
     getmaxyx(mNCursesWindow.get(), lHeight, lWidth);
-    if ((lWidth != mColumns) || (lHeight != mLines))
-    {
-        mColumns = lWidth;
-        mLines = lHeight;
-        mDimensionsChanged = true;
-    }
 
     return {lHeight, lWidth};
 }
 
-bool Window::Scale(int aMaxHeight, int aMaxWidth)
+bool Window::Scale()
 {
-  // No scale hints for base window.
+    bool               lReturn{false};
+    std::array<int, 4> lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
+    if (Resize(lParameters.at(2), lParameters.at(3))) {
+        if (Move(lParameters.at(0), lParameters.at(1))) {
+            lReturn = true;
+        }
+    }
+    return lReturn;
 }
 
 bool Window::Resize(int aLines, int aColumns)
 {
-    return wresize(mNCursesWindow.get(), aLines, aColumns) == OK;
+    bool lReturn{true};
+
+    if (wresize(mNCursesWindow.get(), aLines, aColumns) == ERR) {
+        Logger::GetInstance().Log("Could not resize window to desired size", Logger::Level::TRACE);
+        lReturn = false;
+    } else {
+        // Clear window as to not have artifacts.
+        ClearWindow();
+    }
+
+    return lReturn;
 }
 
 bool Window::AdvanceSelectionVertical()
@@ -119,4 +159,13 @@ bool Window::IsVisible()
 void Window::SetVisible(bool aVisible)
 {
     mVisible = aVisible;
+}
+
+void Window::ClearWindow()
+{
+    std::pair<int, int> lSize{GetSize()};
+
+    for (int lCount = 0; lCount < lSize.first; lCount++) {
+        ClearLine(lCount, lSize.second);
+    }
 }

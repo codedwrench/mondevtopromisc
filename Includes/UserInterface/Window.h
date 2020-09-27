@@ -21,13 +21,17 @@
 class Window : public IWindow
 {
 public:
-    Window(std::string_view aTitle,
-           int              aYCoord,
-           int              aXCoord,
-           int              aLines,
-           int              aColumns,
-           bool             aExclusive = false,
-           bool             aVisible   = true);
+    /**
+     * @param aCalculation - The calculation that needs to be done to get to the scaling values
+     * (takes height, width; returns starty, startx, height, width).
+     **/
+    Window(std::string_view                                                 aTitle,
+           const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
+           const int&                                                       aMaxHeight,
+           const int&                                                       aMaxWidth,
+           bool                                                             aDrawBorder = true,
+           bool                                                             aExclusive  = false,
+           bool                                                             aVisible    = true);
 
     Window(const Window& aWindow) = delete;
     Window& operator=(const Window& aWindow) = delete;
@@ -39,9 +43,13 @@ public:
 
     void SetUp() override;
 
+    void ClearLine(int aYCoord, int aLength) override;
+
+    void ClearWindow() override;
+
     void Draw() override;
 
-    void DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString);
+    void DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString) override;
 
     void AddObject(std::unique_ptr<IUIObject> aObject) override;
 
@@ -53,7 +61,7 @@ public:
 
     bool Resize(int aLines, int aColumns) override;
 
-    bool Scale(int aMaxHeight, int aMaxWidth) override;
+    bool Scale() override;
 
     bool AdvanceSelectionVertical() override;
 
@@ -74,12 +82,13 @@ public:
     bool IsVisible() override;
 
 private:
-    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mNCursesWindow;
-    std::string                                           mTitle;
-    int                                                   mLines;
-    int                                                   mColumns;
-    bool                                                  mDimensionsChanged;
-    bool                                                  mExclusive;
-    bool                                                  mVisible;
-    std::vector<std::unique_ptr<IUIObject>>               mObjects;
+    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>           mNCursesWindow;
+    std::string                                                     mTitle;
+    const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;
+    const int&                                                      mMaxHeight;
+    const int&                                                      mMaxWidth;
+    bool                                                            mDrawBorder;
+    bool                                                            mExclusive;
+    bool                                                            mVisible;
+    std::vector<std::unique_ptr<IUIObject>>                         mObjects;
 };

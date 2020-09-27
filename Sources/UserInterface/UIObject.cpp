@@ -2,10 +2,11 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - UIObject.cpp */
 
-UIObject::UIObject(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aVisible, bool aSelectable) : mWindow(aWindow), mName(aName), mYCoord(aYCoord), mXCoord(aXCoord), mSelectable(aSelectable), mVisible(aVisible)
-{
-    
-}
+UIObject::UIObject(
+    IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aVisible, bool aSelectable) :
+    mWindow(aWindow),
+    mName(aName), mYCoord(aYCoord), mXCoord(aXCoord), mSelectable(aSelectable), mVisible(aVisible)
+{}
 
 void UIObject::Move(int aYCoord, int aXCoord)
 {
@@ -15,8 +16,8 @@ void UIObject::Move(int aYCoord, int aXCoord)
 
 bool UIObject::DoAction()
 {
-  // Do nothing
-  return true;
+    // Do nothing
+    return true;
 }
 
 bool UIObject::IsSelected() const

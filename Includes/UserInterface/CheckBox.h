@@ -6,13 +6,19 @@
  *
  **/
 
-#include "UIObject.h"
 #include "IWindow.h"
+#include "UIObject.h"
 
 class CheckBox : public UIObject
 {
 public:
-    CheckBox(IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aChecked = false, bool aSelected = false, bool aVisible = true);
+    CheckBox(IWindow&         aWindow,
+             std::string_view aName,
+             int              aYCoord,
+             int              aXCoord,
+             bool             aChecked  = false,
+             bool             aSelected = false,
+             bool             aVisible  = true);
     void Draw() override;
     bool DoAction() override;
 

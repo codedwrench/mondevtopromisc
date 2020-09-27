@@ -6,5 +6,5 @@
 
 void String::Draw()
 {
-    GetWindow().DrawString(GetYCoord(), GetXCoord(),1 , GetName());
+    GetWindow().DrawString(GetYCoord(), GetXCoord(), 1, GetName());
 }
