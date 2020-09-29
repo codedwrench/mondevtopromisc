@@ -71,6 +71,8 @@ public:
 
     bool RecedeSelectionHorizontal() override;
 
+    void DeSelect() override;
+
     bool DoSelection() override;
 
     void SetExclusive(bool aExclusive) override;
@@ -96,5 +98,6 @@ private:
     bool                                                            mDrawBorder;
     bool                                                            mExclusive;
     bool                                                            mVisible;
+    int                                                             mSelectedObject;
     std::vector<std::unique_ptr<IUIObject>>                         mObjects;
 };

@@ -40,15 +40,17 @@ public:
 
     /**
      * Redraws and handles windows.
+     * @return true if still processing
      */
-    void Process();
+    bool Process();
 
 private:
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas{nullptr};
 
-    int                                   mHeight{0};
-    int                                   mWidth{0};
-    bool                                  mDimensionsChanged{false};
-    std::vector<std::shared_ptr<IWindow>> mWindows{};
-    std::shared_ptr<IWindow>              mExclusiveWindow{nullptr};
+    int                                      mHeight{0};
+    int                                      mWidth{0};
+    bool                                     mDimensionsChanged{false};
+    std::vector<std::shared_ptr<IWindow>>    mWindows{};
+    bool                                     mExclusiveWindow{false};
+    std::pair<int, std::shared_ptr<IWindow>> mWindowSelector{0, nullptr};
 };

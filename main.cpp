@@ -235,8 +235,11 @@ int main(int argc, char* argv[])
     lController.SetUp();
 
     while (gRunning) {
-        lController.Process();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if (lController.Process()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        } else {
+            gRunning = false;
+        }
     }
 
     lSignalIoService.stop();

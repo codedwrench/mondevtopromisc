@@ -17,7 +17,7 @@ Window::Window(std::string_view                                                 
     mTitle{aTitle},
     mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
     mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
-    mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mObjects{}
+    mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}
 {
     std::array<int, 4> lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
     mWidth         = aMaxWidth;
@@ -131,12 +131,50 @@ bool Window::Resize(int aLines, int aColumns)
 
 bool Window::AdvanceSelectionVertical()
 {
-    return false;
+    bool lReturn{false};
+    bool lEndLoop{false};
+    int  lIndex{mSelectedObject};
+    while (!lEndLoop) {
+        lIndex++;
+        if (lIndex < mObjects.size()) {
+            if (mObjects.at(lIndex)->IsVisible() && mObjects.at(lIndex)->IsSelectable()) {
+                if (mSelectedObject >= 0 && mSelectedObject < mObjects.size()) {
+                    mObjects.at(mSelectedObject)->SetSelected(false);
+                }
+                mSelectedObject = lIndex;
+                mObjects.at(mSelectedObject)->SetSelected(true);
+                lEndLoop = true;
+                lReturn  = true;
+            }
+        } else {
+            lEndLoop = true;
+        }
+    }
+    return lReturn;
 }
 
 bool Window::RecedeSelectionVertical()
 {
-    return false;
+    bool lReturn{false};
+    bool lEndLoop{false};
+    int  lIndex{mSelectedObject};
+    while (!lEndLoop) {
+        lIndex--;
+        if (lIndex >= 0) {
+            if (mObjects.at(lIndex)->IsVisible() && mObjects.at(lIndex)->IsSelectable()) {
+                if (mSelectedObject >= 0 && mSelectedObject < mObjects.size()) {
+                    mObjects.at(mSelectedObject)->SetSelected(false);
+                }
+                mSelectedObject = lIndex;
+                mObjects.at(mSelectedObject)->SetSelected(true);
+                lEndLoop = true;
+                lReturn  = true;
+            }
+        } else {
+            lEndLoop = true;
+        }
+    }
+    return lReturn;
 }
 
 bool Window::AdvanceSelectionHorizontal()
@@ -147,6 +185,14 @@ bool Window::AdvanceSelectionHorizontal()
 bool Window::RecedeSelectionHorizontal()
 {
     return false;
+}
+
+void Window::DeSelect()
+{
+    mSelectedObject = -1;
+    for (auto& lObject : mObjects) {
+        lObject->SetSelected(false);
+    }
 }
 
 bool Window::DoSelection()

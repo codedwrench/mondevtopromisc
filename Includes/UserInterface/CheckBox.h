@@ -20,7 +20,7 @@ public:
              bool                                                             aSelected   = false,
              bool                                                             aChecked    = false,
              bool                                                             aVisible    = true,
-             bool                                                             aSelectable = false);
+             bool                                                             aSelectable = true);
 
     void Draw() override;
     bool DoAction() override;

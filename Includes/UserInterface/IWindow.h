@@ -101,6 +101,11 @@ public:
     virtual bool RecedeSelectionHorizontal() = 0;
 
     /**
+     * Disable selection, for example when window not focused.
+     */
+    virtual void DeSelect() = 0;
+
+    /**
      * Do action for object at selection.
      * @return true if successful.
      */

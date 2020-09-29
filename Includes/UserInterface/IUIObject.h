@@ -20,6 +20,18 @@ public:
     virtual void SetSelected(bool aSelected) = 0;
 
     /**
+     * Sets the object visible or not.
+     * @param aVisible whether the object should be visible
+     */
+    virtual void SetVisible(bool aVisible) = 0;
+
+    /**
+     * Returns if the object is visible.
+     * @return true if visible.
+     */
+    [[nodiscard]] virtual bool IsVisible() const = 0;
+
+    /**
      * Gets whether object is selectable.
      * @return true if object is selectable.
      **/
