@@ -6,6 +6,19 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - NetworkingWindow.cpp */
 
+const std::string_view cQuitMessage{"Press q to quit"};
+
+std::array<int, 4> SearchPSPNetworksScaleFunction(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {2, 2, 0, 0};
+}
+
+std::array<int, 4> SearchTakeHintsXLinkKaiScaleFunction(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {3, 2, 0, 0};
+}
+
+
 NetworkingWindow::NetworkingWindow(std::string_view                                                 aTitle,
                                    const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                                    const int&                                                       aMaxHeight,
@@ -18,6 +31,15 @@ NetworkingWindow::NetworkingWindow(std::string_view                             
 void NetworkingWindow::SetUp()
 {
     Window::SetUp();
-    AddObject(std::make_unique<CheckBox>(*this, "Automatically connect to PSP/Vita networks.", 2, 2));
-    AddObject(std::make_unique<CheckBox>(*this, "Take hints from XLink Kai.", 3, 2));
+
+    AddObject(std::make_unique<CheckBox>(*this,
+                                         "Automatically connect to PSP/Vita networks.",
+                                         SearchPSPNetworksScaleFunction,
+                                         GetHeightReference(),
+                                         GetWidthReference()));
+    AddObject(std::make_unique<CheckBox>(*this,
+                                         "Take hints from XLink Kai.",
+                                         SearchTakeHintsXLinkKaiScaleFunction,
+                                         GetHeightReference(),
+                                         GetWidthReference()));
 }

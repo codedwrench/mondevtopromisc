@@ -15,10 +15,13 @@ Window::Window(std::string_view                                                 
                bool                                                             aExclusive,
                bool                                                             aVisible) :
     mTitle{aTitle},
-    mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight), mMaxWidth(aMaxWidth), mNCursesWindow{nullptr},
+    mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
+    mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mObjects{}
 {
     std::array<int, 4> lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
+    mWidth         = aMaxWidth;
+    mHeight        = aMaxHeight;
     mNCursesWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(
         newwin(lWindowParameters.at(2), lWindowParameters.at(3), lWindowParameters.at(0), lWindowParameters.at(1)),
         [](WINDOW* aWin) { delwin(aWin); });
@@ -86,6 +89,9 @@ std::pair<int, int> Window::GetSize()
     int lWidth{0};
     getmaxyx(mNCursesWindow.get(), lHeight, lWidth);
 
+    mHeight = lHeight;
+    mWidth  = lWidth;
+
     return {lHeight, lWidth};
 }
 
@@ -96,6 +102,13 @@ bool Window::Scale()
     if (Resize(lParameters.at(2), lParameters.at(3))) {
         if (Move(lParameters.at(0), lParameters.at(1))) {
             lReturn = true;
+        }
+
+        mHeight = lParameters.at(2);
+        mWidth  = lParameters.at(3);
+
+        for (auto& lObject : mObjects) {
+            lObject->Scale();
         }
     }
     return lReturn;
@@ -168,4 +181,14 @@ void Window::ClearWindow()
     for (int lCount = 0; lCount < lSize.first; lCount++) {
         ClearLine(lCount, lSize.second);
     }
+}
+
+const int& Window::GetHeightReference() const
+{
+    return mHeight;
+}
+
+const int& Window::GetWidthReference() const
+{
+    return mWidth;
 }

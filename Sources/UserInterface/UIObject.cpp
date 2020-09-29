@@ -1,23 +1,36 @@
 #include "../../Includes/UserInterface/UIObject.h"
 
+#include <utility>
+
 /* Copyright (c) 2020 [Rick de Bondt] - UIObject.cpp */
 
-UIObject::UIObject(
-    IWindow& aWindow, std::string_view aName, int aYCoord, int aXCoord, bool aVisible, bool aSelectable) :
+UIObject::UIObject(IWindow&                                                         aWindow,
+                   std::string_view                                                 aName,
+                   const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
+                   const int&                                                       aMaxHeight,
+                   const int&                                                       aMaxWidth,
+                   bool                                                             aVisible,
+                   bool                                                             aSelectable) :
     mWindow(aWindow),
-    mName(aName), mYCoord(aYCoord), mXCoord(aXCoord), mSelectable(aSelectable), mVisible(aVisible)
-{}
-
-void UIObject::Move(int aYCoord, int aXCoord)
+    mName(aName), mSelectable(aSelectable), mVisible(aVisible), mYCoord(0), mXCoord(0),
+    mScaleCalculation(aScaleCalculation), mMaxHeight(aMaxHeight), mMaxWidth(aMaxWidth)
 {
-    mYCoord = aYCoord;
-    mXCoord = aXCoord;
+    std::array<int, 4> lParameters{mScaleCalculation(aMaxHeight, aMaxWidth)};
+    mYCoord = lParameters.at(0);
+    mXCoord = lParameters.at(1);
 }
 
 bool UIObject::DoAction()
 {
     // Do nothing
     return true;
+}
+
+void UIObject::Scale()
+{
+    std::array<int, 4> lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
+    mYCoord = lParameters.at(0);
+    mXCoord = lParameters.at(1);
 }
 
 bool UIObject::IsSelected() const

@@ -81,12 +81,18 @@ public:
 
     bool IsVisible() override;
 
+protected:
+    [[nodiscard]] const int& GetHeightReference() const;
+    [[nodiscard]] const int& GetWidthReference() const;
+
 private:
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>           mNCursesWindow;
     std::string                                                     mTitle;
     const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;
     const int&                                                      mMaxHeight;
     const int&                                                      mMaxWidth;
+    int                                                             mHeight;
+    int                                                             mWidth;
     bool                                                            mDrawBorder;
     bool                                                            mExclusive;
     bool                                                            mVisible;

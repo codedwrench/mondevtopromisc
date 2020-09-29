@@ -15,15 +15,16 @@
 class UIObject : public IUIObject
 {
 public:
-    UIObject(IWindow&         aWindow,
-             std::string_view aName,
-             int              aYCoord,
-             int              aXCoord,
-             bool             aVisible    = true,
-             bool             aSelectable = false);
+    UIObject(IWindow&                                                         aWindow,
+             std::string_view                                                 aName,
+             const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
+             const int&                                                       aMaxHeight,
+             const int&                                                       aMaxWidth,
+             bool                                                             aVisible    = true,
+             bool                                                             aSelectable = false);
 
-    void Move(int aYCoord, int aXCoord) override;
     bool DoAction() override;
+    void Scale() override;
 
     void               SetVisible(bool aVisible);
     [[nodiscard]] bool IsVisible() const;
@@ -33,16 +34,19 @@ public:
     [[nodiscard]] bool IsSelected() const override;
 
 protected:
-    IWindow&         GetWindow();
-    std::string_view GetName();
-    int              GetYCoord() const;
-    int              GetXCoord() const;
+    IWindow&          GetWindow();
+    std::string_view  GetName();
+    [[nodiscard]] int GetYCoord() const;
+    [[nodiscard]] int GetXCoord() const;
 
 private:
-    IWindow&    mWindow;
-    std::string mName;
-    bool        mSelectable;
-    bool        mVisible;
-    int         mYCoord;
-    int         mXCoord;
+    IWindow&                                                        mWindow;
+    std::string                                                     mName;
+    bool                                                            mSelectable;
+    bool                                                            mVisible;
+    int                                                             mYCoord;
+    int                                                             mXCoord;
+    const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;
+    const int&                                                      mMaxHeight;
+    const int&                                                      mMaxWidth;
 };

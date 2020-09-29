@@ -8,6 +8,23 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - XLinkWindow.cpp */
 
+const std::string_view cQuitMessage{"Press q to quit"};
+
+std::array<int, 4> SearchXLinkCheckBoxScaleFunction(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {2, 2, 0, 0};
+}
+
+std::array<int, 4> TabPressStringScaleFunction(const int& aMaxHeight, const int& /*aMaxWidth*/)
+{
+    return {aMaxHeight - 1, 1, 0, 0};
+}
+
+std::array<int, 4> QQuitStringScaleFunction(const int& aMaxHeight, const int& aMaxWidth)
+{
+    return {aMaxHeight - 1, static_cast<int>(aMaxWidth - 1 - cQuitMessage.length()), 0, 0};
+}
+
 XLinkWindow::XLinkWindow(std::string_view                                                 aTitle,
                          const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                          const int&                                                       aMaxHeight,
@@ -20,12 +37,18 @@ XLinkWindow::XLinkWindow(std::string_view                                       
 void XLinkWindow::SetUp()
 {
     Window::SetUp();
-    std::pair<int, int> lWindowSize = GetSize();
-    AddObject(std::make_unique<CheckBox>(*this, "Automatically search for XLink Kai instances", 2, 2));
-    AddObject(std::make_unique<String>(*this, "Press Tab to switch panes", lWindowSize.first - 1, 1));
-    std::string lQuitMessage{"Press q to quit"};
+    // Get size of window so scaling works properly.
+    GetSize();
+
+    AddObject(std::make_unique<CheckBox>(*this,
+                                         "Automatically search for XLink Kai instances",
+                                         SearchXLinkCheckBoxScaleFunction,
+                                         GetHeightReference(),
+                                         GetWidthReference()));
     AddObject(std::make_unique<String>(
-        *this, lQuitMessage, lWindowSize.first - 1, lWindowSize.second - lQuitMessage.length() - 1));
+        *this, "Press Tab to switch panes", TabPressStringScaleFunction, GetHeightReference(), GetWidthReference()));
+    AddObject(std::make_unique<String>(
+        *this, cQuitMessage, QQuitStringScaleFunction, GetHeightReference(), GetWidthReference()));
 }
 
 void XLinkWindow::Draw()

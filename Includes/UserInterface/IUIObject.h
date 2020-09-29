@@ -38,10 +38,7 @@ public:
     virtual bool DoAction() = 0;
 
     /**
-     * Moves object to desired position in the window.
-     * Note: Does not move selection order, so beware of the user experience there.
-     * @param aYCoord - The Y coordinate to move the object to.
-     * @param aXCoord - The X coordinate to move the object to.
+     * Scales object according to given calculation.
      **/
-    virtual void Move(int aYCoord, int aXCoord) = 0;
+    virtual void Scale() = 0;
 };
