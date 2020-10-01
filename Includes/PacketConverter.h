@@ -45,9 +45,9 @@ public:
     bool Is80211QOS(std::string_view aData);
 
     /**
-     * Checks if the provided data is part of a quality of service packet.
+     * Checks if the provided data is part of a null function packet.
      * Only works on packets containing a 802.11 header.
-     * @return true if packet is a no data packet.
+     * @return true if packet is a null function packet.
      */
     bool Is80211NullFunc(std::string_view aData);
 
