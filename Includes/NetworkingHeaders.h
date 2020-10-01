@@ -72,6 +72,7 @@ namespace Net_80211_Constants
     constexpr uint8_t  cRadioTapLengthIndex{2};
     constexpr uint8_t  cDataType{0x08};
     constexpr uint8_t  cDataQOSType{0x80};
+    constexpr uint8_t  cDataNullFuncType{0x40};
     constexpr uint8_t  cDataQOSLength{2};
     constexpr uint8_t  cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cTypeLength};
     constexpr uint16_t cWlanFCTypeData{0x0008};

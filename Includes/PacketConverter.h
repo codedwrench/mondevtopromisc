@@ -45,6 +45,13 @@ public:
     bool Is80211QOS(std::string_view aData);
 
     /**
+     * Checks if the provided data is part of a quality of service packet.
+     * Only works on packets containing a 802.11 header.
+     * @return true if packet is a no data packet.
+     */
+    bool Is80211NullFunc(std::string_view aData);
+
+    /**
      * Check if provided packet matches BSSID.
      * @param aData - Data to inspect.
      * @param aBSSID - BSSID to compare against.
@@ -77,7 +84,8 @@ public:
     void SetRadioTap(bool aRadioTap);
 
 private:
-    bool     UpdateIndexAfterRadioTap(std::string_view aData);
+    bool UpdateIndexAfterRadioTap(std::string_view aData);
+
     bool     mRadioTap{false};
     uint64_t  mIndexAfterRadioTap{0};
 };

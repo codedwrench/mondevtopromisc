@@ -87,6 +87,20 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
     return lReturn;
 }
 
+bool PacketConverter::Is80211NullFunc(std::string_view aData)
+{
+    bool lReturn{false};
+
+    if (UpdateIndexAfterRadioTap(aData)) {
+        // Sometimes it seems to send malformed packets.
+        // Do not care about subtype!
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0xF0u) ==
+                  Net_80211_Constants::cDataNullFuncType;
+    }
+
+    return lReturn;
+}
+
 bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
 {
     bool lReturn{false};
@@ -122,27 +136,29 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
             lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
         }
 
-        // The header should have it's complete size for the packet to be valid.
-        if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
-            // Strip framecheck sequence as well.
-            lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
-                                     Net_80211_Constants::cFCSLength);
+        // Null functions not supported.
+        if (!Is80211NullFunc(aData)) {
+            // The header should have it's complete size for the packet to be valid.
+            if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
+                // Strip framecheck sequence as well.
+                lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
+                                         Net_80211_Constants::cFCSLength);
 
-            lConvertedPacket.append(
-                aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
+                lConvertedPacket.append(
+                    aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
 
-            lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
+                lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
 
-            lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cTypeLength));
+                lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cTypeLength));
 
-            lConvertedPacket.append(
-                aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
-        } else {
-            Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
-                                      Logger::Level::WARNING);
+                lConvertedPacket.append(
+                    aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
+            } else {
+                Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
+                                          Logger::Level::WARNING);
+            }
         }
     }
-
     // [ Destination MAC | Source MAC | EtherType ] [ Payload ]
     return lConvertedPacket;
 }
