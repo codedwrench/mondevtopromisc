@@ -8,7 +8,7 @@
 
 Window::Window(WindowModel&                aModel,
                std::string_view            aTitle,
-               std::function<Dimensions()> aCalculation,
+               const std::function<Dimensions()>& aCalculation,
                bool                        aDrawBorder,
                bool                        aExclusive,
                bool                        aVisible) :

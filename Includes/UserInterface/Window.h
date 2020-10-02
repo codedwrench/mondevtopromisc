@@ -37,7 +37,7 @@ public:
      **/
     Window(WindowModel&                aModel,
            std::string_view            aTitle,
-           std::function<Dimensions()> aCalculation,
+           const std::function<Dimensions()>& aCalculation,
            bool                        aDrawBorder = true,
            bool                        aExclusive  = false,
            bool                        aVisible    = true);

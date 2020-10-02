@@ -1,6 +1,7 @@
 #include "../../Includes/UserInterface/CheckBox.h"
 
 #include <string>
+#include <utility>
 
 /* Copyright (c) 2020 [Rick de Bondt] - CheckBox.cpp */
 
@@ -12,7 +13,7 @@ CheckBox::CheckBox(IWindow&                    aWindow,
                    bool                        aChecked,
                    bool                        aVisible,
                    bool                        aSelectable) :
-    UIObject(aWindow, aName, aCalculation, aVisible, aSelectable),
+    UIObject(aWindow, aName, std::move(aCalculation), aVisible, aSelectable),
     mChecked(aChecked), mSelected(aSelected), mModelCheckBox{aModelCheckBox}
 {}
 

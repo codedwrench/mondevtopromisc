@@ -12,7 +12,7 @@ Button::Button(IWindow&                    aWindow,
                bool                        aSelected,
                bool                        aVisible,
                bool                        aSelectable) :
-    UIObject(aWindow, aName, aCalculation, aVisible, aSelectable),
+    UIObject(aWindow, aName, std::move(aCalculation), aVisible, aSelectable),
     mSelected(aSelected), mAction{std::move(aAction)}
 {}
 

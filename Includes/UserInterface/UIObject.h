@@ -24,8 +24,8 @@ public:
     bool DoAction() override;
     void Scale() override;
 
-    void               SetVisible(bool aVisible);
-    [[nodiscard]] bool IsVisible() const;
+    void               SetVisible(bool aVisible) override;
+    [[nodiscard]] bool IsVisible() const override;
 
     void               SetSelected(bool aSelected) override;
     [[nodiscard]] bool IsSelectable() const override;

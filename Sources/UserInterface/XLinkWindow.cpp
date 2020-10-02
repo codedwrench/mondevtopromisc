@@ -85,7 +85,6 @@ void XLinkWindow::SetUp()
         },
         false,
         false,
-        false,
         false));
 
     AddObject(std::make_unique<String>(*this, "Press Tab to switch panes", [&] {
