@@ -1,5 +1,5 @@
 # mondevtopromisc
-Hopefully will in the future add a way to create a virtual network card that emulates a promiscuous mode wifi card using monitor mode and packet injection.
+Emulatess a promiscuous mode wifi card using monitor mode and packet injection and sends the data over XLink Kai.
 
 As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai with a few restrictions. Namely it only works on channel 1, and you will have to find the BSSID the PSP is sending on yourself and use it in the command line when starting this program.
 
