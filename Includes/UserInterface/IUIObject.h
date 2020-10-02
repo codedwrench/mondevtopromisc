@@ -53,4 +53,22 @@ public:
      * Scales object according to given calculation.
      **/
     virtual void Scale() = 0;
+
+    /**
+     * Gets Y coordinate of object.
+     * @return Y coordinate of object.
+     */
+    [[nodiscard]] virtual int GetYCoord() const = 0;
+
+    /**
+     * Gets X coordinate of object.
+     * @return X coordinate of object.
+     */
+    [[nodiscard]] virtual int GetXCoord() const = 0;
+
+    /**
+     * Gets name of object.
+     * @return Name of object.
+     */
+    virtual std::string_view GetName() = 0;
 };

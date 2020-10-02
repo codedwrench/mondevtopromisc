@@ -4,17 +4,17 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - CheckBox.cpp */
 
-CheckBox::CheckBox(IWindow&                                                         aWindow,
-                   std::string_view                                                 aName,
-                   const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
-                   const int&                                                       aMaxHeight,
-                   const int&                                                       aMaxWidth,
-                   bool&                                                            aModelCheckBox,
-                   bool                                                             aSelected,
-                   bool                                                             aChecked,
-                   bool                                                             aVisible,
-                   bool                                                             aSelectable) :
-    UIObject(aWindow, aName, aScaleCalculation, aMaxHeight, aMaxWidth, aVisible, aSelectable),
+CheckBox::CheckBox(IWindow&         aWindow,
+                   std::string_view aName,
+                   ScaleCalculation aCalculation,
+                   const int&       aMaxHeight,
+                   const int&       aMaxWidth,
+                   bool&            aModelCheckBox,
+                   bool             aSelected,
+                   bool             aChecked,
+                   bool             aVisible,
+                   bool             aSelectable) :
+    UIObject(aWindow, aName, aCalculation, aMaxHeight, aMaxWidth, aVisible, aSelectable),
     mChecked(aChecked), mSelected(aSelected), mModelCheckBox{aModelCheckBox}
 {}
 

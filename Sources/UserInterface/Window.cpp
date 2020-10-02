@@ -6,23 +6,23 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - Window.cpp */
 
-Window::Window(WindowModel&                                                     aModel,
-               std::string_view                                                 aTitle,
-               const std::function<std::array<int, 4>(const int&, const int&)>& aCalculation,
-               const int&                                                       aMaxHeight,
-               const int&                                                       aMaxWidth,
-               bool                                                             aDrawBorder,
-               bool                                                             aExclusive,
-               bool                                                             aVisible) :
+Window::Window(WindowModel&     aModel,
+               std::string_view aTitle,
+               ScaleCalculation aCalculation,
+               const int&       aMaxHeight,
+               const int&       aMaxWidth,
+               bool             aDrawBorder,
+               bool             aExclusive,
+               bool             aVisible) :
     mModel{aModel},
     mTitle{aTitle}, mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
     mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}
 {
-    std::array<int, 4> lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
+    Dimensions lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
     mWidth         = aMaxWidth;
     mHeight        = aMaxHeight;
-    mNCursesWindow = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(
+    mNCursesWindow = NCursesWindow(
         newwin(lWindowParameters.at(2), lWindowParameters.at(3), lWindowParameters.at(0), lWindowParameters.at(1)),
         [](WINDOW* aWin) { delwin(aWin); });
     SetUp();
@@ -102,8 +102,8 @@ std::pair<int, int> Window::GetSize()
 
 bool Window::Scale()
 {
-    bool               lReturn{false};
-    std::array<int, 4> lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
+    bool       lReturn{false};
+    Dimensions lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
     if (Resize(lParameters.at(2), lParameters.at(3))) {
         if (Move(lParameters.at(0), lParameters.at(1))) {
             lReturn = true;
@@ -137,59 +137,138 @@ bool Window::Resize(int aLines, int aColumns)
 bool Window::AdvanceSelectionVertical()
 {
     bool lReturn{false};
-    bool lEndLoop{false};
-    int  lIndex{mSelectedObject};
-    while (!lEndLoop) {
-        lIndex++;
-        if (lIndex < mObjects.size()) {
-            if (mObjects.at(lIndex)->IsVisible() && mObjects.at(lIndex)->IsSelectable()) {
-                if (mSelectedObject >= 0 && mSelectedObject < mObjects.size()) {
-                    mObjects.at(mSelectedObject)->SetSelected(false);
-                }
-                mSelectedObject = lIndex;
-                mObjects.at(mSelectedObject)->SetSelected(true);
-                lEndLoop = true;
-                lReturn  = true;
+    int  lCounter{0};
+    if (mSelectedObject >= 0) {
+        int lSelectionIndex{mObjects.at(mSelectedObject)->GetYCoord()};
+        int lLowestHigherSelection{std::numeric_limits<int>::max()};
+        int lLowestHigherSelectionYCoord{std::numeric_limits<int>::max()};
+
+        for (auto& lObject : mObjects) {
+            int lYCoord{lObject->GetYCoord()};
+            if (lObject->IsVisible() && lObject->IsSelectable() && lYCoord > lSelectionIndex &&
+                lYCoord < lLowestHigherSelectionYCoord) {
+                lLowestHigherSelection       = lCounter;
+                lLowestHigherSelectionYCoord = mObjects.at(lLowestHigherSelection)->GetYCoord();
             }
-        } else {
-            lEndLoop = true;
+            lCounter++;
         }
+
+        if (lLowestHigherSelection != std::numeric_limits<int>::max()) {
+            mObjects.at(mSelectedObject)->SetSelected(false);
+            mObjects.at(lLowestHigherSelection)->SetSelected(true);
+            mSelectedObject = lLowestHigherSelection;
+            lReturn         = true;
+        }
+    } else {
+        mSelectedObject = 0;
+        mObjects.at(0)->SetSelected(true);
+        lReturn = true;
     }
+
+
     return lReturn;
 }
 
 bool Window::RecedeSelectionVertical()
 {
     bool lReturn{false};
-    bool lEndLoop{false};
-    int  lIndex{mSelectedObject};
-    while (!lEndLoop) {
-        lIndex--;
-        if (lIndex >= 0) {
-            if (mObjects.at(lIndex)->IsVisible() && mObjects.at(lIndex)->IsSelectable()) {
-                if (mSelectedObject >= 0 && mSelectedObject < mObjects.size()) {
-                    mObjects.at(mSelectedObject)->SetSelected(false);
-                }
-                mSelectedObject = lIndex;
-                mObjects.at(mSelectedObject)->SetSelected(true);
-                lEndLoop = true;
-                lReturn  = true;
+    int  lCounter{0};
+    if (mSelectedObject >= 0) {
+        int lSelectionIndex{mObjects.at(mSelectedObject)->GetYCoord()};
+        int lHighestLowerSelection{-1};
+        int lHighestLowerSelectionYCoord{-1};
+
+        for (auto& lObject : mObjects) {
+            int lYCoord{lObject->GetYCoord()};
+            if (lObject->IsVisible() && lObject->IsSelectable() && lYCoord < lSelectionIndex &&
+                lYCoord > lHighestLowerSelectionYCoord) {
+                lHighestLowerSelection       = lCounter;
+                lHighestLowerSelectionYCoord = mObjects.at(lHighestLowerSelection)->GetYCoord();
             }
-        } else {
-            lEndLoop = true;
+            lCounter++;
         }
+
+        if (lHighestLowerSelection != -1) {
+            mObjects.at(mSelectedObject)->SetSelected(false);
+            mObjects.at(lHighestLowerSelection)->SetSelected(true);
+            mSelectedObject = lHighestLowerSelection;
+            lReturn         = true;
+        }
+    } else {
+        mSelectedObject = static_cast<int>(mObjects.size()) - 1;
+        mObjects.at(mSelectedObject)->SetSelected(true);
+        lReturn = true;
     }
+
     return lReturn;
 }
 
 bool Window::AdvanceSelectionHorizontal()
 {
-    return false;
+    bool lReturn{false};
+    int  lCounter{0};
+    if (mSelectedObject >= 0) {
+        int lSelectionIndex{mObjects.at(mSelectedObject)->GetXCoord()};
+        int lLowestHigherSelection{std::numeric_limits<int>::max()};
+        int lLowestHigherSelectionXCoord{std::numeric_limits<int>::max()};
+
+        for (auto& lObject : mObjects) {
+            int lXCoord{lObject->GetXCoord()};
+            if (lObject->IsVisible() && lObject->IsSelectable() && lXCoord > lSelectionIndex &&
+                lXCoord < lLowestHigherSelectionXCoord) {
+                lLowestHigherSelection       = lCounter;
+                lLowestHigherSelectionXCoord = mObjects.at(lLowestHigherSelection)->GetXCoord();
+            }
+            lCounter++;
+        }
+
+        if (lLowestHigherSelection != std::numeric_limits<int>::max()) {
+            mObjects.at(mSelectedObject)->SetSelected(false);
+            mObjects.at(lLowestHigherSelection)->SetSelected(true);
+            mSelectedObject = lLowestHigherSelection;
+            lReturn         = true;
+        }
+    } else {
+        mSelectedObject = 0;
+        mObjects.at(0)->SetSelected(true);
+        lReturn = true;
+    }
+
+    return lReturn;
 }
 
 bool Window::RecedeSelectionHorizontal()
 {
-    return false;
+    bool lReturn{false};
+    int  lCounter{0};
+    if (mSelectedObject >= 0) {
+        int lSelectionIndex{mObjects.at(mSelectedObject)->GetXCoord()};
+        int lHighestLowerSelection{-1};
+        int lHighestLowerSelectionXCoord{-1};
+
+        for (auto& lObject : mObjects) {
+            int lXCoord{lObject->GetXCoord()};
+            if (lObject->IsVisible() && lObject->IsSelectable() && lXCoord < lSelectionIndex &&
+                lXCoord > lHighestLowerSelectionXCoord) {
+                lHighestLowerSelection       = lCounter;
+                lHighestLowerSelectionXCoord = mObjects.at(lHighestLowerSelection)->GetXCoord();
+            }
+            lCounter++;
+        }
+
+        if (lHighestLowerSelection != -1) {
+            mObjects.at(mSelectedObject)->SetSelected(false);
+            mObjects.at(lHighestLowerSelection)->SetSelected(true);
+            mSelectedObject = lHighestLowerSelection;
+            lReturn         = true;
+        }
+    } else {
+        mSelectedObject = 0;
+        mObjects.at(0)->SetSelected(true);
+        lReturn = true;
+    }
+
+    return lReturn;
 }
 
 void Window::DeSelect()
@@ -247,4 +326,14 @@ const int& Window::GetHeightReference() const
 const int& Window::GetWidthReference() const
 {
     return mWidth;
+}
+
+ObjectList& Window::GetObjects()
+{
+    return mObjects;
+}
+
+int Window::GetSelectedObject() const
+{
+    return mSelectedObject;
 }

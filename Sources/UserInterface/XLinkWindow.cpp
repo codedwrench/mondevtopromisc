@@ -1,36 +1,50 @@
 #include "../../Includes/UserInterface/XLinkWindow.h"
 
-#include <cmath>
+#include <utility>
 
-#include "../../Includes/Logger.h"
+#include "../../Includes/UserInterface/Button.h"
 #include "../../Includes/UserInterface/CheckBox.h"
 #include "../../Includes/UserInterface/String.h"
 
 /* Copyright (c) 2020 [Rick de Bondt] - XLinkWindow.cpp */
 
-const std::string_view cQuitMessage{"Press q to quit"};
-
-std::array<int, 4> SearchXLinkCheckBoxScaleFunction(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+Dimensions ScaleSearchXLinkCheckBox(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
     return {2, 2, 0, 0};
 }
 
-std::array<int, 4> TabPressStringScaleFunction(const int& aMaxHeight, const int& /*aMaxWidth*/)
+Dimensions ScaleTabPressString(const int& aMaxHeight, const int& /*aMaxWidth*/)
 {
     return {aMaxHeight - 1, 1, 0, 0};
 }
 
-std::array<int, 4> QQuitStringScaleFunction(const int& aMaxHeight, const int& aMaxWidth)
+Dimensions ScaleQQuitString(const int& aMaxHeight, const int& aMaxWidth)
 {
     return {aMaxHeight - 1, static_cast<int>(aMaxWidth - 1 - cQuitMessage.length()), 0, 0};
 }
 
-XLinkWindow::XLinkWindow(WindowModel&                                                     aModel,
-                         std::string_view                                                 aTitle,
-                         const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
-                         const int&                                                       aMaxHeight,
-                         const int&                                                       aMaxWidth) :
-    Window(aModel, aTitle, aScaleCalculation, aMaxHeight, aMaxWidth)
+Dimensions ScaleSaveButton(const int& aMaxHeight, const int& aMaxWidth)
+{
+    return {
+        aMaxHeight - 2, static_cast<int>(aMaxWidth - 10 - cStartEngineMessage.length() - cSaveMessage.length()), 0, 0};
+}
+
+Dimensions ScaleStartEngine(const int& aMaxHeight, const int& aMaxWidth)
+{
+    return {aMaxHeight - 2, static_cast<int>(aMaxWidth - 5 - cStartEngineMessage.length()), 0, 0};
+}
+
+Dimensions ScaleStopEngine(const int& aMaxHeight, const int& aMaxWidth)
+{
+    return {aMaxHeight - 2, static_cast<int>(aMaxWidth - 5 - cStopEngineMessage.length()), 0, 0};
+}
+
+XLinkWindow::XLinkWindow(WindowModel&     aModel,
+                         std::string_view aTitle,
+                         ScaleCalculation aCalculation,
+                         const int&       aMaxHeight,
+                         const int&       aMaxWidth) :
+    Window(aModel, aTitle, std::move(aCalculation), aMaxHeight, aMaxWidth)
 {
     SetUp();
 }
@@ -43,14 +57,42 @@ void XLinkWindow::SetUp()
 
     AddObject(std::make_unique<CheckBox>(*this,
                                          "Automatically search for XLink Kai instances",
-                                         SearchXLinkCheckBoxScaleFunction,
+                                         ScaleSearchXLinkCheckBox,
                                          GetHeightReference(),
                                          GetWidthReference(),
                                          GetModel().mAutoDiscoverXLinkKaiInstance));
+
+    AddObject(
+        std::make_unique<Button>(*this, cSaveMessage, ScaleSaveButton, GetHeightReference(), GetWidthReference(), [&] {
+            GetModel().mCommand = WindowModel_Constants::Command::SaveSettings;
+            return true;
+        }));
+
+    AddObject(std::make_unique<Button>(
+        *this, cStartEngineMessage, ScaleStartEngine, GetHeightReference(), GetWidthReference(), [&] {
+            GetModel().mCommand = WindowModel_Constants::Command::StartEngine;
+            return true;
+        }));
+
+    AddObject(std::make_unique<Button>(
+        *this,
+        cStopEngineMessage,
+        ScaleStopEngine,
+        GetHeightReference(),
+        GetWidthReference(),
+        [&] {
+            GetModel().mCommand = WindowModel_Constants::Command::StopEngine;
+            return true;
+        },
+        false,
+        false,
+        false,
+        false));
+
     AddObject(std::make_unique<String>(
-        *this, "Press Tab to switch panes", TabPressStringScaleFunction, GetHeightReference(), GetWidthReference()));
-    AddObject(std::make_unique<String>(
-        *this, cQuitMessage, QQuitStringScaleFunction, GetHeightReference(), GetWidthReference()));
+        *this, "Press Tab to switch panes", ScaleTabPressString, GetHeightReference(), GetWidthReference()));
+    AddObject(
+        std::make_unique<String>(*this, cQuitMessage, ScaleQQuitString, GetHeightReference(), GetWidthReference()));
 }
 
 void XLinkWindow::Draw()

@@ -9,19 +9,22 @@
 #include "IWindow.h"
 #include "UIObject.h"
 
+/**
+ * Class for a userinterface checkbox.
+ */
 class CheckBox : public UIObject
 {
 public:
-    CheckBox(IWindow&                                                         aWindow,
-             std::string_view                                                 aName,
-             const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
-             const int&                                                       aMaxHeight,
-             const int&                                                       aMaxWidth,
-             bool&                                                            aModelCheckBox,
-             bool                                                             aSelected   = false,
-             bool                                                             aChecked    = false,
-             bool                                                             aVisible    = true,
-             bool                                                             aSelectable = true);
+    CheckBox(IWindow&         aWindow,
+             std::string_view aName,
+             ScaleCalculation aCalculation,
+             const int&       aMaxHeight,
+             const int&       aMaxWidth,
+             bool&            aModelCheckBox,
+             bool             aSelected   = false,
+             bool             aChecked    = false,
+             bool             aVisible    = true,
+             bool             aSelectable = true);
 
     void Draw() override;
     bool DoAction() override;
@@ -29,8 +32,8 @@ public:
     void               SetChecked(bool aChecked);
     [[nodiscard]] bool IsChecked() const;
 
-    void               SetSelected(bool aSelected);
-    [[nodiscard]] bool IsSelected() const;
+    void               SetSelected(bool aSelected) override;
+    [[nodiscard]] bool IsSelected() const override;
 
 private:
     bool& mModelCheckBox;

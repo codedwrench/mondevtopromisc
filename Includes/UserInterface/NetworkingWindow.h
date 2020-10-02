@@ -14,11 +14,11 @@
 class NetworkingWindow : public Window
 {
 public:
-    NetworkingWindow(WindowModel&                                                     aModel,
-                     std::string_view                                                 aTitle,
-                     const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
-                     const int&                                                       aMaxHeight,
-                     const int&                                                       aMaxWidth);
+    NetworkingWindow(WindowModel&     aModel,
+                     std::string_view aTitle,
+                     ScaleCalculation aCalculation,
+                     const int&       aMaxHeight,
+                     const int&       aMaxWidth);
 
     void SetUp() override;
 };

@@ -15,6 +15,16 @@
 
 #include "IWindow.h"
 
+namespace Window_Constants
+{
+    using Dimensions       = std::array<int, 4>;
+    using ScaleCalculation = std::function<Dimensions(const int&, const int&)>;
+    using NCursesWindow    = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>;
+    using ObjectList       = std::vector<std::unique_ptr<IUIObject>>;
+}  // namespace Window_Constants
+
+using namespace Window_Constants;
+
 /**
  * Class with basic functions to setup a window.
  */
@@ -25,14 +35,14 @@ public:
      * @param aCalculation - The calculation that needs to be done to get to the scaling values
      * (takes height, width; returns starty, startx, height, width).
      **/
-    Window(WindowModel&                                                     aModel,
-           std::string_view                                                 aTitle,
-           const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
-           const int&                                                       aMaxHeight,
-           const int&                                                       aMaxWidth,
-           bool                                                             aDrawBorder = true,
-           bool                                                             aExclusive  = false,
-           bool                                                             aVisible    = true);
+    Window(WindowModel&     aModel,
+           std::string_view aTitle,
+           ScaleCalculation aCalculation,
+           const int&       aMaxHeight,
+           const int&       aMaxWidth,
+           bool             aDrawBorder = true,
+           bool             aExclusive  = false,
+           bool             aVisible    = true);
 
     Window(const Window& aWindow) = delete;
     Window& operator=(const Window& aWindow) = delete;
@@ -87,21 +97,23 @@ public:
     bool IsVisible() override;
 
 protected:
-    [[nodiscard]] const int& GetHeightReference() const;
-    [[nodiscard]] const int& GetWidthReference() const;
+    [[nodiscard]] ObjectList& GetObjects();
+    [[nodiscard]] int         GetSelectedObject() const;
+    [[nodiscard]] const int&  GetHeightReference() const;
+    [[nodiscard]] const int&  GetWidthReference() const;
 
 private:
-    WindowModel&                                                    mModel;
-    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>           mNCursesWindow;
-    std::string                                                     mTitle;
-    const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;
-    const int&                                                      mMaxHeight;
-    const int&                                                      mMaxWidth;
-    int                                                             mHeight;
-    int                                                             mWidth;
-    bool                                                            mDrawBorder;
-    bool                                                            mExclusive;
-    bool                                                            mVisible;
-    int                                                             mSelectedObject;
-    std::vector<std::unique_ptr<IUIObject>>                         mObjects;
+    WindowModel&           mModel;
+    NCursesWindow          mNCursesWindow;
+    std::string            mTitle;
+    const ScaleCalculation mScaleCalculation;
+    const int&             mMaxHeight;
+    const int&             mMaxWidth;
+    int                    mHeight;
+    int                    mWidth;
+    bool                   mDrawBorder;
+    bool                   mExclusive;
+    bool                   mVisible;
+    int                    mSelectedObject;
+    ObjectList             mObjects;
 };

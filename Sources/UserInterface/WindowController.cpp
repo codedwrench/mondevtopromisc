@@ -7,20 +7,17 @@
 #include "../../Includes/UserInterface/NetworkingWindow.h"
 #include "../../Includes/UserInterface/XLinkWindow.h"
 
-constexpr unsigned int cKeyQ{113};
-constexpr unsigned int cKeyTab{9};
-
-std::array<int, 4> NetworkingWindowScaleFunction(const int& aMaxHeight, const int& aMaxWidth)
+Dimensions ScaleNetworkingWindow(const int& aMaxHeight, const int& aMaxWidth)
 {
     return {0, 0, static_cast<int>(floor(aMaxHeight / 2.0)), aMaxWidth};
 }
 
-std::array<int, 4> XLinkWindowScaleFunction(const int& aMaxHeight, const int& aMaxWidth)
+Dimensions ScaleXLinkWindow(const int& aMaxHeight, const int& aMaxWidth)
 {
     return {static_cast<int>(floor(aMaxHeight / 2.0)), 0, static_cast<int>(floor(aMaxHeight / 2.0)), aMaxWidth};
 }
 
-std::array<int, 4> SSIDSelectWindowScaleFunction(const int& aMaxHeight, const int& aMaxWidth)
+Dimensions ScaleSSIDSelectWindow(const int& aMaxHeight, const int& aMaxWidth)
 {
     return {10, 10, aMaxHeight - 20, aMaxWidth - 20};
 }
@@ -50,19 +47,17 @@ bool WindowController::SetUp()
         init_pair(7, COLOR_BLACK, COLOR_WHITE);
     }
 
-    mMainCanvas =
-        std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>(newwin(0, 0, 0, 0), [](WINDOW* aWin) { delwin(aWin); });
+    mMainCanvas = NCursesWindow(newwin(0, 0, 0, 0), [](WINDOW* aWin) { delwin(aWin); });
 
     getmaxyx(mMainCanvas.get(), mHeight, mWidth);
 
     mWindows.emplace_back(
-        std::make_shared<NetworkingWindow>(mModel, "Networking pane:", NetworkingWindowScaleFunction, mHeight, mWidth));
+        std::make_shared<NetworkingWindow>(mModel, "Networking pane:", ScaleNetworkingWindow, mHeight, mWidth));
 
-    mWindows.emplace_back(
-        std::make_shared<XLinkWindow>(mModel, "XLink Kai pane:", XLinkWindowScaleFunction, mHeight, mWidth));
+    mWindows.emplace_back(std::make_shared<XLinkWindow>(mModel, "XLink Kai pane:", ScaleXLinkWindow, mHeight, mWidth));
 
     mWindows.emplace_back(std::make_shared<Window>(
-        mModel, "SSID Selection:", SSIDSelectWindowScaleFunction, mHeight, mWidth, false, false, false));
+        mModel, "SSID Selection:", ScaleSSIDSelectWindow, mHeight, mWidth, false, false, false));
 
     mWindowSelector.first  = 0;
     mWindowSelector.second = mWindows.at(0);
@@ -71,6 +66,33 @@ bool WindowController::SetUp()
     mWindowSelector.second->AdvanceSelectionVertical();
 
     return true;
+}
+
+void WindowController::AdvanceWindow()
+{
+    if (!mExclusiveWindow) {
+        bool lEndLoop{false};
+        int  lStartIndex{mWindowSelector.first};
+        int  lIndex{lStartIndex};
+
+        while (!lEndLoop) {
+            lIndex++;
+            if (lIndex >= mWindows.size()) {
+                lIndex = 0;
+            }
+
+            if (mWindows.at(lIndex)->IsVisible()) {
+                mWindowSelector.second->DeSelect();
+                mWindowSelector = {lIndex, mWindows.at(lIndex)};
+                mWindowSelector.second->DeSelect();
+                mWindowSelector.second->AdvanceSelectionVertical();
+                lEndLoop = true;
+            } else if (lIndex == lStartIndex) {
+                mWindowSelector = {lStartIndex, mWindowSelector.second};
+                lEndLoop        = true;
+            }
+        }
+    }
 }
 
 bool WindowController::Process()
@@ -82,29 +104,7 @@ bool WindowController::Process()
             lReturn = false;
             break;
         case cKeyTab:
-            if (!mExclusiveWindow) {
-                bool lEndLoop{false};
-                int  lStartIndex{mWindowSelector.first};
-                int  lIndex{lStartIndex};
-
-                while (!lEndLoop) {
-                    lIndex++;
-                    if (lIndex >= mWindows.size()) {
-                        lIndex = 0;
-                    }
-
-                    if (mWindows.at(lIndex)->IsVisible()) {
-                        mWindowSelector.second->DeSelect();
-                        mWindowSelector = {lIndex, mWindows.at(lIndex)};
-                        mWindowSelector.second->DeSelect();
-                        mWindowSelector.second->AdvanceSelectionVertical();
-                        lEndLoop = true;
-                    } else if (lIndex == lStartIndex) {
-                        mWindowSelector = {lStartIndex, mWindowSelector.second};
-                        lEndLoop        = true;
-                    }
-                }
-            }
+            AdvanceWindow();
             break;
         case KEY_UP:
             if (mWindowSelector.second != nullptr) {

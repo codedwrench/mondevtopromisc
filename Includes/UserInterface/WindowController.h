@@ -11,11 +11,22 @@
 #include "IWindow.h"
 #undef timeout
 
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <vector>
 
 #include "Window.h"
+
+namespace WindowController_Constants
+{
+    constexpr unsigned int cKeyQ{113};
+    constexpr unsigned int cKeyTab{9};
+
+    using WindowList = std::vector<std::shared_ptr<IWindow>>;
+}  // namespace WindowController_Constants
+
+using namespace WindowController_Constants;
 
 /**
  * This class will setup our window layout and basically handle everything around the user interface.
@@ -49,12 +60,13 @@ public:
     bool Process();
 
 private:
-    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas;
+    void AdvanceWindow();
 
+    NCursesWindow                            mMainCanvas;
     int                                      mHeight;
     int                                      mWidth;
     bool                                     mDimensionsChanged;
-    std::vector<std::shared_ptr<IWindow>>    mWindows;
+    WindowList                               mWindows;
     bool                                     mExclusiveWindow;
     std::pair<int, std::shared_ptr<IWindow>> mWindowSelector;
     WindowModel&                             mModel;
