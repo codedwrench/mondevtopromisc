@@ -6,12 +6,12 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - Window.cpp */
 
-Window::Window(WindowModel&                aModel,
-               std::string_view            aTitle,
+Window::Window(WindowModel&                       aModel,
+               std::string_view                   aTitle,
                const std::function<Dimensions()>& aCalculation,
-               bool                        aDrawBorder,
-               bool                        aExclusive,
-               bool                        aVisible) :
+               bool                               aDrawBorder,
+               bool                               aExclusive,
+               bool                               aVisible) :
     mModel{aModel},
     mTitle{aTitle}, mScaleCalculation(aCalculation), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}

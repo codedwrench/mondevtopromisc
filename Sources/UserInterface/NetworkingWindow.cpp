@@ -20,10 +20,10 @@ Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*
 }
 
 
-NetworkingWindow::NetworkingWindow(WindowModel&                aModel,
-                                   std::string_view            aTitle,
-                                   std::function<Dimensions()> aCalculation) :
-    Window(aModel, aTitle, std::move(aCalculation))
+NetworkingWindow::NetworkingWindow(WindowModel&                       aModel,
+                                   std::string_view                   aTitle,
+                                   const std::function<Dimensions()>& aCalculation) :
+    Window(aModel, aTitle, aCalculation)
 {
     SetUp();
 }

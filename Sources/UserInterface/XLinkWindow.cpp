@@ -39,8 +39,10 @@ Dimensions ScaleStopEngine(const int& aMaxHeight, const int& aMaxWidth)
     return {aMaxHeight - 2, static_cast<int>(aMaxWidth - 5 - cStopEngineMessage.length()), 0, 0};
 }
 
-XLinkWindow::XLinkWindow(WindowModel& aModel, std::string_view aTitle, std::function<Dimensions()> aCalculation) :
-    Window(aModel, aTitle, std::move(aCalculation))
+XLinkWindow::XLinkWindow(WindowModel&                       aModel,
+                         std::string_view                   aTitle,
+                         const std::function<Dimensions()>& aCalculation) :
+    Window(aModel, aTitle, aCalculation)
 {
     SetUp();
 }

@@ -14,7 +14,7 @@
 class NetworkingWindow : public Window
 {
 public:
-    NetworkingWindow(WindowModel& aModel, std::string_view aTitle, std::function<Dimensions()> aCalculation);
+    NetworkingWindow(WindowModel& aModel, std::string_view aTitle, const std::function<Dimensions()>& aCalculation);
 
     void SetUp() override;
 };
