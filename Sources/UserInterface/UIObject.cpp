@@ -62,6 +62,11 @@ std::string_view UIObject::GetName()
     return mName;
 }
 
+void UIObject::SetName(std::string_view aName)
+{
+    mName = aName;
+}
+
 bool UIObject::IsSelectable() const
 {
     return mSelectable;

@@ -33,6 +33,7 @@ public:
     [[nodiscard]] int  GetYCoord() const override;
     [[nodiscard]] int  GetXCoord() const override;
     std::string_view   GetName() override;
+    void               SetName(std::string_view) override;
 
 protected:
     IWindow& GetWindow();

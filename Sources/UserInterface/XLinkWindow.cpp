@@ -1,5 +1,6 @@
 #include "../../Includes/UserInterface/XLinkWindow.h"
 
+#include <cmath>
 #include <utility>
 
 #include "../../Includes/UserInterface/Button.h"
@@ -37,6 +38,21 @@ Dimensions ScaleStartEngine(const int& aMaxHeight, const int& aMaxWidth)
 Dimensions ScaleStopEngine(const int& aMaxHeight, const int& aMaxWidth)
 {
     return {aMaxHeight - 2, static_cast<int>(aMaxWidth - 5 - cStopEngineMessage.length()), 0, 0};
+}
+
+Dimensions XLinkWindow::ScaleStatusMessage(const int& aMaxHeight, const int& aMaxWidth)
+{
+    // This long calculation really just calculates to half width of the screen.
+    return {aMaxHeight - 1,
+            static_cast<int>(
+                floor(aMaxWidth / 2.0) -
+                static_cast<int>(floor(static_cast<int>(cStatusPrefix.length() + 1 +
+                                                        WindowModel_Constants::cEngineStatusTexts
+                                                            .at(static_cast<unsigned long>(GetModel().mEngineStatus))
+                                                            .length()) /
+                                       2.0))),
+            0,
+            0};
 }
 
 XLinkWindow::XLinkWindow(WindowModel&                       aModel,
@@ -89,14 +105,27 @@ void XLinkWindow::SetUp()
         false,
         false));
 
-    AddObject(std::make_unique<String>(*this, "Press Tab to switch panes", [&] {
-        return ScaleTabPressString(GetHeightReference(), GetWidthReference());
-    }));
+    AddObject(std::make_unique<String>(
+        *this, cTabMessage, [&] { return ScaleTabPressString(GetHeightReference(), GetWidthReference()); }));
+
+    AddObject(std::make_unique<String>(
+        *this,
+        std::string(cStatusPrefix) + cDefaultStatusMessage.data(),
+        [&] { return ScaleStatusMessage(GetHeightReference(), GetWidthReference()); },
+        false,
+        false,
+        7));
+
     AddObject(std::make_unique<String>(
         *this, cQuitMessage, [&] { return ScaleQQuitString(GetHeightReference(), GetWidthReference()); }));
 }
 
 void XLinkWindow::Draw()
 {
+    GetObjects().at(5)->SetName(
+        std::string(cStatusPrefix) +
+        WindowModel_Constants::cEngineStatusTexts.at(static_cast<unsigned long>(GetModel().mEngineStatus)) + " ");
+    GetObjects().at(5)->Scale();
+
     Window::Draw();
 }

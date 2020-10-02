@@ -10,10 +10,13 @@
 
 namespace XLinkWindow_Constants
 {
-    const std::string_view cQuitMessage{"Press q to quit"};
-    const std::string_view cStartEngineMessage{"Start Engine"};
-    const std::string_view cStopEngineMessage{"Stop Engine"};
-    const std::string_view cSaveMessage{"Save config"};
+    constexpr std::string_view cTabMessage{"Press Tab to switch panes"};
+    constexpr std::string_view cQuitMessage{"Press q to quit"};
+    constexpr std::string_view cStartEngineMessage{"Start Engine"};
+    constexpr std::string_view cStopEngineMessage{"Stop Engine"};
+    constexpr std::string_view cSaveMessage{"Save config"};
+    constexpr std::string_view cStatusPrefix{" Status: "};
+    constexpr std::string_view cDefaultStatusMessage{"Idle"};
 }  // namespace XLinkWindow_Constants
 
 using namespace XLinkWindow_Constants;
@@ -28,4 +31,7 @@ public:
 
     void SetUp() override;
     void Draw() override;
+
+private:
+    Dimensions ScaleStatusMessage(const int& aMaxHeight, const int& aMaxWidth);
 };

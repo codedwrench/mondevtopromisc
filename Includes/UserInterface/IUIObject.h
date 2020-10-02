@@ -71,4 +71,10 @@ public:
      * @return Name of object.
      */
     virtual std::string_view GetName() = 0;
+
+    /**
+     * Sets name of object.
+     * @param aName - Name of object.
+     */
+    virtual void SetName(std::string_view aName) = 0;
 };

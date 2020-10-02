@@ -6,8 +6,8 @@
  *
  **/
 
-#include "IWindow.h"
 #include "UIObject.h"
+#include "Window.h"
 
 /**
  * Class for a userinterface checkbox.

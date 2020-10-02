@@ -41,6 +41,10 @@ int main(int argc, char* argv[])
     while (gRunning) {
         if (lWindowController.Process()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if (mWindowModel.mCommand == WindowModel_Constants::Command::StartEngine) {
+                mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
+                mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
+            }
         } else {
             gRunning = false;
         }
