@@ -9,12 +9,13 @@ CheckBox::CheckBox(IWindow&                                                     
                    const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                    const int&                                                       aMaxHeight,
                    const int&                                                       aMaxWidth,
+                   bool&                                                            aModelCheckBox,
                    bool                                                             aSelected,
                    bool                                                             aChecked,
                    bool                                                             aVisible,
                    bool                                                             aSelectable) :
     UIObject(aWindow, aName, aScaleCalculation, aMaxHeight, aMaxWidth, aVisible, aSelectable),
-    mChecked(aChecked), mSelected(aSelected)
+    mChecked(aChecked), mSelected(aSelected), mModelCheckBox{aModelCheckBox}
 {}
 
 void CheckBox::Draw()
@@ -27,6 +28,7 @@ void CheckBox::Draw()
 bool CheckBox::DoAction()
 {
     mChecked = !mChecked;
+    mModelCheckBox = mChecked;
     return true;
 }
 

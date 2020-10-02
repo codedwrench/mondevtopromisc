@@ -83,7 +83,8 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
             lHeader.ts     = lPCapReader.GetHeader()->ts;
 
             // Output a file with the results as well so the results can be further inspected
-            pcap_dump((u_char*) lDumper, &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
+            pcap_dump(
+                reinterpret_cast<u_char*>(lDumper), &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
             // It should never be the case that there is no next packet available, then the expected output doesn't
             // match.

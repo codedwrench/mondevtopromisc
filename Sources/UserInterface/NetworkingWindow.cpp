@@ -19,11 +19,12 @@ std::array<int, 4> SearchTakeHintsXLinkKaiScaleFunction(const int& /*aMaxHeight*
 }
 
 
-NetworkingWindow::NetworkingWindow(std::string_view                                                 aTitle,
+NetworkingWindow::NetworkingWindow(WindowModel&                                                     aModel,
+                                   std::string_view                                                 aTitle,
                                    const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                                    const int&                                                       aMaxHeight,
                                    const int&                                                       aMaxWidth) :
-    Window(aTitle, aScaleCalculation, aMaxHeight, aMaxWidth)
+    Window(aModel, aTitle, aScaleCalculation, aMaxHeight, aMaxWidth)
 {
     SetUp();
 }
@@ -36,10 +37,12 @@ void NetworkingWindow::SetUp()
                                          "Automatically connect to PSP/Vita networks.",
                                          SearchPSPNetworksScaleFunction,
                                          GetHeightReference(),
-                                         GetWidthReference()));
+                                         GetWidthReference(),
+                                         GetModel().mAutoDiscoverNetworks));
     AddObject(std::make_unique<CheckBox>(*this,
                                          "Take hints from XLink Kai.",
                                          SearchTakeHintsXLinkKaiScaleFunction,
                                          GetHeightReference(),
-                                         GetWidthReference()));
+                                         GetWidthReference(),
+                                         GetModel().mXLinkKaiHints));
 }

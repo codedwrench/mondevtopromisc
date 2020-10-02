@@ -4,17 +4,17 @@
 
 #include "../../Includes/Logger.h"
 
-
 /* Copyright (c) 2020 [Rick de Bondt] - Window.cpp */
 
-Window::Window(std::string_view                                                 aTitle,
+Window::Window(WindowModel&                                                     aModel,
+               std::string_view                                                 aTitle,
                const std::function<std::array<int, 4>(const int&, const int&)>& aCalculation,
                const int&                                                       aMaxHeight,
                const int&                                                       aMaxWidth,
                bool                                                             aDrawBorder,
                bool                                                             aExclusive,
                bool                                                             aVisible) :
-    mTitle{aTitle},
+    mModel{aModel}, mTitle{aTitle},
     mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
     mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}
@@ -81,6 +81,11 @@ bool Window::Move(int aYCoord, int aXCoord)
     }
 
     return lReturn;
+}
+
+WindowModel& Window::GetModel()
+{
+    return mModel;
 }
 
 std::pair<int, int> Window::GetSize()

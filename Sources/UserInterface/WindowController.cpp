@@ -25,6 +25,11 @@ std::array<int, 4> SSIDSelectWindowScaleFunction(const int& aMaxHeight, const in
     return {10, 10, aMaxHeight - 20, aMaxWidth - 20};
 }
 
+WindowController::WindowController(WindowModel& aModel) :
+    mMainCanvas{nullptr}, mHeight{0}, mWidth{0}, mDimensionsChanged{false}, mWindows{}, mExclusiveWindow{false},
+    mWindowSelector{0, nullptr}, mModel{aModel}
+{}
+
 bool WindowController::SetUp()
 {
     initscr();
@@ -51,12 +56,13 @@ bool WindowController::SetUp()
     getmaxyx(mMainCanvas.get(), mHeight, mWidth);
 
     mWindows.emplace_back(
-        std::make_shared<NetworkingWindow>("Networking pane:", NetworkingWindowScaleFunction, mHeight, mWidth));
+        std::make_shared<NetworkingWindow>(mModel, "Networking pane:", NetworkingWindowScaleFunction, mHeight, mWidth));
 
-    mWindows.emplace_back(std::make_shared<XLinkWindow>("XLink Kai pane:", XLinkWindowScaleFunction, mHeight, mWidth));
+    mWindows.emplace_back(
+        std::make_shared<XLinkWindow>(mModel, "XLink Kai pane:", XLinkWindowScaleFunction, mHeight, mWidth));
 
     mWindows.emplace_back(std::make_shared<Window>(
-        "SSID Selection:", SSIDSelectWindowScaleFunction, mHeight, mWidth, false, false, false));
+        mModel, "SSID Selection:", SSIDSelectWindowScaleFunction, mHeight, mWidth, false, false, false));
 
     mWindowSelector.first  = 0;
     mWindowSelector.second = mWindows.at(0);
@@ -119,12 +125,14 @@ bool WindowController::Process()
             if (mWindowSelector.second != nullptr) {
                 mWindowSelector.second->AdvanceSelectionHorizontal();
             }
+            break;
         case ' ':
             if (mWindowSelector.second != nullptr) {
                 mWindowSelector.second->DoSelection();
             }
+            break;
         default:
-            mLastKeyPressed = 0;
+            break;
     }
 
     int lHeight{0};

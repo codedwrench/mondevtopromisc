@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "IUIObject.h"
+#include "../WindowModel.h"
 
 /**
  * Interface for Window classes.
@@ -55,6 +56,12 @@ public:
      * @return true if successful.
      */
     virtual bool Move(int aYCoord, int aXCoord) = 0;
+
+    /**
+     * Returns model attached to this window.
+     * @return reference to a window model.
+     */
+    virtual WindowModel& GetModel() = 0;
 
     /**
      * Gets the size of the window.

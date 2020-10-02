@@ -23,7 +23,11 @@
 class WindowController
 {
 public:
-    WindowController() = default;
+    /**
+     * Constructor of WindowController, handles everything around the user interface.
+     * @param aModel - A model where the window can leave its data for the rest of the program.
+     */
+    WindowController(WindowModel& aModel);
     ~WindowController();
 
     WindowController(const WindowController& aWindowController) = delete;
@@ -45,12 +49,13 @@ public:
     bool Process();
 
 private:
-    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas{nullptr};
+    std::unique_ptr<WINDOW, std::function<void(WINDOW*)>> mMainCanvas;
 
-    int                                      mHeight{0};
-    int                                      mWidth{0};
-    bool                                     mDimensionsChanged{false};
-    std::vector<std::shared_ptr<IWindow>>    mWindows{};
-    bool                                     mExclusiveWindow{false};
-    std::pair<int, std::shared_ptr<IWindow>> mWindowSelector{0, nullptr};
+    int                                      mHeight;
+    int                                      mWidth;
+    bool                                     mDimensionsChanged;
+    std::vector<std::shared_ptr<IWindow>>    mWindows;
+    bool                                     mExclusiveWindow;
+    std::pair<int, std::shared_ptr<IWindow>> mWindowSelector;
+    WindowModel&                             mModel;
 };

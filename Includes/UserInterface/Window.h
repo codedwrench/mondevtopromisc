@@ -25,7 +25,8 @@ public:
      * @param aCalculation - The calculation that needs to be done to get to the scaling values
      * (takes height, width; returns starty, startx, height, width).
      **/
-    Window(std::string_view                                                 aTitle,
+    Window(WindowModel&                                                     aModel,
+           std::string_view                                                 aTitle,
            const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
            const int&                                                       aMaxHeight,
            const int&                                                       aMaxWidth,
@@ -56,6 +57,8 @@ public:
     void Refresh() override;
 
     bool Move(int aYCoord, int aXCoord) override;
+
+    WindowModel& GetModel() override;
 
     std::pair<int, int> GetSize() override;
 
@@ -88,6 +91,7 @@ protected:
     [[nodiscard]] const int& GetWidthReference() const;
 
 private:
+    WindowModel& mModel;
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>           mNCursesWindow;
     std::string                                                     mTitle;
     const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;

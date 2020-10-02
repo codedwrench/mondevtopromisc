@@ -14,7 +14,8 @@
 class NetworkingWindow : public Window
 {
 public:
-    NetworkingWindow(std::string_view                                                 aTitle,
+    NetworkingWindow(WindowModel&                                                     aModel,
+                     std::string_view                                                 aTitle,
                      const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                      const int&                                                       aMaxHeight,
                      const int&                                                       aMaxWidth);

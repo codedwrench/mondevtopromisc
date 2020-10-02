@@ -25,11 +25,12 @@ std::array<int, 4> QQuitStringScaleFunction(const int& aMaxHeight, const int& aM
     return {aMaxHeight - 1, static_cast<int>(aMaxWidth - 1 - cQuitMessage.length()), 0, 0};
 }
 
-XLinkWindow::XLinkWindow(std::string_view                                                 aTitle,
+XLinkWindow::XLinkWindow(WindowModel&                                                     aModel,
+                         std::string_view                                                 aTitle,
                          const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
                          const int&                                                       aMaxHeight,
                          const int&                                                       aMaxWidth) :
-    Window(aTitle, aScaleCalculation, aMaxHeight, aMaxWidth)
+    Window(aModel, aTitle, aScaleCalculation, aMaxHeight, aMaxWidth)
 {
     SetUp();
 }
@@ -44,7 +45,8 @@ void XLinkWindow::SetUp()
                                          "Automatically search for XLink Kai instances",
                                          SearchXLinkCheckBoxScaleFunction,
                                          GetHeightReference(),
-                                         GetWidthReference()));
+                                         GetWidthReference(),
+                                         GetModel().mAutoDiscoverXLinkKaiInstance));
     AddObject(std::make_unique<String>(
         *this, "Press Tab to switch panes", TabPressStringScaleFunction, GetHeightReference(), GetWidthReference()));
     AddObject(std::make_unique<String>(
