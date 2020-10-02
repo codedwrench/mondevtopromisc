@@ -35,14 +35,12 @@ public:
      * @param aCalculation - The calculation that needs to be done to get to the scaling values
      * (takes height, width; returns starty, startx, height, width).
      **/
-    Window(WindowModel&     aModel,
-           std::string_view aTitle,
-           ScaleCalculation aCalculation,
-           const int&       aMaxHeight,
-           const int&       aMaxWidth,
-           bool             aDrawBorder = true,
-           bool             aExclusive  = false,
-           bool             aVisible    = true);
+    Window(WindowModel&                aModel,
+           std::string_view            aTitle,
+           std::function<Dimensions()> aCalculation,
+           bool                        aDrawBorder = true,
+           bool                        aExclusive  = false,
+           bool                        aVisible    = true);
 
     Window(const Window& aWindow) = delete;
     Window& operator=(const Window& aWindow) = delete;
@@ -103,17 +101,15 @@ protected:
     [[nodiscard]] const int&  GetWidthReference() const;
 
 private:
-    WindowModel&           mModel;
-    NCursesWindow          mNCursesWindow;
-    std::string            mTitle;
-    const ScaleCalculation mScaleCalculation;
-    const int&             mMaxHeight;
-    const int&             mMaxWidth;
-    int                    mHeight;
-    int                    mWidth;
-    bool                   mDrawBorder;
-    bool                   mExclusive;
-    bool                   mVisible;
-    int                    mSelectedObject;
-    ObjectList             mObjects;
+    WindowModel&                mModel;
+    NCursesWindow               mNCursesWindow;
+    std::string                 mTitle;
+    std::function<Dimensions()> mScaleCalculation;
+    int                         mHeight;
+    int                         mWidth;
+    bool                        mDrawBorder;
+    bool                        mExclusive;
+    bool                        mVisible;
+    int                         mSelectedObject;
+    ObjectList                  mObjects;
 };

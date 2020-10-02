@@ -6,22 +6,19 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - Window.cpp */
 
-Window::Window(WindowModel&     aModel,
-               std::string_view aTitle,
-               ScaleCalculation aCalculation,
-               const int&       aMaxHeight,
-               const int&       aMaxWidth,
-               bool             aDrawBorder,
-               bool             aExclusive,
-               bool             aVisible) :
+Window::Window(WindowModel&                aModel,
+               std::string_view            aTitle,
+               std::function<Dimensions()> aCalculation,
+               bool                        aDrawBorder,
+               bool                        aExclusive,
+               bool                        aVisible) :
     mModel{aModel},
-    mTitle{aTitle}, mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
-    mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
+    mTitle{aTitle}, mScaleCalculation(aCalculation), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}
 {
-    Dimensions lWindowParameters{aCalculation(aMaxHeight, aMaxWidth)};
-    mWidth         = aMaxWidth;
-    mHeight        = aMaxHeight;
+    Dimensions lWindowParameters{aCalculation()};
+    mHeight        = lWindowParameters.at(0);
+    mWidth         = lWindowParameters.at(1);
     mNCursesWindow = NCursesWindow(
         newwin(lWindowParameters.at(2), lWindowParameters.at(3), lWindowParameters.at(0), lWindowParameters.at(1)),
         [](WINDOW* aWin) { delwin(aWin); });
@@ -103,7 +100,8 @@ std::pair<int, int> Window::GetSize()
 bool Window::Scale()
 {
     bool       lReturn{false};
-    Dimensions lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
+    Dimensions lParameters{mScaleCalculation()};
+
     if (Resize(lParameters.at(2), lParameters.at(3))) {
         if (Move(lParameters.at(0), lParameters.at(1))) {
             lReturn = true;

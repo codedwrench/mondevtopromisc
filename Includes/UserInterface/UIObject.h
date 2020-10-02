@@ -15,13 +15,11 @@
 class UIObject : public IUIObject
 {
 public:
-    UIObject(IWindow&         aWindow,
-             std::string_view aName,
-             ScaleCalculation aCalculation,
-             const int&       aMaxHeight,
-             const int&       aMaxWidth,
-             bool             aVisible    = true,
-             bool             aSelectable = false);
+    UIObject(IWindow&                    aWindow,
+             std::string_view            aName,
+             std::function<Dimensions()> aCalculation,
+             bool                        aVisible    = true,
+             bool                        aSelectable = false);
 
     bool DoAction() override;
     void Scale() override;
@@ -40,13 +38,11 @@ protected:
     IWindow& GetWindow();
 
 private:
-    IWindow&                                 mWindow;
-    std::string                              mName;
-    bool                                     mSelectable;
-    bool                                     mVisible;
-    int                                      mYCoord;
-    int                                      mXCoord;
-    const Window_Constants::ScaleCalculation mScaleCalculation;
-    const int&                               mMaxHeight;
-    const int&                               mMaxWidth;
+    IWindow&                    mWindow;
+    std::string                 mName;
+    bool                        mSelectable;
+    bool                        mVisible;
+    int                         mYCoord;
+    int                         mXCoord;
+    std::function<Dimensions()> mScaleCalculation;
 };

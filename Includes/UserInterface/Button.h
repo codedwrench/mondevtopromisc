@@ -16,16 +16,13 @@
 class Button : public UIObject
 {
 public:
-    Button(IWindow&              aWindow,
-           std::string_view      aName,
-           ScaleCalculation      aCalculation,
-           const int&            aMaxHeight,
-           const int&            aMaxWidth,
-           std::function<bool()> aAction,
-           bool                  aSelected   = false,
-           bool                  aChecked    = false,
-           bool                  aVisible    = true,
-           bool                  aSelectable = true);
+    Button(IWindow&                    aWindow,
+           std::string_view            aName,
+           std::function<Dimensions()> aCalculation,
+           std::function<bool()>       aAction,
+           bool                        aSelected   = false,
+           bool                        aVisible    = true,
+           bool                        aSelectable = true);
 
     void Draw() override;
     bool DoAction() override;
@@ -36,5 +33,4 @@ public:
 private:
     std::function<bool()> mAction;
     bool                  mSelected;
-    bool                  mChecked;
 };

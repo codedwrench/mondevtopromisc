@@ -5,18 +5,15 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - Button.cpp */
 
-Button::Button(IWindow&              aWindow,
-               std::string_view      aName,
-               ScaleCalculation      aCalculation,
-               const int&            aMaxHeight,
-               const int&            aMaxWidth,
-               std::function<bool()> aAction,
-               bool                  aSelected,
-               bool                  aChecked,
-               bool                  aVisible,
-               bool                  aSelectable) :
-    UIObject(aWindow, aName, aCalculation, aMaxHeight, aMaxWidth, aVisible, aSelectable),
-    mChecked(aChecked), mSelected(aSelected), mAction{std::move(aAction)}
+Button::Button(IWindow&                    aWindow,
+               std::string_view            aName,
+               std::function<Dimensions()> aCalculation,
+               std::function<bool()>       aAction,
+               bool                        aSelected,
+               bool                        aVisible,
+               bool                        aSelectable) :
+    UIObject(aWindow, aName, aCalculation, aVisible, aSelectable),
+    mSelected(aSelected), mAction{std::move(aAction)}
 {}
 
 void Button::Draw()

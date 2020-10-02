@@ -1,6 +1,7 @@
 #include "../../Includes/UserInterface/NetworkingWindow.h"
 
 #include <cmath>
+#include <utility>
 
 #include "../../Includes/UserInterface/CheckBox.h"
 
@@ -19,12 +20,10 @@ Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*
 }
 
 
-NetworkingWindow::NetworkingWindow(WindowModel&     aModel,
-                                   std::string_view aTitle,
-                                   ScaleCalculation aCalculation,
-                                   const int&       aMaxHeight,
-                                   const int&       aMaxWidth) :
-    Window(aModel, aTitle, aCalculation, aMaxHeight, aMaxWidth)
+NetworkingWindow::NetworkingWindow(WindowModel&                aModel,
+                                   std::string_view            aTitle,
+                                   std::function<Dimensions()> aCalculation) :
+    Window(aModel, aTitle, std::move(aCalculation))
 {
     SetUp();
 }
@@ -33,16 +32,14 @@ void NetworkingWindow::SetUp()
 {
     Window::SetUp();
 
-    AddObject(std::make_unique<CheckBox>(*this,
-                                         "Automatically connect to PSP/Vita networks.",
-                                         ScaleSearchPSPNetworks,
-                                         GetHeightReference(),
-                                         GetWidthReference(),
-                                         GetModel().mAutoDiscoverNetworks));
-    AddObject(std::make_unique<CheckBox>(*this,
-                                         "Take hints from XLink Kai.",
-                                         ScaleSearchTakeHintsXLinkKai,
-                                         GetHeightReference(),
-                                         GetWidthReference(),
-                                         GetModel().mXLinkKaiHints));
+    AddObject(std::make_unique<CheckBox>(
+        *this,
+        "Automatically connect to PSP/Vita networks.",
+        [&] { return ScaleSearchPSPNetworks(GetHeightReference(), GetWidthReference()); },
+        GetModel().mAutoDiscoverNetworks));
+    AddObject(std::make_unique<CheckBox>(
+        *this,
+        "Take hints from XLink Kai.",
+        [&] { return ScaleSearchTakeHintsXLinkKai(GetHeightReference(), GetWidthReference()); },
+        GetModel().mXLinkKaiHints));
 }

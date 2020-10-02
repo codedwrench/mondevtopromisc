@@ -4,18 +4,16 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - UIObject.cpp */
 
-UIObject::UIObject(IWindow&         aWindow,
-                   std::string_view aName,
-                   ScaleCalculation aCalculation,
-                   const int&       aMaxHeight,
-                   const int&       aMaxWidth,
-                   bool             aVisible,
-                   bool             aSelectable) :
+UIObject::UIObject(IWindow&                    aWindow,
+                   std::string_view            aName,
+                   std::function<Dimensions()> aCalculation,
+                   bool                        aVisible,
+                   bool                        aSelectable) :
     mWindow(aWindow),
-    mName(aName), mSelectable(aSelectable), mVisible(aVisible), mYCoord(0), mXCoord(0), mScaleCalculation(aCalculation),
-    mMaxHeight(aMaxHeight), mMaxWidth(aMaxWidth)
+    mName(aName), mSelectable(aSelectable), mVisible(aVisible), mYCoord(0), mXCoord(0),
+    mScaleCalculation(std::move(aCalculation))
 {
-    Dimensions lParameters{mScaleCalculation(aMaxHeight, aMaxWidth)};
+    Dimensions lParameters{mScaleCalculation()};
     mYCoord = lParameters.at(0);
     mXCoord = lParameters.at(1);
 }
@@ -28,7 +26,7 @@ bool UIObject::DoAction()
 
 void UIObject::Scale()
 {
-    Dimensions lParameters{mScaleCalculation(mMaxHeight, mMaxWidth)};
+    Dimensions lParameters{mScaleCalculation()};
     mYCoord = lParameters.at(0);
     mXCoord = lParameters.at(1);
 }

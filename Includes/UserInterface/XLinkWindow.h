@@ -24,11 +24,7 @@ using namespace XLinkWindow_Constants;
 class XLinkWindow : public Window
 {
 public:
-    XLinkWindow(WindowModel&     aModel,
-                std::string_view aTitle,
-                ScaleCalculation aCalculation,
-                const int&       aMaxHeight,
-                const int&       aMaxWidth);
+    XLinkWindow(WindowModel& aModel, std::string_view aTitle, std::function<Dimensions()> aCalculation);
 
     void SetUp() override;
     void Draw() override;

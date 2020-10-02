@@ -51,13 +51,14 @@ bool WindowController::SetUp()
 
     getmaxyx(mMainCanvas.get(), mHeight, mWidth);
 
-    mWindows.emplace_back(
-        std::make_shared<NetworkingWindow>(mModel, "Networking pane:", ScaleNetworkingWindow, mHeight, mWidth));
+    mWindows.emplace_back(std::make_shared<NetworkingWindow>(
+        mModel, "Networking pane:", [&] { return ScaleNetworkingWindow(mHeight, mWidth); }));
 
-    mWindows.emplace_back(std::make_shared<XLinkWindow>(mModel, "XLink Kai pane:", ScaleXLinkWindow, mHeight, mWidth));
+    mWindows.emplace_back(
+        std::make_shared<XLinkWindow>(mModel, "XLink Kai pane:", [&] { return ScaleXLinkWindow(mHeight, mWidth); }));
 
     mWindows.emplace_back(std::make_shared<Window>(
-        mModel, "SSID Selection:", ScaleSSIDSelectWindow, mHeight, mWidth, false, false, false));
+        mModel, "SSID Selection:", [&] { return ScaleSSIDSelectWindow(mHeight, mWidth); }, false, false, false));
 
     mWindowSelector.first  = 0;
     mWindowSelector.second = mWindows.at(0);
