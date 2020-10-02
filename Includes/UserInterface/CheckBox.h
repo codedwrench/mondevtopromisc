@@ -17,7 +17,7 @@ public:
              const std::function<std::array<int, 4>(const int&, const int&)>& aScaleCalculation,
              const int&                                                       aMaxHeight,
              const int&                                                       aMaxWidth,
-             bool&                                                             aModelCheckBox,
+             bool&                                                            aModelCheckBox,
              bool                                                             aSelected   = false,
              bool                                                             aChecked    = false,
              bool                                                             aVisible    = true,
@@ -34,6 +34,6 @@ public:
 
 private:
     bool& mModelCheckBox;
-    bool mSelected;
-    bool mChecked;
+    bool  mSelected;
+    bool  mChecked;
 };

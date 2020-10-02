@@ -20,14 +20,15 @@ CheckBox::CheckBox(IWindow&                                                     
 
 void CheckBox::Draw()
 {
-    std::string lCheckBoxString{std::string("[") + (mChecked ? "X" : " ") + "]  " + GetName().data()};
+    std::string lCheckBoxString{std::string("[") + (mChecked ? std::string("X") : std::string(" ")) + "]  " +
+                                GetName().data()};
     int         lColorPair{mSelected ? 7 : 1};
     GetWindow().DrawString(GetYCoord(), GetXCoord(), lColorPair, lCheckBoxString);
 }
 
 bool CheckBox::DoAction()
 {
-    mChecked = !mChecked;
+    mChecked       = !mChecked;
     mModelCheckBox = mChecked;
     return true;
 }

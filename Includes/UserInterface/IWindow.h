@@ -10,8 +10,8 @@
 #include <memory>
 #include <string_view>
 
-#include "IUIObject.h"
 #include "../WindowModel.h"
+#include "IUIObject.h"
 
 /**
  * Interface for Window classes.

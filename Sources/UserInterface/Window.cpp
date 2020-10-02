@@ -14,8 +14,8 @@ Window::Window(WindowModel&                                                     
                bool                                                             aDrawBorder,
                bool                                                             aExclusive,
                bool                                                             aVisible) :
-    mModel{aModel}, mTitle{aTitle},
-    mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
+    mModel{aModel},
+    mTitle{aTitle}, mScaleCalculation(aCalculation), mMaxHeight(aMaxHeight),
     mMaxWidth(aMaxWidth), mNCursesWindow{nullptr}, mHeight{0}, mWidth{0},
     mDrawBorder(aDrawBorder), mExclusive{aExclusive}, mVisible{aVisible}, mSelectedObject{0}, mObjects{}
 {

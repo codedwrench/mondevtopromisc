@@ -91,7 +91,7 @@ protected:
     [[nodiscard]] const int& GetWidthReference() const;
 
 private:
-    WindowModel& mModel;
+    WindowModel&                                                    mModel;
     std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>           mNCursesWindow;
     std::string                                                     mTitle;
     const std::function<std::array<int, 4>(const int&, const int&)> mScaleCalculation;
