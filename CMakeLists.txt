@@ -67,6 +67,7 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/UIObject.cpp
         Sources/UserInterface/Window.cpp
         Sources/UserInterface/WindowController.cpp
+	Sources/WindowModel.cpp
         Sources/UserInterface/XLinkWindow.cpp
         Includes/IPCapDevice.h
         Includes/ISendReceiveDevice.h
@@ -86,6 +87,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/UIObject.h
         Includes/UserInterface/Window.h
         Includes/UserInterface/WindowController.h
+	Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h
         ${EXTRA_INCLUDES})
 

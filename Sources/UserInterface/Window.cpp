@@ -197,7 +197,12 @@ void Window::DeSelect()
 
 bool Window::DoSelection()
 {
-    return false;
+    bool lReturn{false};
+    if ((mSelectedObject >= 0) && (mSelectedObject < mObjects.size()) && (mObjects.at(mSelectedObject)->IsVisible()) &&
+        (mObjects.at(mSelectedObject)->IsSelectable())) {
+        lReturn = mObjects.at(mSelectedObject)->DoAction();
+    }
+    return lReturn;
 }
 
 bool Window::IsExclusive()

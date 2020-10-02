@@ -119,6 +119,10 @@ bool WindowController::Process()
             if (mWindowSelector.second != nullptr) {
                 mWindowSelector.second->AdvanceSelectionHorizontal();
             }
+        case ' ':
+            if (mWindowSelector.second != nullptr) {
+                mWindowSelector.second->DoSelection();
+            }
         default:
             mLastKeyPressed = 0;
     }
