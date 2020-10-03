@@ -10,6 +10,7 @@ As of right now it is a working proof of concept where you can receive and send 
 - WTXUP Ralink RT3070 (rt2800usb)
 - TP-Link TL-WN823N V2 (Realtek rtl8192eu (kimocoder/rtl8192eu))
 - Dell Wireless 1390 (Broadcom BCM4311 (b43)) with the following patch: https://gist.github.com/codedwrench/8d7916d63993574e1dd089a62dd523a9
+- Hercules Guillemot HWGUm-54 (rtl8192su (codedwrench/rtl8192su))
 
 ## How to compile
 
