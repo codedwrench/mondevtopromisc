@@ -5,3 +5,34 @@
  * This file contains an class for a userinterface textfield.
  *
  **/
+
+#include <functional>
+
+#include "UIObject.h"
+
+/**
+ * Class for a userinterface TextField.
+ */
+class TextField : public UIObject
+{
+public:
+    TextField(IWindow&                 aWindow,
+           std::string_view            aName,
+           std::function<Dimensions()> aCalculation,
+           std::string&                aTextReference,
+           int                         aLength,
+           bool                        aSelected   = false,
+           bool                        aVisible    = true,
+           bool                        aSelectable = true);
+
+    void Draw() override;
+    bool DoAction() override;
+
+    void               SetSelected(bool aSelected) override;
+    [[nodiscard]] bool IsSelected() const override;
+
+private:
+    std::string&          mTextReference;
+    int                   mLength;
+    bool                  mSelected;
+};
