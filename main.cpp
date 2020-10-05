@@ -15,9 +15,11 @@
 
 namespace
 {
-    constexpr Logger::Level cLogLevel{Logger::Level::TRACE};
-    constexpr char          cLogFileName[]{"log.txt"};
-    constexpr bool          cLogToDisk{true};
+    constexpr Logger::Level    cLogLevel{Logger::Level::TRACE};
+    constexpr std::string_view cLogFileName{"log.txt"};
+    constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
+    constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
+    constexpr bool             cLogToDisk{true};
 
     // Indicates if the program should be running or not, used to gracefully exit the program.
     bool gRunning{true};
@@ -36,7 +38,7 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
 
 int main(int argc, char* argv[])
 {
-    Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName);
+    Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName.data());
     // Handle quit signals gracefully.
     boost::asio::io_service lSignalIoService{};
     boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
@@ -44,14 +46,18 @@ int main(int argc, char* argv[])
     boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
     WindowModel   mWindowModel{};
 
-    WindowController lWindowController(mWindowModel);
+    std::vector<std::string> lSSIDFilters{};
+    WindowController         lWindowController(mWindowModel);
     lWindowController.SetUp();
+
+    WirelessMonitorDevice lMonitorDevice;
 
     while (gRunning) {
         if (lWindowController.Process()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             switch (mWindowModel.mCommand) {
                 case WindowModel_Constants::Command::StartEngine:
+                    if (mWindowModel.mAutoDiscoverPSPVitaNetworks) {}
                     mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
                     mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
                     break;

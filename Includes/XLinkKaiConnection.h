@@ -58,7 +58,7 @@ public:
     XLinkKaiConnection(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
     XLinkKaiConnection& operator=(const XLinkKaiConnection& aXLinkKaiConnection) = delete;
 
-    bool Open(std::string_view aIp) override;
+    bool Open(std::string_view aIp);
 
     /**
      * Creates a connection.

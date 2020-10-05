@@ -8,6 +8,8 @@
 
 #include <string_view>
 
+#include "NetworkingHeaders.h"
+
 /**
  * This class converts packets from a monitor format to promiscuous format and vice versa.
  */
@@ -31,8 +33,17 @@ public:
     static uint64_t MacToInt(std::string_view aMac);
 
     /**
+     * Check if the provided data is part of a beacon packet.
+     * Only works on packets containing a 802.11 header.
+     * @param aData - The data to check.
+     * @return true if packet is a beacon packet.
+     */
+    bool Is80211Beacon(std::string_view aData);
+
+    /**
      * Checks if the provided data is part of a data packet.
      * Only works on packets containing a 802.11 header.
+     * @param aData - The data to check.
      * @return true if packet is a data packet.
      */
     bool Is80211Data(std::string_view aData);
@@ -40,6 +51,7 @@ public:
     /**
      * Checks if the provided data is part of a quality of service packet.
      * Only works on packets containing a 802.11 header.
+     * @param aData - The data to check.
      * @return true if packet is a quality of service packet.
      */
     bool Is80211QOS(std::string_view aData);
@@ -47,6 +59,7 @@ public:
     /**
      * Checks if the provided data is part of a null function packet.
      * Only works on packets containing a 802.11 header.
+     * @param aData - The data to check.
      * @return true if packet is a null function packet.
      */
     bool Is80211NullFunc(std::string_view aData);
@@ -83,9 +96,31 @@ public:
      */
     void SetRadioTap(bool aRadioTap);
 
+    /**
+     * Sets the frequency to set in the the 802.11 radiotap header.
+     * @param aFrequency - The frequency to set.
+     */
+    void SetFrequency(uint16_t aFrequency);
+
+    /**
+     * Sets the data rate to set in the 802.11 radiotap header.
+     * @param aDataRate - The datarate to set.
+     */
+    void SetRate(uint8_t aDataRate);
+
+    /**
+     * Sets the channel flags to set in the 802.11 radiotap header.
+     * @param aChannelFlags - The channel flags to set.
+     */
+    void SetChannelFlags(uint8_t aChannelFlags);
+
 private:
+    void InsertRadioTapHeader(std::string_view aData, char* aPacket) const;
     bool UpdateIndexAfterRadioTap(std::string_view aData);
 
+    uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
+    uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
+    uint16_t mFrequency{RadioTap_Constants::cChannel};
     bool     mRadioTap{false};
     uint64_t mIndexAfterRadioTap{0};
 };

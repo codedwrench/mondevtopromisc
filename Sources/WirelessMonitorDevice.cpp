@@ -15,19 +15,19 @@
 
 using namespace std::chrono;
 
-bool WirelessMonitorDevice::Open(std::string_view aName)
+bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
 {
     bool lReturn{true};
-    char lErrorBuffer[PCAP_ERRBUF_SIZE];
+    mSSIDFilter = std::move(aSSIDFilter);
+    mFrequency  = aFrequency;
+    std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
-    mHandler = pcap_create(aName.data(), lErrorBuffer);
-    pcap_set_rfmon(mHandler, 1);
+    mHandler = pcap_create(aName.data(), lErrorBuffer.data());
     pcap_set_snaplen(mHandler, cSnapshotLength);
-    pcap_set_promisc(mHandler, 1);
     pcap_set_timeout(mHandler, cTimeout);
     pcap_set_immediate_mode(mHandler, 1);
 
-    int lStatus;
+    int lStatus{0};
     lStatus = pcap_activate(mHandler);
 
     if (lStatus == 0) {
@@ -86,7 +86,9 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
     bool lReturn{false};
 
     std::string lData = DataToString(aData, aHeader);
-    if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
+    if (mPacketConverter.Is80211Beacon(lData)) {
+        for (auto& lFilter : mSSIDFilter) {}
+    } else if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
         ++mPacketCount;
 
         // Don't even bother setting up these strings if loglevel is not trace.

@@ -26,12 +26,15 @@ class WindowModel
 {
 public:
     // Settings
-    bool         mAutoDiscoverNetworks{false};
-    bool         mXLinkKaiHints{false};
-    bool         mAutoDiscoverXLinkKaiInstance{false};
-    unsigned int mChannel{1};
-    std::string  mXLinkIp{"127.0.0.1"};
-    std::string  mXLinkPort{"34523"};
+    bool        mAutoDiscoverPSPVitaNetworks{false};
+    bool        mXLinkKaiHints{false};
+    bool        mAutoDiscoverXLinkKaiInstance{false};
+    std::string mWifiAdapter{""};
+
+    // Channel as a string because of the textfield this is bound to.
+    std::string mChannel{"1"};
+    std::string mXLinkIp{"127.0.0.1"};
+    std::string mXLinkPort{"34523"};
 
     // Statuses
     WindowModel_Constants::EngineStatus mEngineStatus{WindowModel_Constants::EngineStatus::Idle};

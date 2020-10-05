@@ -18,7 +18,7 @@ class PCapReader : public IPCapDevice
 public:
     void Close() override;
 
-    bool Open(std::string_view aName) override;
+    bool Open(std::string_view aName);
 
     bool ReadNextData() override;
 

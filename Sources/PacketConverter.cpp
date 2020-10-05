@@ -61,12 +61,23 @@ bool PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
     return lReturn;
 }
 
+bool PacketConverter::Is80211Beacon(std::string_view aData)
+{
+    bool lReturn{false};
+    if (UpdateIndexAfterRadioTap(aData)) {
+        lReturn = (*(reinterpret_cast<const uint16_t*>(aData.data()) + mIndexAfterRadioTap)) ==
+                  Net_80211_Constants::cBeaconType;
+    }
+
+    return lReturn;
+}
+
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0x0Fu) ==
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0x0FU) ==
                   Net_80211_Constants::cDataType;
     }
 
@@ -164,7 +175,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 }
 
 // Helper function for ConvertPacketTo80211, adds the radiotap header.
-void InsertRadioTapHeader(std::string_view aData, char* aPacket)
+void PacketConverter::InsertRadioTapHeader(std::string_view aData, char* aPacket) const
 {
     unsigned int lIndex{sizeof(RadioTapHeader)};
 
@@ -184,16 +195,16 @@ void InsertRadioTapHeader(std::string_view aData, char* aPacket)
     lIndex += sizeof(lFlags);
 
     // Optional header (Rate Flags)
-    uint8_t lRateFlags{RadioTap_Constants::cRateFlags};
+    uint8_t lRateFlags{mDataRate};
     memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
     lIndex += sizeof(lRateFlags);
 
     // Optional headers (Channel & Channel Flags)
-    uint16_t lChannel{RadioTap_Constants::cChannel};
+    uint16_t lChannel{mFrequency};
     memcpy(aPacket + lIndex, &lChannel, sizeof(lChannel));
     lIndex += sizeof(lChannel);
 
-    uint16_t lChannelFlags{RadioTap_Constants::cChannelFlags};
+    uint16_t lChannelFlags{mChannelFlags};
     memcpy(aPacket + lIndex, &lChannelFlags, sizeof(lChannelFlags));
     lIndex += sizeof(lChannelFlags);
 
@@ -230,7 +241,7 @@ void InsertIeee80211Header(std::string_view aData, uint64_t aBSSID, char* aPacke
 
     // Little- to Big endian
     lBSSID = bswap_64(lBSSID);
-    lBSSID = lBSSID >> 16u;
+    lBSSID = lBSSID >> 16U;
     memcpy(&lIeee80211Header.addr3[0], &lBSSID, Net_80211_Constants::cBSSIDLength * sizeof(uint8_t));
 
     memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
@@ -295,4 +306,19 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, uint64
 void PacketConverter::SetRadioTap(bool aRadioTap)
 {
     mRadioTap = aRadioTap;
+}
+
+void PacketConverter::SetFrequency(uint16_t aFrequency)
+{
+    mFrequency = aFrequency;
+}
+
+void PacketConverter::SetRate(uint8_t aDataRate)
+{
+    mDataRate = aDataRate;
+}
+
+void PacketConverter::SetChannelFlags(uint8_t aChannelFlags)
+{
+    mChannelFlags = aChannelFlags;
 }

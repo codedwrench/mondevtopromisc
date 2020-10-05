@@ -4,19 +4,28 @@
 #include <utility>
 
 #include "../../Includes/UserInterface/CheckBox.h"
+#include "../../Includes/UserInterface/TextField.h"
 
-/* Copyright (c) 2020 [Rick de Bondt] - NetworkingWindow.cpp */
-
-const std::string_view cQuitMessage{"Press q to quit"};
-
-Dimensions ScaleSearchPSPNetworks(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+Dimensions ScaleUseWifiAdapter(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
     return {2, 2, 0, 0};
 }
 
-Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+Dimensions ScaleSetChannel(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
     return {3, 2, 0, 0};
+}
+
+/* Copyright (c) 2020 [Rick de Bondt] - NetworkingWindow.cpp */
+
+Dimensions ScaleSearchPSPNetworks(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {4, 2, 0, 0};
+}
+
+Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {5, 2, 0, 0};
 }
 
 
@@ -32,14 +41,36 @@ void NetworkingWindow::SetUp()
 {
     Window::SetUp();
 
+    AddObject(std::make_shared<TextField>(
+        *this,
+        cWifiAdapterToUse,
+        [&] { return ScaleUseWifiAdapter(GetHeightReference(), GetWidthReference()); },
+        GetModel().mWifiAdapter,
+        15,
+        true,
+        true,
+        std::vector<char>{}));
+
+    AddObject(std::make_shared<TextField>(
+        *this,
+        cChannel,
+        [&] { return ScaleSetChannel(GetHeightReference(), GetWidthReference()); },
+        GetModel().mChannel,
+        2,
+        true,
+        true,
+        std::vector<char>{}));
+
     AddObject(std::make_shared<CheckBox>(
         *this,
-        "Automatically connect to PSP/Vita networks.",
+        cScanWifiNetworksPSP,
         [&] { return ScaleSearchPSPNetworks(GetHeightReference(), GetWidthReference()); },
-        GetModel().mAutoDiscoverNetworks));
-    AddObject(std::make_shared<CheckBox>(
-        *this,
-        "Take hints from XLink Kai.",
-        [&] { return ScaleSearchTakeHintsXLinkKai(GetHeightReference(), GetWidthReference()); },
-        GetModel().mXLinkKaiHints));
+        GetModel().mAutoDiscoverPSPVitaNetworks));
+
+    // TODO: Add when XLink Kai adds it
+    //    AddObject(std::make_shared<CheckBox>(
+    //        *this,
+    //        cTakeHintsFromXLinkKai,
+    //        [&] { return ScaleSearchTakeHintsXLinkKai(GetHeightReference(), GetWidthReference()); },
+    //        GetModel().mXLinkKaiHints));
 }

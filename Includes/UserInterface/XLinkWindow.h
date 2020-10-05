@@ -37,5 +37,5 @@ public:
 
 private:
     WindowModel_Constants::EngineStatus mOldEngineStatus;
-    Dimensions ScaleStatusMessage(const int& aMaxHeight, const int& aMaxWidth);
+    Dimensions                          ScaleStatusMessage(const int& aMaxHeight, const int& aMaxWidth);
 };

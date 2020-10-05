@@ -27,13 +27,6 @@ public:
     virtual std::string LastDataToString() = 0;
 
     /**
-     * Opens the device/file.
-     * @param aName - the name of the device to capture or the path of the file to open.
-     * @return true on success.
-     */
-    virtual bool Open(std::string_view aName) = 0;
-
-    /**
      * Reads the next data from the device or file.
      * @return true on success.
      */

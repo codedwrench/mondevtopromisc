@@ -29,7 +29,7 @@ class WirelessMonitorDevice : public IPCapDevice
 {
 public:
     void                 Close() override;
-    bool                 Open(std::string_view aName) override;
+    bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency);
     bool                 ReadNextData() override;
     const unsigned char* GetData() override;
 
@@ -57,7 +57,9 @@ private:
     bool                                mConnected{false};
     PacketConverter                     mPacketConverter{true};
     const unsigned char*                mData{nullptr};
-    uint64_t                            mBSSID;
+    uint16_t                            mFrequency{RadioTap_Constants::cChannel};
+    std::vector<std::string>            mSSIDFilter;
+    uint64_t                            mBSSID{1};
     pcap_t*                             mHandler{nullptr};
     const pcap_pkthdr*                  mHeader{nullptr};
     unsigned int                        mPacketCount{0};

@@ -17,12 +17,12 @@ Dimensions ScaleSearchXLinkCheckBox(const int& /*aMaxHeight*/, const int& /*aMax
 
 Dimensions ScaleIpAddressTextField(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
-    return {3, 2, 0, 0};
+    return {2, 2, 0, 0};
 }
 
 Dimensions ScalePortTextField(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
-    return {4, 2, 0, 0};
+    return {3, 2, 0, 0};
 }
 
 Dimensions ScaleTabPressString(const int& aMaxHeight, const int& /*aMaxWidth*/)
@@ -69,7 +69,8 @@ Dimensions XLinkWindow::ScaleStatusMessage(const int& aMaxHeight, const int& aMa
 XLinkWindow::XLinkWindow(WindowModel&                       aModel,
                          std::string_view                   aTitle,
                          const std::function<Dimensions()>& aCalculation) :
-    Window(aModel, aTitle, aCalculation), mOldEngineStatus(WindowModel_Constants::EngineStatus::Idle)
+    Window(aModel, aTitle, aCalculation),
+    mOldEngineStatus(WindowModel_Constants::EngineStatus::Idle)
 {
     SetUp();
 }
@@ -81,11 +82,12 @@ void XLinkWindow::SetUp()
     // Get size of window so scaling works properly.
     GetSize();
 
-    AddObject(std::make_shared<CheckBox>(
-        *this,
-        cAutoSearchXLinkInstancesMessage,
-        [&] { return ScaleSearchXLinkCheckBox(GetHeightReference(), GetWidthReference()); },
-        GetModel().mAutoDiscoverXLinkKaiInstance));
+    // TODO: Implement broadcast to XLink Kai to find IP-address
+    //    AddObject(std::make_shared<CheckBox>(
+    //        *this,
+    //        cAutoSearchXLinkInstancesMessage,
+    //        [&] { return ScaleSearchXLinkCheckBox(GetHeightReference(), GetWidthReference()); },
+    //        GetModel().mAutoDiscoverXLinkKaiInstance));
 
     AddObject(std::make_shared<TextField>(
         *this,
@@ -156,38 +158,38 @@ void XLinkWindow::Draw()
 {
     // TODO: Add hiding checkbox object, which allows hiding groups of objects
     // Autodiscover checkbox
-    if (std::dynamic_pointer_cast<CheckBox>(GetObjects().at(0))->IsChecked()) {
-        // IP Field
-        GetObjects().at(1)->SetVisible(false);
-
-        // Port Field
-        GetObjects().at(2)->SetVisible(false);
-    } else {
-        GetObjects().at(1)->SetVisible(true);
-        GetObjects().at(2)->SetVisible(true);
-    }
+    //    if (std::dynamic_pointer_cast<CheckBox>(GetObjects().at(0))->IsChecked()) {
+    //        // IP Field
+    //        GetObjects().at(1)->SetVisible(false);
+    //
+    //        // Port Field
+    //        GetObjects().at(2)->SetVisible(false);
+    //    } else {
+    GetObjects().at(1)->SetVisible(true);
+    GetObjects().at(2)->SetVisible(true);
+    //    }
 
     // TODO: Make some kind of live-updating string or add status string as member variable?
     // Status field
-    GetObjects().at(7)->SetName(
+    GetObjects().at(6)->SetName(
         std::string(cStatusPrefix) +
         WindowModel_Constants::cEngineStatusTexts.at(static_cast<unsigned long>(GetModel().mEngineStatus)) + " ");
-    GetObjects().at(7)->Scale();
+    GetObjects().at(6)->Scale();
 
     // TODO: Don't have 2 overlapping buttons, instead update name of button and make button action lambda settable.
     // TODO: Also add as member variable maybe?
-    if(GetModel().mEngineStatus != mOldEngineStatus) {
+    if (GetModel().mEngineStatus != mOldEngineStatus) {
         if (GetModel().mEngineStatus == WindowModel_Constants::EngineStatus::Running) {
             // Start button
-            GetObjects().at(4)->SetVisible(false);
+            GetObjects().at(3)->SetVisible(false);
 
             // Stop button
-            GetObjects().at(5)->SetVisible(true);
-            SetSelection(5);
-        } else {
             GetObjects().at(4)->SetVisible(true);
-            GetObjects().at(5)->SetVisible(false);
             SetSelection(4);
+        } else {
+            GetObjects().at(3)->SetVisible(true);
+            GetObjects().at(4)->SetVisible(false);
+            SetSelection(3);
         }
         mOldEngineStatus = GetModel().mEngineStatus;
     }

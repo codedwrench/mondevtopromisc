@@ -168,7 +168,7 @@ bool Window::SetSelection(int aSelection)
         mObjects.at(mSelectedObject)->SetSelected(false);
         mSelectedObject = aSelection;
         mObjects.at(mSelectedObject)->SetSelected(true);
-        lReturn         = true;
+        lReturn = true;
     }
 
     return lReturn;
