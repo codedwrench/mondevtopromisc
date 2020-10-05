@@ -21,7 +21,6 @@ public:
              bool                        aVisible    = true,
              bool                        aSelectable = false);
 
-    bool DoAction() override;
     void Scale() override;
 
     void               SetVisible(bool aVisible) override;
@@ -34,6 +33,7 @@ public:
     [[nodiscard]] int  GetXCoord() const override;
     std::string_view   GetName() override;
     void               SetName(std::string_view) override;
+    bool               HandleKey(unsigned int aKeyCode) override;
 
 protected:
     IWindow& GetWindow();

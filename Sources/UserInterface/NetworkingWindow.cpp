@@ -32,12 +32,12 @@ void NetworkingWindow::SetUp()
 {
     Window::SetUp();
 
-    AddObject(std::make_unique<CheckBox>(
+    AddObject(std::make_shared<CheckBox>(
         *this,
         "Automatically connect to PSP/Vita networks.",
         [&] { return ScaleSearchPSPNetworks(GetHeightReference(), GetWidthReference()); },
         GetModel().mAutoDiscoverNetworks));
-    AddObject(std::make_unique<CheckBox>(
+    AddObject(std::make_shared<CheckBox>(
         *this,
         "Take hints from XLink Kai.",
         [&] { return ScaleSearchTakeHintsXLinkKai(GetHeightReference(), GetWidthReference()); },

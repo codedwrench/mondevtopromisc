@@ -44,12 +44,6 @@ public:
     [[nodiscard]] virtual bool IsSelected() const = 0;
 
     /**
-     * Does action corrosponding with object type.
-     * @return true when successful.
-     */
-    virtual bool DoAction() = 0;
-
-    /**
      * Scales object according to given calculation.
      **/
     virtual void Scale() = 0;
@@ -77,4 +71,11 @@ public:
      * @param aName - Name of object.
      */
     virtual void SetName(std::string_view aName) = 0;
+
+    /**
+     * Handles key sent to the object.
+     * @param aKeyCode - Key code to be handled.
+     * @return true if handled.
+     */
+    virtual bool HandleKey(unsigned int aKeyCode) = 0;
 };

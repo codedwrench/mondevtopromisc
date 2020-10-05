@@ -5,16 +5,20 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - TextField.cpp */
 
-TextField::TextField(IWindow&              aWindow,
-               std::string_view            aName,
-               std::function<Dimensions()> aCalculation,
-               std::string&                aTextReference,
-               int                         aLength,
-               bool                        aSelected,
-               bool                        aVisible,
-               bool                        aSelectable) :
-        UIObject(aWindow, aName, std::move(aCalculation), aVisible, aSelectable),
-        mTextReference{aTextReference},  mSelected(aSelected), mLength{aLength}
+TextField::TextField(IWindow&                    aWindow,
+                     std::string_view            aName,
+                     std::function<Dimensions()> aCalculation,
+                     std::string&                aTextReference,
+                     int                         aLength,
+                     bool                        aAcceptNumbers,
+                     bool                        aAcceptLetters,
+                     std::vector<char>           aAcceptSymbols,
+                     bool                        aSelected,
+                     bool                        aVisible,
+                     bool                        aSelectable) :
+    UIObject(aWindow, aName, std::move(aCalculation), aVisible, aSelectable),
+    mTextReference{aTextReference}, mAcceptNumbers(aAcceptNumbers),
+    mAcceptLetters(aAcceptLetters), mAcceptSymbols{std::move(aAcceptSymbols)}, mSelected(aSelected), mLength{aLength}
 {}
 
 void TextField::Draw()
@@ -31,10 +35,42 @@ void TextField::Draw()
     }
 }
 
-bool TextField::DoAction()
+bool TextField::AddToText(char aCharacter)
 {
-    mTextReference = "";
-    return true;
+    bool lReturn{false};
+
+    if (mTextReference.length() < mLength) {
+        mTextReference += aCharacter;
+        lReturn = true;
+    }
+
+    return lReturn;
+}
+
+bool TextField::RemoveCharacter()
+{
+    bool lReturn{false};
+
+    if (mTextReference.length() > 0) {
+        mTextReference.resize(mTextReference.length() - 1);
+    }
+
+    return lReturn;
+}
+
+bool TextField::HandleKey(unsigned int aKeyCode)
+{
+    bool lReturn{false};
+
+    if ((mAcceptLetters && (aKeyCode >= 'a' && aKeyCode <= 'z') || (aKeyCode >= 'A' && aKeyCode <= 'Z')) ||
+        (mAcceptNumbers && (aKeyCode >= '0' && aKeyCode <= '9')) ||
+        (find(mAcceptSymbols.begin(), mAcceptSymbols.end(), aKeyCode) != mAcceptSymbols.end())) {
+        lReturn = AddToText(static_cast<char>(aKeyCode));
+    } else if (aKeyCode == KEY_BACKSPACE) {
+        lReturn = RemoveCharacter();
+    }
+
+    return lReturn;
 }
 
 void TextField::SetSelected(bool aSelected)

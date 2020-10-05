@@ -31,7 +31,7 @@ public:
     bool         mAutoDiscoverXLinkKaiInstance{false};
     unsigned int mChannel{1};
     std::string  mXLinkIp{"127.0.0.1"};
-    std::string  mXLinkPort{"34522"};
+    std::string  mXLinkPort{"34523"};
 
     // Statuses
     WindowModel_Constants::EngineStatus mEngineStatus{WindowModel_Constants::EngineStatus::Idle};

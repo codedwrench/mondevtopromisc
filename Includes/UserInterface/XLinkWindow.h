@@ -36,5 +36,6 @@ public:
     void Draw() override;
 
 private:
+    WindowModel_Constants::EngineStatus mOldEngineStatus;
     Dimensions ScaleStatusMessage(const int& aMaxHeight, const int& aMaxWidth);
 };

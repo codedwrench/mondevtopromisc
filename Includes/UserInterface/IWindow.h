@@ -32,7 +32,7 @@ public:
     /**
      * Add objects to window.
      */
-    virtual void AddObject(std::unique_ptr<IUIObject> aObject) = 0;
+    virtual void AddObject(std::shared_ptr<IUIObject> aObject) = 0;
 
     /**
      * Draws a string on the Window at specified position.
@@ -84,6 +84,12 @@ public:
     virtual bool Scale() = 0;
 
     /**
+     * Set selection to index of mObjects list.
+     * @return true if successful.
+     */
+    bool SetSelection(unsigned int aSelection);
+
+    /**
      * Advances cursor position to next selection vertically.
      * @return true if successful.
      */
@@ -111,12 +117,6 @@ public:
      * Disable selection, for example when window not focused.
      */
     virtual void DeSelect() = 0;
-
-    /**
-     * Do action for object at selection.
-     * @return true if successful.
-     */
-    virtual bool DoSelection() = 0;
 
     /**
      * Makes a window exclusive, other windows stop being processed.
@@ -153,4 +153,11 @@ public:
      * Clears window.
      */
     virtual void ClearWindow() = 0;
+
+    /**
+     * Handles a key given to the window.
+     * @param aKeyCode - Keycode that needs to be handled.
+     * @return true if handled.
+     */
+    virtual bool HandleKey(unsigned int aKeyCode) = 0;
 };

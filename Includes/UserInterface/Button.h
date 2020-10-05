@@ -25,7 +25,7 @@ public:
            bool                        aSelectable = true);
 
     void Draw() override;
-    bool DoAction() override;
+    bool HandleKey(unsigned int aKeyCode) override;
 
     void               SetSelected(bool aSelected) override;
     [[nodiscard]] bool IsSelected() const override;

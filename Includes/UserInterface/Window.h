@@ -20,7 +20,7 @@ namespace Window_Constants
     using Dimensions       = std::array<int, 4>;
     using ScaleCalculation = std::function<Dimensions(const int&, const int&)>;
     using NCursesWindow    = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>;
-    using ObjectList       = std::vector<std::unique_ptr<IUIObject>>;
+    using ObjectList       = std::vector<std::shared_ptr<IUIObject>>;
 }  // namespace Window_Constants
 
 using namespace Window_Constants;
@@ -60,7 +60,7 @@ public:
 
     void DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_view aString) override;
 
-    void AddObject(std::unique_ptr<IUIObject> aObject) override;
+    void AddObject(std::shared_ptr<IUIObject> aObject) override;
 
     void Refresh() override;
 
@@ -74,6 +74,8 @@ public:
 
     bool Scale() override;
 
+    bool SetSelection(int aSelection);
+
     bool AdvanceSelectionVertical() override;
 
     bool RecedeSelectionVertical() override;
@@ -84,8 +86,6 @@ public:
 
     void DeSelect() override;
 
-    bool DoSelection() override;
-
     void SetExclusive(bool aExclusive) override;
 
     bool IsExclusive() override;
@@ -93,6 +93,8 @@ public:
     void SetVisible(bool aVisible) override;
 
     bool IsVisible() override;
+
+    bool HandleKey(unsigned int aKeyCode) override;
 
 protected:
     [[nodiscard]] ObjectList& GetObjects();

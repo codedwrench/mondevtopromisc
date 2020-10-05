@@ -25,9 +25,14 @@ void Button::Draw()
     }
 }
 
-bool Button::DoAction()
+bool Button::HandleKey(unsigned int aKeyCode)
 {
-    return mAction();
+    bool lReturn{false};
+
+    if (aKeyCode == ' ' || aKeyCode == '\n' || aKeyCode == '\r') {
+        lReturn = mAction();
+    }
+    return lReturn;
 }
 
 void Button::SetSelected(bool aSelected)

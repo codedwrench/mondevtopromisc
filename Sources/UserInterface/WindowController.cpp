@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "../../Includes/UserInterface/NCursesKeys.h"
 #include "../../Includes/UserInterface/NetworkingWindow.h"
 #include "../../Includes/UserInterface/XLinkWindow.h"
 
@@ -101,38 +102,14 @@ bool WindowController::Process()
     bool lReturn{true};
     int  mLastKeyPressed = getch();
     switch (mLastKeyPressed) {
-        case cKeyQ:
+        case 'q':
             lReturn = false;
             break;
         case cKeyTab:
             AdvanceWindow();
             break;
-        case KEY_UP:
-            if (mWindowSelector.second != nullptr) {
-                mWindowSelector.second->RecedeSelectionVertical();
-            }
-            break;
-        case KEY_DOWN:
-            if (mWindowSelector.second != nullptr) {
-                mWindowSelector.second->AdvanceSelectionVertical();
-            }
-            break;
-        case KEY_LEFT:
-            if (mWindowSelector.second != nullptr) {
-                mWindowSelector.second->RecedeSelectionHorizontal();
-            }
-            break;
-        case KEY_RIGHT:
-            if (mWindowSelector.second != nullptr) {
-                mWindowSelector.second->AdvanceSelectionHorizontal();
-            }
-            break;
-        case ' ':
-            if (mWindowSelector.second != nullptr) {
-                mWindowSelector.second->DoSelection();
-            }
-            break;
         default:
+            mWindowSelector.second->HandleKey(mLastKeyPressed);
             break;
     }
 

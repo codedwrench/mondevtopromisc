@@ -16,23 +16,32 @@
 class TextField : public UIObject
 {
 public:
-    TextField(IWindow&                 aWindow,
-           std::string_view            aName,
-           std::function<Dimensions()> aCalculation,
-           std::string&                aTextReference,
-           int                         aLength,
-           bool                        aSelected   = false,
-           bool                        aVisible    = true,
-           bool                        aSelectable = true);
+    TextField(IWindow&                    aWindow,
+              std::string_view            aName,
+              std::function<Dimensions()> aCalculation,
+              std::string&                aTextReference,
+              int                         aLength,
+              bool                        aAcceptNumbers = true,
+              bool                        aAcceptLetters = true,
+              std::vector<char>           aAcceptSymbols = {'.', ' '},
+              bool                        aSelected      = false,
+              bool                        aVisible       = true,
+              bool                        aSelectable    = true);
 
     void Draw() override;
-    bool DoAction() override;
+    bool HandleKey(unsigned int aKeyCode) override;
 
     void               SetSelected(bool aSelected) override;
     [[nodiscard]] bool IsSelected() const override;
 
 private:
-    std::string&          mTextReference;
-    int                   mLength;
-    bool                  mSelected;
+    bool AddToText(char aCharacter);
+    bool RemoveCharacter();
+
+    std::string&      mTextReference;
+    int               mLength;
+    bool              mAcceptLetters;
+    bool              mAcceptNumbers;
+    std::vector<char> mAcceptSymbols;
+    bool              mSelected;
 };

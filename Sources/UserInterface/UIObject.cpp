@@ -18,10 +18,10 @@ UIObject::UIObject(IWindow&                    aWindow,
     mXCoord = lParameters.at(1);
 }
 
-bool UIObject::DoAction()
+bool UIObject::HandleKey(unsigned int /*aKeyCode*/)
 {
-    // Do nothing
-    return true;
+    // Base object does not handle keys
+    return false;
 }
 
 void UIObject::Scale()
@@ -45,6 +45,11 @@ void UIObject::SetSelected(bool /*aSelected*/)
 void UIObject::SetVisible(bool aVisible)
 {
     mVisible = aVisible;
+
+    // Also clear the line that this is on.
+    if (!mVisible) {
+        mWindow.ClearLine(mYCoord, mWindow.GetSize().second);
+    }
 }
 
 bool UIObject::IsVisible() const

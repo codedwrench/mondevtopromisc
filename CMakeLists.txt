@@ -80,6 +80,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/CheckBox.h
         Includes/UserInterface/IUIObject.h
         Includes/UserInterface/IWindow.h
+        Includes/UserInterface/NCursesKeys.h
         Includes/UserInterface/NetworkingWindow.h
         Includes/UserInterface/String.h
         Includes/UserInterface/TextField.h

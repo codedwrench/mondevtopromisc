@@ -30,6 +30,32 @@ void Window::SetUp()
     // Base window has no setup yet.
 }
 
+bool Window::HandleKey(unsigned int aKeyCode)
+{
+    bool lReturn{false};
+
+    switch (aKeyCode) {
+        case KEY_UP:
+            lReturn = RecedeSelectionVertical();
+            break;
+        case KEY_DOWN:
+            lReturn = AdvanceSelectionVertical();
+            break;
+        case KEY_LEFT:
+            lReturn = RecedeSelectionHorizontal();
+            break;
+        case KEY_RIGHT:
+            lReturn = AdvanceSelectionHorizontal();
+            break;
+        default:
+            if (mSelectedObject >= 0 && mSelectedObject < mObjects.size()) {
+                lReturn = mObjects.at(mSelectedObject)->HandleKey(aKeyCode);
+            }
+    }
+
+    return lReturn;
+}
+
 void Window::Draw()
 {
     if (mDrawBorder) {
@@ -38,7 +64,9 @@ void Window::Draw()
     }
 
     for (auto& lObject : mObjects) {
-        lObject->Draw();
+        if (lObject->IsVisible()) {
+            lObject->Draw();
+        }
     }
 
     Refresh();
@@ -58,7 +86,7 @@ void Window::DrawString(int aYCoord, int aXCoord, int aColorPair, std::string_vi
     wattrset(mNCursesWindow.get(), COLOR_PAIR(1));
 }
 
-void Window::AddObject(std::unique_ptr<IUIObject> aObject)
+void Window::AddObject(std::shared_ptr<IUIObject> aObject)
 {
     mObjects.push_back(std::move(aObject));
 }
@@ -127,6 +155,20 @@ bool Window::Resize(int aLines, int aColumns)
     } else {
         // Clear window as to not have artifacts.
         ClearWindow();
+    }
+
+    return lReturn;
+}
+
+bool Window::SetSelection(int aSelection)
+{
+    bool lReturn{false};
+
+    if (aSelection >= 0 && aSelection < mObjects.size()) {
+        mObjects.at(mSelectedObject)->SetSelected(false);
+        mSelectedObject = aSelection;
+        mObjects.at(mSelectedObject)->SetSelected(true);
+        lReturn         = true;
     }
 
     return lReturn;
@@ -275,16 +317,6 @@ void Window::DeSelect()
     for (auto& lObject : mObjects) {
         lObject->SetSelected(false);
     }
-}
-
-bool Window::DoSelection()
-{
-    bool lReturn{false};
-    if ((mSelectedObject >= 0) && (mSelectedObject < mObjects.size()) && (mObjects.at(mSelectedObject)->IsVisible()) &&
-        (mObjects.at(mSelectedObject)->IsSelectable())) {
-        lReturn = mObjects.at(mSelectedObject)->DoAction();
-    }
-    return lReturn;
 }
 
 bool Window::IsExclusive()

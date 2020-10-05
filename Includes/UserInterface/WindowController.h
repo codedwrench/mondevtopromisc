@@ -20,9 +20,6 @@
 
 namespace WindowController_Constants
 {
-    constexpr unsigned int cKeyQ{113};
-    constexpr unsigned int cKeyTab{9};
-
     using WindowList = std::vector<std::shared_ptr<IWindow>>;
 }  // namespace WindowController_Constants
 

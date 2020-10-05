@@ -25,11 +25,17 @@ void CheckBox::Draw()
     GetWindow().DrawString(GetYCoord(), GetXCoord(), lColorPair, lCheckBoxString);
 }
 
-bool CheckBox::DoAction()
+bool CheckBox::HandleKey(unsigned int aKeyCode)
 {
-    mChecked       = !mChecked;
-    mModelCheckBox = mChecked;
-    return true;
+    bool lReturn{false};
+
+    if (aKeyCode == ' ') {
+        mChecked       = !mChecked;
+        mModelCheckBox = mChecked;
+        lReturn        = true;
+    }
+
+    return lReturn;
 }
 
 void CheckBox::SetChecked(bool aChecked)
