@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 namespace WindowModel_Constants
 {
     enum class EngineStatus

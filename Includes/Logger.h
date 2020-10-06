@@ -15,6 +15,9 @@
 #include <experimental/source_location>
 #endif
 
+// Windows has ERROR defined, this program doesn't care about Windows ERROR
+#undef ERROR
+
 #include <sstream>
 #include <string>
 

@@ -5,7 +5,7 @@
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
 
-#include <ncurses.h>
+#include <curses.h>
 #undef timeout
 
 #include "Includes/Logger.h"

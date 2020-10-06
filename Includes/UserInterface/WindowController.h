@@ -6,7 +6,7 @@
  *
  **/
 
-#include <ncurses.h>
+#include <curses.h>
 
 #include "IWindow.h"
 #undef timeout

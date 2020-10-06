@@ -8,11 +8,19 @@
 
 #include <cstdint>
 
+#ifdef __GNUC__
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#endif
+
+#ifdef _MSC_VER
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#endif
+
 // Defined in include/linux/ieee80211.h
 /**
  * This is the IEEE80211 header.
  **/
-struct ieee80211_hdr
+PACK(struct ieee80211_hdr
 {
     uint16_t /*__le16*/ frame_control; /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
     uint16_t /*__le16*/ duration_id;   /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
@@ -21,12 +29,12 @@ struct ieee80211_hdr
     uint8_t             addr3[6];      /**< Address 3 based on frame_control. */
     uint16_t /*__le16*/ seq_ctrl;      /**< Sequence and fragmentation number. */
     // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
-} __attribute__((packed));
+});
 
 /**
  * The Radiotap header needed to construct a WiFi packet.
  **/
-struct RadioTapHeader
+PACK(struct RadioTapHeader
 {
     uint8_t  radiotap_version;     /**< Version of the RadioTap standard. */
     uint8_t  radiotap_version_pad; /**< Padding. */
@@ -56,7 +64,7 @@ struct RadioTapHeader
     // VHT
     // Timestamp
     uint32_t present_flags; /**< Which parts of the RadioTap header are present. See source code for more info. */
-} __attribute__((packed));
+});
 
 namespace Net_80211_Constants
 {

@@ -32,12 +32,21 @@ endif (BUILD_DOC AND DOXYGEN_FOUND)
 
 if (MSVC)
     message("You're running Windows! Make sure your paths are set correctly.")
+
     set(PCAP_ROOT_DIR "c:\\npcapsdk")
     set(BOOST_ROOT "c:\\Program Files\\boost\\boost_1_71_0")
 
     # Magic that boost on windows seems to need.
     add_definitions( -DBOOST_ALL_NO_LIB )
     add_definitions( -DBOOST_ALL_DYN_LINK )
+
+    set(PDCURSES_INCLUDE_DIR "c:\\pdcurses\\")
+    set(PDCURSES_LIBRARY "c:\\pdcurses\\wincon\\pdcurses.lib")
+    include(FindPDCurses.cmake)
+    set(CURSES_INCLUDE_DIRS "c:\\pdcurses\\")
+    set(CURSES_LIBRARIES ${PDCURSES_LIBRARIES})
+else ()
+    find_package(Curses)
 endif ()
 
 # Concepts seems to break on a bunch of compilers, see: https://github.com/boostorg/asio/issues/312
@@ -46,8 +55,6 @@ add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 include(FindPCAP.cmake)
 
 find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
-
-find_package(Curses)
 
 if (NOT APPLE AND NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")

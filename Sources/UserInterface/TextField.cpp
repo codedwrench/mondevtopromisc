@@ -66,7 +66,7 @@ bool TextField::HandleKey(unsigned int aKeyCode)
         (mAcceptNumbers && (aKeyCode >= '0' && aKeyCode <= '9')) ||
         (find(mAcceptSymbols.begin(), mAcceptSymbols.end(), aKeyCode) != mAcceptSymbols.end())) {
         lReturn = AddToText(static_cast<char>(aKeyCode));
-    } else if (aKeyCode == KEY_BACKSPACE) {
+    } else if (aKeyCode == KEY_BACKSPACE || aKeyCode == 127 || aKeyCode == '\b') {
         lReturn = RemoveCharacter();
     }
 

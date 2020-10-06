@@ -2,6 +2,8 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - WindowController.cpp */
 
+#undef MOUSE_MOVED
+
 #include <cmath>
 
 #include "../../Includes/UserInterface/NCursesKeys.h"

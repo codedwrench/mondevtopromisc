@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-#include <ncurses.h>
+#include <curses.h>
 #undef timeout
 
 #include "IWindow.h"
