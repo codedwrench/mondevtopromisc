@@ -6,7 +6,7 @@
  *
  **/
 
-#include <string_view>
+#include <string>
 
 #include "NetworkingHeaders.h"
 
@@ -52,7 +52,7 @@ public:
      * Note: Only works is this packet is a beacon frame.
      * @return uint64_t containing the BSSID of this beacon frame. 0 if not found.
      */
-    uint64_t GetBeaconBSSID(std::string_view aData);
+    uint64_t GetBSSID(std::string_view aData);
 
     /**
      * Tries to find the datarate in a beacon frame.
@@ -142,13 +142,21 @@ public:
      */
     void SetChannelFlags(uint8_t aChannelFlags);
 
+    /**
+     * Sets the SSID.
+     * @param aSSID - The SSID to listen to.
+     */
+    void SetSSID(std::string_view aSSID);
+
 private:
     void InsertRadioTapHeader(std::string_view aData, char* aPacket) const;
     bool UpdateIndexAfterRadioTap(std::string_view aData);
 
+    // TODO: Move these to a struct somewhere else, probably WirelessMonitorDevice. This doesn't really belong here
     uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
     uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
     uint16_t mFrequency{RadioTap_Constants::cChannel};
+
     bool     mRadioTap{false};
     uint64_t mIndexAfterRadioTap{0};
 };

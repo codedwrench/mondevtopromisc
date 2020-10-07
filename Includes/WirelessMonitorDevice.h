@@ -38,7 +38,9 @@ public:
     std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     std::string LastDataToString() override;
 
-    void SetBSSID(std::string_view aBSSID) override;
+    void SetBSSID(uint64_t aBSSID) override;
+
+    void SetSSID(std::string_view aSSID);
 
     bool Send(std::string_view aData) override;
 
@@ -60,6 +62,7 @@ private:
     uint16_t                            mFrequency{RadioTap_Constants::cChannel};
     std::vector<std::string>            mSSIDFilter;
     uint64_t                            mBSSID{1};
+    std::string                         mSSID{};
     pcap_t*                             mHandler{nullptr};
     const pcap_pkthdr*                  mHeader{nullptr};
     unsigned int                        mPacketCount{0};

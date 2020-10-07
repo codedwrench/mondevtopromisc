@@ -90,6 +90,23 @@ std::string PacketConverter::GetBeaconSSID(std::string_view aData)
     return lReturn;
 }
 
+uint64_t PacketConverter::GetBSSID(std::string_view aData)
+{
+    uint64_t lBSSID{0};
+
+    if (UpdateIndexAfterRadioTap(aData)) {
+        lBSSID =
+            *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
+        lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
+
+        // Big- to Little endian
+        lBSSID = bswap_64(lBSSID);
+        lBSSID = lBSSID >> 16U;
+    }
+
+    return lBSSID;
+}
+
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
     bool lReturn{false};
@@ -132,21 +149,7 @@ bool PacketConverter::Is80211NullFunc(std::string_view aData)
 
 bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
 {
-    bool lReturn{false};
-
-    if (UpdateIndexAfterRadioTap(aData)) {
-        uint64_t lBSSID =
-            *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
-        lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1);  // it's actually a uint48.
-
-        // Big- to Little endian
-        lBSSID = bswap_64(lBSSID);
-        lBSSID = lBSSID >> 16u;
-
-        lReturn = lBSSID == aBSSID;
-    }
-
-    return lReturn;
+    return aBSSID == GetBSSID(aData);
 }
 
 std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)

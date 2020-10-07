@@ -42,5 +42,5 @@ public:
      * Set BSSID to specified BSSID, this is used for sending packets and filtering.
      * @return true on success.
      */
-    virtual void SetBSSID(std::string_view aBssid) = 0;
+    virtual void SetBSSID(uint64_t aBSSID) = 0;
 };

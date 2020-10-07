@@ -31,7 +31,7 @@ public:
     std::string LastDataToString() override;
 
     // TODO: Implement
-    void SetBSSID(std::string_view aBSSID) override{};
+    void SetBSSID(uint64_t aBSSID) override{};
 
     bool Send(std::string_view aData) override;
 

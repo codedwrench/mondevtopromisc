@@ -92,8 +92,11 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         
         for (auto& lFilter : mSSIDFilter) {
             if (lSSID.find(lFilter) != std::string::npos) {
-                // TODO: Actually derive BSSID.
-                Logger::GetInstance().Log("SSID found:" + lSSID, Logger::Level::TRACE);
+                if(lSSID != mSSID) {
+                    mSSID = lSSID;
+                    mBSSID = mPacketConverter.GetBSSID(lData);
+                    Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
+                }
             }
         }
     } else if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
@@ -166,9 +169,14 @@ std::string WirelessMonitorDevice::LastDataToString()
     return DataToString(mData, mHeader);
 }
 
-void WirelessMonitorDevice::SetBSSID(std::string_view aBSSID)
+void WirelessMonitorDevice::SetBSSID(uint64_t aBSSID)
 {
-    mBSSID = mPacketConverter.MacToInt(aBSSID);
+    mBSSID = aBSSID;
+}
+
+void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
+{
+    mSSID = aSSID;
 }
 
 bool WirelessMonitorDevice::Send(std::string_view aData)
