@@ -15,9 +15,6 @@
 #include <experimental/source_location>
 #endif
 
-// Windows has ERROR defined, this program doesn't care about Windows ERROR
-#undef ERROR
-
 #include <sstream>
 #include <string>
 
@@ -101,6 +98,12 @@ public:
      */
     void SetLogToDisk(bool aLoggingToDiskEnabled);
 
+    /**
+     * Enables or disables logging to screen. When using the TUI interface logging to screen is unwanted.
+     * @param aLoggingToScreenEnabled - Set true when logging to screen should be enabled.
+     */
+    void SetLogToScreen(bool aLoggingToScreenEnabled);
+
 private:
     Logger() = default;
     ~Logger();
@@ -110,4 +113,5 @@ private:
     std::array<std::string, 5> mLogLevelTexts{"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
     std::ofstream              mLogOutputStream{};
     bool                       mLogToDisk{false};
+    bool                       mLogToScreen{false};
 };

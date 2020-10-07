@@ -17,24 +17,13 @@ Logger::~Logger()
 void Logger::Init(Level aLevel, bool aLogToDisk, const std::string& aFileName = "")
 {
     SetLogLevel(aLevel);
-    SetLogToDisk(aLogToDisk);
     SetFileName(aFileName);
+    SetLogToDisk(aLogToDisk);
 }
 
 void Logger::SetFileName(const std::string& aFileName)
 {
     mFileName = aFileName;
-
-    if (mLogOutputStream.is_open()) {
-        mLogOutputStream.close();
-    }
-
-    if (mLogToDisk) {
-        mLogOutputStream.open(aFileName);
-        if (mLogOutputStream.fail()) {
-            std::cerr << "Opening log file failed, logging may be incomplete!" << std::endl;
-        }
-    }
 }
 
 Logger::Level Logger::GetLogLevel()
@@ -52,13 +41,18 @@ void Logger::SetLogToDisk(bool aLoggingToDiskEnabled)
     if (aLoggingToDiskEnabled && !mLogOutputStream.is_open() && !mFileName.empty()) {
         mLogOutputStream.open(mFileName);
         if (mLogOutputStream.fail()) {
-            std::cerr << "Opening log file failed, logging may be incomplete!" << std::endl;
+            std::cerr << "Opening log file failed, logging may be incomplete! " << mFileName << std::endl;
         }
     } else if (!aLoggingToDiskEnabled && mLogOutputStream.is_open()) {
         mLogOutputStream.close();
     }
 
     mLogToDisk = aLoggingToDiskEnabled;
+}
+
+void Logger::SetLogToScreen(bool aLoggingToScreenEnabled)
+{
+    mLogToScreen = aLoggingToScreenEnabled;
 }
 
 #if defined(__GNUC__) || defined(__GNUG__)
@@ -83,7 +77,10 @@ void Logger::Log(const std::string& aText, Level aLevel)
                   << lTimeMs.count() << ": " << mLogLevelTexts.at(static_cast<unsigned long>(aLevel)) << ":" << aText;
 #endif
 
-        std::cout << lLogEntry.str() << std::endl;
+        if (mLogToScreen)
+        {
+            std::cout << lLogEntry.str() << std::endl;
+        }
 
         // Save message to log file
         if (mLogToDisk && mLogOutputStream.is_open()) {

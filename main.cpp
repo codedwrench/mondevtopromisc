@@ -50,7 +50,24 @@ int ConvertChannelToFrequency(int aChannel)
 
 int main(int argc, char* argv[])
 {
-    Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName.data());
+    std::string lProgramPath{"./"};
+
+    #ifndef _MSC_VER
+    // Make robust against sudo path change.
+    std::array<char, PATH_MAX> lResolvedPath{};
+    if (realpath(argv[0], lResolvedPath.data()) != nullptr) {
+        lProgramPath = std::string(lResolvedPath.begin(), lResolvedPath.end());
+
+        // Remove excecutable name from path
+        size_t lExcecutableNameIndex{lProgramPath.rfind('/')};
+        if(lExcecutableNameIndex != std::string::npos)
+        {
+            lProgramPath.erase(lExcecutableNameIndex + 1, lProgramPath.length() - lExcecutableNameIndex - 1);
+        }
+    }
+    #endif
+
+    Logger::GetInstance().Init(cLogLevel, cLogToDisk, lProgramPath + cLogFileName.data());
 
     // Handle quit signals gracefully.
     boost::asio::io_service lSignalIoService{};

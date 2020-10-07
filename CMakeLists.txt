@@ -45,6 +45,10 @@ if (MSVC)
     include(FindPDCurses.cmake)
     set(CURSES_INCLUDE_DIRS "c:\\pdcurses\\")
     set(CURSES_LIBRARIES ${PDCURSES_LIBRARIES})
+
+    # The logger module uses ERROR in an enum class, GDI also uses this, but screw GDI
+    # We have no GUI anyway!
+    add_definitions( -DNOGDI )
 else ()
     find_package(Curses)
 endif ()
