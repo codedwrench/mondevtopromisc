@@ -9,19 +9,18 @@
 #include <cstdint>
 
 #ifdef __GNUC__
-#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#define PACK(__Declaration__) __Declaration__ __attribute__((__packed__))
 #endif
 
 #ifdef _MSC_VER
-#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#define PACK(__Declaration__) __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
 #endif
 
 // Defined in include/linux/ieee80211.h
 /**
  * This is the IEEE80211 header.
  **/
-PACK(struct ieee80211_hdr
-{
+PACK(struct ieee80211_hdr {
     uint16_t /*__le16*/ frame_control; /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
     uint16_t /*__le16*/ duration_id;   /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
     uint8_t             addr1[6];      /**< Address 1 based on frame_control. */
@@ -34,8 +33,7 @@ PACK(struct ieee80211_hdr
 /**
  * The Radiotap header needed to construct a WiFi packet.
  **/
-PACK(struct RadioTapHeader
-{
+PACK(struct RadioTapHeader {
     uint8_t  radiotap_version;     /**< Version of the RadioTap standard. */
     uint8_t  radiotap_version_pad; /**< Padding. */
     uint16_t bytes_in_header;      /**< Amount of bytes in the header. */
@@ -76,9 +74,13 @@ namespace Net_80211_Constants
     constexpr uint8_t  cBSSIDLength{6};
     constexpr uint8_t  cTypeIndex{30};
     constexpr uint8_t  cTypeLength{2};
+    constexpr uint8_t  cFixedParameterTypeIndex{36};
+    constexpr uint8_t  cFixedParameterTypeSSIDParameterSet{0};
+    constexpr uint8_t  cFixedParameterTagLengthIndex{37};
+    constexpr uint8_t  cFixedParameterSSIDIndex{38};
     constexpr uint8_t  cDataIndex{32};
     constexpr uint8_t  cRadioTapLengthIndex{2};
-    constexpr uint16_t cBeaconType{0x0008};
+    constexpr uint16_t cBeaconType{0x80};
     constexpr uint8_t  cDataType{0x08};
     constexpr uint8_t  cDataQOSType{0x80};
     constexpr uint8_t  cDataNullFuncType{0x40};
@@ -118,13 +120,11 @@ namespace RadioTap_Constants
     // Short preamble
     constexpr uint8_t cFlags{0x02};
 
-    // Channel 1 (2412hz) only for now
-    // TODO: Deduce from incoming traffic
+    // Channel 1 (2412hz)
     constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz
     constexpr uint16_t cChannelFlags{0x00a0};  // 2.4Ghz, Turbo on
 
     // Using 11mbps for Vita and PSP traffic
-    // TODO: Deduce from incoming traffic.
     constexpr uint8_t cRateFlags{0x16};
 
     // No Ack

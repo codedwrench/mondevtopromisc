@@ -87,7 +87,15 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
 
     std::string lData = DataToString(aData, aHeader);
     if (mPacketConverter.Is80211Beacon(lData)) {
-        for (auto& lFilter : mSSIDFilter) {}
+        // Try to match SSID to filter list
+        std::string lSSID = mPacketConverter.GetBeaconSSID(lData);
+        
+        for (auto& lFilter : mSSIDFilter) {
+            if (lSSID.find(lFilter) != std::string::npos) {
+                // TODO: Actually derive BSSID.
+                Logger::GetInstance().Log("SSID found:" + lSSID, Logger::Level::TRACE);
+            }
+        }
     } else if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
         ++mPacketCount;
 

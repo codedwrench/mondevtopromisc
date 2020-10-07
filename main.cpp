@@ -36,9 +36,22 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
     }
 }
 
+int ConvertChannelToFrequency(int aChannel)
+{
+    int lReturn{-1};
+
+    // 2.4GHz, steps of 5hz.
+    if (aChannel >= 1 && aChannel <= 13) {
+        lReturn = 2412 + ((aChannel - 1) * 5);
+    }
+
+    return lReturn;
+}
+
 int main(int argc, char* argv[])
 {
     Logger::GetInstance().Init(cLogLevel, cLogToDisk, cLogFileName.data());
+
     // Handle quit signals gracefully.
     boost::asio::io_service lSignalIoService{};
     boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
@@ -50,18 +63,63 @@ int main(int argc, char* argv[])
     WindowController         lWindowController(mWindowModel);
     lWindowController.SetUp();
 
-    WirelessMonitorDevice lMonitorDevice;
+    std::shared_ptr<WirelessMonitorDevice> lMonitorDevice{std::make_shared<WirelessMonitorDevice>()};
+    std::shared_ptr<XLinkKaiConnection>    lXLinkKaiConnection{std::make_shared<XLinkKaiConnection>()};
+
+    lMonitorDevice->SetSendReceiveDevice(lXLinkKaiConnection);
+    lXLinkKaiConnection->SetSendReceiveDevice(lMonitorDevice);
+
+    bool lSuccess{false};
 
     while (gRunning) {
         if (lWindowController.Process()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             switch (mWindowModel.mCommand) {
                 case WindowModel_Constants::Command::StartEngine:
-                    if (mWindowModel.mAutoDiscoverPSPVitaNetworks) {}
-                    mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
-                    mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
+
+                    // If we are auto discovering PSP/VITA networks add those to the filter list
+                    if (mWindowModel.mAutoDiscoverPSPVitaNetworks) {
+                        lSSIDFilters.emplace_back(cPSPSSIDFilterName.data());
+                        lSSIDFilters.emplace_back(cVitaSSIDFilterName.data());
+                    }
+
+                    // Set the XLink Kai connection up, if we are autodiscovering we don't need to provide an IP
+                    if (!mWindowModel.mAutoDiscoverXLinkKaiInstance) {
+                        lSuccess = lXLinkKaiConnection->Open(mWindowModel.mXLinkIp, std::stoi(mWindowModel.mXLinkPort));
+                    } else {
+                        lSuccess = lXLinkKaiConnection->Open();
+                    }
+
+                    // Now set up the wifi interface
+                    if (lSuccess) {
+                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter,
+                                                 lSSIDFilters,
+                                                 ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
+                            
+                            if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread())
+                            {
+                                mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
+                            }
+                            else {
+                                Logger::GetInstance().Log("Failed to start receiver threads", Logger::Level::ERROR);
+                                mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
+                            }
+                        } else {
+                            Logger::GetInstance().Log("Failed to activate monitor interface", Logger::Level::ERROR);
+                            mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
+                        }
+                    } else {
+                        Logger::GetInstance().Log("Failed to open connection to XLink Kai", Logger::Level::ERROR);
+                        mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
+                    }
+
+                    mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
                     break;
                 case WindowModel_Constants::Command::StopEngine:
+                    lXLinkKaiConnection->Close();
+                    lMonitorDevice->Close();
+                    lSSIDFilters.clear();
+                    
                     mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Idle;
                     mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
                     break;

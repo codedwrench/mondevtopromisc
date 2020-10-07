@@ -41,6 +41,34 @@ public:
     bool Is80211Beacon(std::string_view aData);
 
     /**
+     * Tries to find an SSID in a beacon frame.
+     * Note: Only works is this packet is a beacon frame.
+     * @return string containing the SSID of this beacon frame. Empty string if not found.
+     */
+    std::string GetBeaconSSID(std::string_view aData);
+
+    /**
+     * Tries to find an BSSID in a beacon frame.
+     * Note: Only works is this packet is a beacon frame.
+     * @return uint64_t containing the BSSID of this beacon frame. 0 if not found.
+     */
+    uint64_t GetBeaconBSSID(std::string_view aData);
+
+    /**
+     * Tries to find the datarate in a beacon frame.
+     * Note: Only works is this packet is a beacon frame.
+     * @return uint64_t containing the datarate of this beacon frame. 0 if not found.
+     */
+    uint8_t GetBeaconRate(std::string_view aData);
+
+    /**
+     * Tries to find the channel flags in a beacon frame.
+     * Note: Only works is this packet is a beacon frame.
+     * @return uint8_t containing the channel flags of this beacon frame.
+     */
+    std::string GetBeaconChannelFlags(std::string_view aData);
+
+    /**
      * Checks if the provided data is part of a data packet.
      * Only works on packets containing a 802.11 header.
      * @param aData - The data to check.

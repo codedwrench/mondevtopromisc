@@ -15,6 +15,11 @@ XLinkKaiConnection::~XLinkKaiConnection()
     Close();
 }
 
+bool XLinkKaiConnection::Open()
+{
+    return Open("", 0);
+}
+
 bool XLinkKaiConnection::Open(std::string_view aIp)
 {
     return Open(aIp, cPort);
@@ -23,6 +28,15 @@ bool XLinkKaiConnection::Open(std::string_view aIp)
 bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
 {
     bool lReturn{true};
+
+    std::string lIp{aIp};
+    unsigned int lPort{aPort};
+
+    // TODO: Do broadcast, but for now, use default stuff
+    if (aIp == "") {
+        lIp   = cIp;
+        lPort = cPort;
+    }
 
     mRemote = ip::udp::endpoint(ip::address::from_string(aIp.data()), aPort);
 

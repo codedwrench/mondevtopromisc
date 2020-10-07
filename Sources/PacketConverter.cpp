@@ -65,8 +65,26 @@ bool PacketConverter::Is80211Beacon(std::string_view aData)
 {
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
-        lReturn = (*(reinterpret_cast<const uint16_t*>(aData.data()) + mIndexAfterRadioTap)) ==
-                  Net_80211_Constants::cBeaconType;
+        lReturn = (*(reinterpret_cast<const uint16_t*>(aData.data() + mIndexAfterRadioTap)) ==
+                  Net_80211_Constants::cBeaconType);
+    }
+
+    return lReturn;
+}
+
+std::string PacketConverter::GetBeaconSSID(std::string_view aData)
+{
+    std::string lReturn{};
+
+    if (UpdateIndexAfterRadioTap(aData)) {
+        if (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeIndex)) == Net_80211_Constants::cFixedParameterTypeSSIDParameterSet) {
+            uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap +
+                                    Net_80211_Constants::cFixedParameterTagLengthIndex));
+
+            lReturn = std::string(reinterpret_cast<const char*>(aData.data() + mIndexAfterRadioTap +
+                                    Net_80211_Constants::cFixedParameterSSIDIndex),
+                                  lSSIDLength);
+        }
     }
 
     return lReturn;
@@ -77,8 +95,8 @@ bool PacketConverter::Is80211Data(std::string_view aData)
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0x0FU) ==
-                  Net_80211_Constants::cDataType;
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) ==
+                  Net_80211_Constants::cDataType);
     }
 
     return lReturn;
@@ -91,8 +109,8 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
     if (UpdateIndexAfterRadioTap(aData)) {
         // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0xF0u) ==
-                  Net_80211_Constants::cDataQOSType;
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) ==
+                  Net_80211_Constants::cDataQOSType);
     }
 
     return lReturn;
