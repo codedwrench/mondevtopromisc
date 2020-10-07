@@ -95,7 +95,7 @@ bool PacketConverter::Is80211Data(std::string_view aData)
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) ==
+        lReturn = ((*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) & 0x0FU) ==
                   Net_80211_Constants::cDataType);
     }
 
@@ -109,7 +109,7 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
     if (UpdateIndexAfterRadioTap(aData)) {
         // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) ==
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
                   Net_80211_Constants::cDataQOSType);
     }
 
@@ -123,8 +123,8 @@ bool PacketConverter::Is80211NullFunc(std::string_view aData)
     if (UpdateIndexAfterRadioTap(aData)) {
         // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data()) + mIndexAfterRadioTap) & 0xF0u) ==
-                  Net_80211_Constants::cDataNullFuncType;
+        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
+                  Net_80211_Constants::cDataNullFuncType);
     }
 
     return lReturn;
