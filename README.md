@@ -3,7 +3,7 @@ Emulates a promiscuous mode wifi card using monitor mode and packet injection an
 
 As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai with a few restrictions. Namely it only works on channel 1, and you will have to find the BSSID the PSP is sending on yourself and use it in the command line when starting this program.
 
-## Wifi cards this has been tested and found working on:
+## Wifi cards this has been tested and found working on (Linux, kernel 5.x):
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
 - Intel Pro Wireless 5100 AGN (iwlwifi)
 - Intel Centrino Wireless-N 1000 (iwlwifi)
