@@ -106,15 +106,15 @@ bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
     bool lReturn{false};
 
     if (UpdateIndexAfterRadioTap(aData)) {
-        uint64_t lMac =
+        uint64_t lBSSID =
             *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
-        lMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1);  // it's actually a uint48.
+        lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48u) - 1);  // it's actually a uint48.
 
         // Big- to Little endian
-        lMac = bswap_64(lMac);
-        lMac = lMac >> 16u;
+        lBSSID = bswap_64(lBSSID);
+        lBSSID = lBSSID >> 16u;
 
-        lReturn = lMac == aBSSID;
+        lReturn = lBSSID == aBSSID;
     }
 
     return lReturn;
