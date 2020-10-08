@@ -1,7 +1,7 @@
 # mondevtopromisc
 Emulates a promiscuous mode wifi card using monitor mode and packet injection and sends the data over XLink Kai.
 
-As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai with a few restrictions. Namely it only works on channel 1, and you will have to find the BSSID the PSP is sending on yourself and use it in the command line when starting this program.
+As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai.
 
 ## Wifi cards this has been tested and found working on (Linux, kernel 5.x):
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
@@ -68,10 +68,8 @@ sudo airmon-ng start wificard 2412
 
 After the program has been built succesfully it can be ran as follows:
 ```bash
-sudo ./mondevtopromisc --bssid "xx:xx:xx:xx:xx:xx" --xlink_kai --capture_interface wificardmon
+sudo ./mondevtopromisc
 ``` 
-
-The BSSID could be found by looking at traffic from the device you're trying to forward in Wireshark.
 
 ## Known issues
 - Packet injection on Windows does not work
