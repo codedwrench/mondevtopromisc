@@ -2,7 +2,7 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - PacketConverter.cpp */
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) or defined(__MINGW32__)
 #include <stdlib.h>
 #define bswap_16(x) _byteswap_ushort(x)
 #define bswap_32(x) _byteswap_ulong(x)

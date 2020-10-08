@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 {
     std::string lProgramPath{"./"};
 
-    #ifndef _MSC_VER
+    #if not defined(_MSC_VER) && not defined(__MINGW32__)
     // Make robust against sudo path change.
     std::array<char, PATH_MAX> lResolvedPath{};
     if (realpath(argv[0], lResolvedPath.data()) != nullptr) {

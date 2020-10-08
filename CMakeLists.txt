@@ -10,14 +10,14 @@ option(ENABLE_TESTS "Build unittests" OFF)
 include_directories(Sources)
 include_directories(Tests)
 
-# check if Doxygen is installed
+# Check if Doxygen is installed
 find_package(Doxygen)
 if (BUILD_DOC AND DOXYGEN_FOUND)
-    # set input and output files
+    # Set input and output files
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Docs/Doxyfile.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
-    # request to configure the file
+    # Request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
     message("Doxygen build started")
 
@@ -30,20 +30,29 @@ else (DOXYGEN_FOUND)
     message("Doxygen need to be installed to generate the doxygen documentation")
 endif (BUILD_DOC AND DOXYGEN_FOUND)
 
-if (MSVC)
+# Windows specific options
+if (MSVC OR MSYS OR MINGW)
     message("You're running Windows! Make sure your paths are set correctly.")
 
-    set(PCAP_ROOT_DIR "c:\\npcapsdk")
-    set(BOOST_ROOT "c:\\Program Files\\boost\\boost_1_71_0")
+    if (MSYS OR MINGW)
+        # Add WinSock to the platform specific libraries, MINGW needs it.
+        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32")
+    
+        # Needed because otherwise the libraries cannot be found.
+        set(Boost_ARCHITECTURE "-x64")
+    endif ()
+    
+    set(PCAP_ROOT_DIR "c:/npcapsdk")
+    set(BOOST_ROOT "c:/Program Files/boost_1_74_0/output/")
 
     # Magic that boost on windows seems to need.
     add_definitions( -DBOOST_ALL_NO_LIB )
     add_definitions( -DBOOST_ALL_DYN_LINK )
 
-    set(PDCURSES_INCLUDE_DIR "c:\\pdcurses\\")
-    set(PDCURSES_LIBRARY "c:\\pdcurses\\wincon\\pdcurses.lib")
+    set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
     include(FindPDCurses.cmake)
-    set(CURSES_INCLUDE_DIRS "c:\\pdcurses\\")
+    set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
     set(CURSES_LIBRARIES ${PDCURSES_LIBRARIES})
 
     # The logger module uses ERROR in an enum class, GDI also uses this, but screw GDI
@@ -57,13 +66,15 @@ endif ()
 add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 include(FindPCAP.cmake)
-
 find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
 
+# Linux needs this to have threading support
+# TODO: Can this be added to platform specific libraries? Test
 if (NOT APPLE AND NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif ()
 
+# TODO: Make this search for source files automatically, this is very ugly!
 add_executable(mondevtopromisc main.cpp
         Sources/Logger.cpp
         Sources/PacketConverter.cpp
@@ -103,7 +114,7 @@ add_executable(mondevtopromisc main.cpp
         ${EXTRA_INCLUDES})
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
-target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES})
+target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
 
 if (ENABLE_TESTS)
     find_package(GTest REQUIRED)
