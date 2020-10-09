@@ -35,7 +35,7 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
         lDataToConvert =
-            mPacketConverter.ConvertPacketTo80211(lDataToConvert, mPacketConverter.MacToInt("01:23:45:67:AB:CD"));
+            mPacketConverter.ConvertPacketTo80211(lDataToConvert, mPacketConverter.MacToInt("01:23:45:67:AB:CD"), RadioTap_Constants::cChannel, RadioTap_Constants::cRateFlags);
 
         pcap_pkthdr lHeader{};
         lHeader.caplen = lDataToConvert.size();
