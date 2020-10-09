@@ -73,42 +73,43 @@ namespace Net_80211_Constants
     constexpr uint8_t  cDataNullFuncType{0x48};
 
     // IEEE 802.11 Data Flags
-    constexpr uint8_t  cTypeIndex{0};
-    constexpr uint8_t  cTypeLength{2};
-    constexpr uint8_t  cDurationIndex{2};
-    constexpr uint8_t  cDurationLength{2};
-    constexpr uint8_t  cDestinationAddressIndex{4};
-    constexpr uint8_t  cDestinationAddressLength{6};
-    constexpr uint8_t  cSourceAddressIndex{10};
-    constexpr uint8_t  cSourceAddressLength{6};
-    constexpr uint8_t  cBSSIDIndex{16};
-    constexpr uint8_t  cBSSIDLength{6};
-    constexpr uint8_t  cFragmentNumberIndex{22};
-    constexpr uint8_t  cFragmentNumberLength{2};
-    constexpr uint8_t  c80211DataHeaderLength{cTypeLength + cDurationLength + cDestinationAddressLength + cSourceAddressLength + cBSSIDLength + cFragmentNumberLength};
+    constexpr uint8_t cTypeIndex{0};
+    constexpr uint8_t cTypeLength{2};
+    constexpr uint8_t cDurationIndex{2};
+    constexpr uint8_t cDurationLength{2};
+    constexpr uint8_t cDestinationAddressIndex{4};
+    constexpr uint8_t cDestinationAddressLength{6};
+    constexpr uint8_t cSourceAddressIndex{10};
+    constexpr uint8_t cSourceAddressLength{6};
+    constexpr uint8_t cBSSIDIndex{16};
+    constexpr uint8_t cBSSIDLength{6};
+    constexpr uint8_t cFragmentNumberIndex{22};
+    constexpr uint8_t cFragmentNumberLength{2};
+    constexpr uint8_t c80211DataHeaderLength{cTypeLength + cDurationLength + cDestinationAddressLength +
+                                             cSourceAddressLength + cBSSIDLength + cFragmentNumberLength};
 
     // IEEE 802.11 Wireless Management
-    constexpr uint8_t  cFixedParameterTypeSSIDIndex{36};
-    constexpr uint8_t  cFixedParameterTypeSupportedRates{0x1};
-    constexpr uint8_t  cFixedParameterTypeDSParameterSet{0x3};
-    constexpr uint8_t  cFixedParameterTypeExtendedRates{0x32};
+    constexpr uint8_t cFixedParameterTypeSSIDIndex{36};
+    constexpr uint8_t cFixedParameterTypeSupportedRates{0x1};
+    constexpr uint8_t cFixedParameterTypeDSParameterSet{0x3};
+    constexpr uint8_t cFixedParameterTypeExtendedRates{0x32};
 
     // LLC
     // 0xAA 0xAA 0x03 is for enabling SNAP
     constexpr uint64_t cSnapLLC{0x000000000003aaaa};
 
-    constexpr uint8_t  cEtherTypeIndex{30};
-    constexpr uint8_t  cEtherTypeLength{2};
-    constexpr uint8_t  cLLCLength{8};
+    constexpr uint8_t cEtherTypeIndex{30};
+    constexpr uint8_t cEtherTypeLength{2};
+    constexpr uint8_t cLLCLength{8};
 
     // IEEE 802.11 Data
-    constexpr uint8_t  cDataIndex{32};
-    constexpr uint8_t  cDataQOSLength{2};
+    constexpr uint8_t cDataIndex{32};
+    constexpr uint8_t cDataQOSLength{2};
 
     constexpr uint16_t cWlanFCTypeData{0x0008};
 
-    constexpr uint8_t  cFCSLength{4};
-    constexpr uint8_t  cDataHeaderLength{c80211DataHeaderLength + cLLCLength};
+    constexpr uint8_t cFCSLength{4};
+    constexpr uint8_t cDataHeaderLength{c80211DataHeaderLength + cLLCLength};
 }  // namespace Net_80211_Constants
 
 namespace Net_8023_Constants
@@ -125,7 +126,7 @@ namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {
-    constexpr uint8_t  cRadioTapLengthIndex{2};
+    constexpr uint8_t cRadioTapLengthIndex{2};
 
     // If when receiving the radiotap header length is higher than this, assume the packet is broken.
     constexpr uint16_t cMaxRadioTapLength{64};

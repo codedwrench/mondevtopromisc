@@ -89,12 +89,12 @@ std::string PacketConverter::GetBeaconSSID(std::string_view aData)
     std::string lReturn{};
 
     if (UpdateIndexAfterRadioTap(aData)) {
-            uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap +
-                                    Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1));
+        uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(
+            aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1));
 
-            lReturn = std::string(reinterpret_cast<const char*>(aData.data() + mIndexAfterRadioTap +
-                                    Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2),
-                                  lSSIDLength);
+        lReturn = std::string(reinterpret_cast<const char*>(aData.data() + mIndexAfterRadioTap +
+                                                            Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2),
+                              lSSIDLength);
     }
 
     return lReturn;
@@ -119,10 +119,10 @@ uint64_t PacketConverter::GetBSSID(std::string_view aData)
 
 int FillSSID(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
-     uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
-     std::string lSSID = std::string(reinterpret_cast<const char*>(aData.data() + aIndex + 1), lSSIDLength);
+    uint8_t     lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
+    std::string lSSID       = std::string(reinterpret_cast<const char*>(aData.data() + aIndex + 1), lSSIDLength);
 
-     aWifiInfo.SSID = lSSID;
+    aWifiInfo.SSID = lSSID;
 
     return lSSIDLength;
 }
@@ -132,7 +132,8 @@ int FillMaxRate(std::string_view aData, PacketConverter_Constants::WiFiBeaconInf
 {
     uint8_t lMaxRateLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
 
-    // Go to index, skip past length info, then go past the highest rate and down 1 byte again so we get to the actual rate
+    // Go to index, skip past length info, then go past the highest rate and down 1 byte again so we get to the actual
+    // rate
     uint8_t lMaxRate = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1 + lMaxRateLength - 1));
 
     aWifiInfo.MaxRate = lMaxRate;
@@ -140,7 +141,9 @@ int FillMaxRate(std::string_view aData, PacketConverter_Constants::WiFiBeaconInf
     return lMaxRateLength;
 }
 
-int FillChannelInfo(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+int FillChannelInfo(std::string_view                                  aData,
+                    PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo,
+                    uint64_t                                          aIndex)
 {
     // Don't need to know the size for channel, so just grab the channel immediately
     uint8_t lChannel = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1));
@@ -155,21 +158,18 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
 {
     bool lReturn{false};
 
-    if (UpdateIndexAfterRadioTap(aData))
-    {
+    if (UpdateIndexAfterRadioTap(aData)) {
         // Add the BSSID
         aWifiInfo.BSSID = GetBSSID(aData);
 
         // First parameter is always SSID
         unsigned long lIndex{mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1};
-        int lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
+        int           lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
 
-        if(lParameterLength > 0)
-        {
+        if (lParameterLength > 0) {
             // Then go fill out all the others, always adding +1 to skip past the type info
             lIndex = lIndex + lParameterLength + 1;
-            while(lIndex < (aData.length() - Net_80211_Constants::cFCSLength))
-            {
+            while (lIndex < (aData.length() - Net_80211_Constants::cFCSLength)) {
                 uint8_t lParameterType = *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex));
                 switch (lParameterType) {
                     case Net_80211_Constants::cFixedParameterTypeSupportedRates:
@@ -190,7 +190,6 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
                 }
             }
         }
-
     }
 
     return lReturn;

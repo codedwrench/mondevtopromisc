@@ -18,8 +18,8 @@ using namespace std::chrono;
 bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
 {
     bool lReturn{true};
-    mSSIDFilter = std::move(aSSIDFilter);
-    mWifiInformation.Frequency  = aFrequency;
+    mSSIDFilter                = std::move(aSSIDFilter);
+    mWifiInformation.Frequency = aFrequency;
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
     mHandler = pcap_create(aName.data(), lErrorBuffer.data());
@@ -56,10 +56,10 @@ void WirelessMonitorDevice::Close()
         pcap_close(mHandler);
     }
 
-    mHandler        = nullptr;
-    mData           = nullptr;
-    mHeader         = nullptr;
-    mReceiverThread = nullptr;
+    mHandler              = nullptr;
+    mData                 = nullptr;
+    mHeader               = nullptr;
+    mReceiverThread       = nullptr;
     mWifiInformation.SSID = "";
 }
 
@@ -183,7 +183,8 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
-        std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mWifiInformation.BSSID, mWifiInformation.Frequency, mWifiInformation.MaxRate);
+        std::string lData = mPacketConverter.ConvertPacketTo80211(
+            aData, mWifiInformation.BSSID, mWifiInformation.Frequency, mWifiInformation.MaxRate);
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 
