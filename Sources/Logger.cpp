@@ -77,8 +77,7 @@ void Logger::Log(const std::string& aText, Level aLevel)
                   << lTimeMs.count() << ": " << mLogLevelTexts.at(static_cast<unsigned long>(aLevel)) << ":" << aText;
 #endif
 
-        if (mLogToScreen)
-        {
+        if (mLogToScreen) {
             std::cout << lLogEntry.str() << std::endl;
         }
 

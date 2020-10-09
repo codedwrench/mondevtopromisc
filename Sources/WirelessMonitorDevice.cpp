@@ -19,7 +19,7 @@ bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string
 {
     bool lReturn{true};
     mSSIDFilter = std::move(aSSIDFilter);
-    mFrequency  = aFrequency;
+    mWifiInformation.Frequency  = aFrequency;
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
     mHandler = pcap_create(aName.data(), lErrorBuffer.data());
@@ -60,6 +60,7 @@ void WirelessMonitorDevice::Close()
     mData           = nullptr;
     mHeader         = nullptr;
     mReceiverThread = nullptr;
+    mWifiInformation.SSID = "";
 }
 
 bool WirelessMonitorDevice::ReadNextData()
@@ -89,17 +90,16 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
     if (mPacketConverter.Is80211Beacon(lData)) {
         // Try to match SSID to filter list
         std::string lSSID = mPacketConverter.GetBeaconSSID(lData);
-        
+
         for (auto& lFilter : mSSIDFilter) {
             if (lSSID.find(lFilter) != std::string::npos) {
-                if(lSSID != mSSID) {
-                    mSSID = lSSID;
-                    mBSSID = mPacketConverter.GetBSSID(lData);
+                if (lSSID != mWifiInformation.SSID) {
+                    mPacketConverter.FillWiFiInformation(lData, mWifiInformation);
                     Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
                 }
             }
         }
-    } else if (mPacketConverter.Is80211Data(lData) && (mBSSID == 0 || mPacketConverter.IsForBSSID(lData, mBSSID))) {
+    } else if (mPacketConverter.Is80211Data(lData) && (mWifiInformation.BSSID == 0 || mPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID))) {
         ++mPacketCount;
 
         // Don't even bother setting up these strings if loglevel is not trace.
@@ -171,19 +171,19 @@ std::string WirelessMonitorDevice::LastDataToString()
 
 void WirelessMonitorDevice::SetBSSID(uint64_t aBSSID)
 {
-    mBSSID = aBSSID;
+    mWifiInformation.BSSID = aBSSID;
 }
 
 void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
 {
-    mSSID = aSSID;
+    mWifiInformation.SSID = aSSID;
 }
 
 bool WirelessMonitorDevice::Send(std::string_view aData)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
-        std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mBSSID);
+        std::string lData = mPacketConverter.ConvertPacketTo80211(aData, mWifiInformation.BSSID, mWifiInformation.Frequency, mWifiInformation.MaxRate);
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 

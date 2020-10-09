@@ -37,6 +37,18 @@ uint64_t PacketConverter::MacToInt(std::string_view aMac)
     return lResult;
 }
 
+int PacketConverter::ConvertChannelToFrequency(int aChannel)
+{
+    int lReturn{-1};
+
+    // 2.4GHz, steps of 5hz.
+    if (aChannel >= 1 && aChannel <= 13) {
+        lReturn = 2412 + ((aChannel - 1) * 5);
+    }
+
+    return lReturn;
+}
+
 PacketConverter::PacketConverter(bool aRadioTap)
 {
     mRadioTap = aRadioTap;
@@ -48,7 +60,7 @@ bool PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
 
     if (mRadioTap) {
         mIndexAfterRadioTap =
-            *reinterpret_cast<const uint16_t*>(aData.data() + Net_80211_Constants::cRadioTapLengthIndex);
+            *reinterpret_cast<const uint16_t*>(aData.data() + RadioTap_Constants::cRadioTapLengthIndex);
 
         if (mIndexAfterRadioTap > RadioTap_Constants::cMaxRadioTapLength) {
             // Invalid length, failed to read index.
@@ -66,7 +78,7 @@ bool PacketConverter::Is80211Beacon(std::string_view aData)
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
         lReturn = (*(reinterpret_cast<const uint16_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                  Net_80211_Constants::cBeaconType);
+                   Net_80211_Constants::cBeaconType);
     }
 
     return lReturn;
@@ -77,14 +89,12 @@ std::string PacketConverter::GetBeaconSSID(std::string_view aData)
     std::string lReturn{};
 
     if (UpdateIndexAfterRadioTap(aData)) {
-        if (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeIndex)) == Net_80211_Constants::cFixedParameterTypeSSIDParameterSet) {
             uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap +
-                                    Net_80211_Constants::cFixedParameterTagLengthIndex));
+                                    Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1));
 
             lReturn = std::string(reinterpret_cast<const char*>(aData.data() + mIndexAfterRadioTap +
-                                    Net_80211_Constants::cFixedParameterSSIDIndex),
+                                    Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2),
                                   lSSIDLength);
-        }
     }
 
     return lReturn;
@@ -107,13 +117,87 @@ uint64_t PacketConverter::GetBSSID(std::string_view aData)
     return lBSSID;
 }
 
+int FillSSID(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+{
+     uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
+     std::string lSSID = std::string(reinterpret_cast<const char*>(aData.data() + aIndex + 1), lSSIDLength);
+
+     aWifiInfo.SSID = lSSID;
+
+    return lSSIDLength;
+}
+
+
+int FillMaxRate(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+{
+    uint8_t lMaxRateLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
+
+    // Go to index, skip past length info, then go past the highest rate and down 1 byte again so we get to the actual rate
+    uint8_t lMaxRate = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1 + lMaxRateLength - 1));
+
+    aWifiInfo.MaxRate = lMaxRate;
+
+    return lMaxRateLength;
+}
+
+int FillChannelInfo(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+{
+    // Don't need to know the size for channel, so just grab the channel immediately
+    uint8_t lChannel = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1));
+
+    aWifiInfo.Frequency = PacketConverter::ConvertChannelToFrequency(lChannel);
+
+    return 1;
+}
+
+bool PacketConverter::FillWiFiInformation(std::string_view                                  aData,
+                                          PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo)
+{
+    bool lReturn{false};
+
+    if (UpdateIndexAfterRadioTap(aData))
+    {
+        // First parameter is always SSID
+        unsigned long lIndex{mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1};
+        int lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
+
+        if(lParameterLength > 0)
+        {
+            // Then go fill out all the others, always adding +1 to skip past the type info
+            lIndex = lIndex + lParameterLength + 1;
+            while(lIndex < (aData.length() - Net_80211_Constants::cFCSLength))
+            {
+                uint8_t lParameterType = *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex));
+                switch (lParameterType) {
+                    case Net_80211_Constants::cFixedParameterTypeSupportedRates:
+                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 1;
+                        break;
+                    case Net_80211_Constants::cFixedParameterTypeDSParameterSet:
+                        lIndex += FillChannelInfo(aData, aWifiInfo, lIndex + 1) + 1;
+                        break;
+                    case Net_80211_Constants::cFixedParameterTypeExtendedRates:
+                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 1;
+                        break;
+                    default:
+                        // Skip past unsupported parameters
+                        lIndex += *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex + 2));
+                        break;
+                }
+            }
+        }
+
+    }
+
+    return lReturn;
+}
+
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
     bool lReturn{false};
     if (UpdateIndexAfterRadioTap(aData)) {
         // Do not care about subtype!
         lReturn = ((*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) & 0x0FU) ==
-                  Net_80211_Constants::cDataType);
+                   Net_80211_Constants::cDataType);
     }
 
     return lReturn;
@@ -127,7 +211,7 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
         // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
         lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                  Net_80211_Constants::cDataQOSType);
+                   Net_80211_Constants::cDataQOSType);
     }
 
     return lReturn;
@@ -141,7 +225,7 @@ bool PacketConverter::Is80211NullFunc(std::string_view aData)
         // Sometimes it seems to send malformed packets.
         // Do not care about subtype!
         lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                  Net_80211_Constants::cDataNullFuncType);
+                   Net_80211_Constants::cDataNullFuncType);
     }
 
     return lReturn;
@@ -159,7 +243,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
     if (UpdateIndexAfterRadioTap(aData)) {
         unsigned int lSourceAddressIndex      = Net_80211_Constants::cSourceAddressIndex + mIndexAfterRadioTap;
         unsigned int lDestinationAddressIndex = Net_80211_Constants::cDestinationAddressIndex + mIndexAfterRadioTap;
-        unsigned int lTypeIndex               = Net_80211_Constants::cTypeIndex + mIndexAfterRadioTap;
+        unsigned int lTypeIndex               = Net_80211_Constants::cEtherTypeIndex + mIndexAfterRadioTap;
         unsigned int lDataIndex               = Net_80211_Constants::cDataIndex + mIndexAfterRadioTap;
 
         // If there is QOS data added to the 80211 header, we need to skip past that as well
@@ -171,7 +255,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
         // Null functions not supported.
         if (!Is80211NullFunc(aData)) {
             // The header should have it's complete size for the packet to be valid.
-            if (aData.size() > Net_80211_Constants::cHeaderLength + mIndexAfterRadioTap) {
+            if (aData.size() > Net_80211_Constants::cDataHeaderLength + mIndexAfterRadioTap) {
                 // Strip framecheck sequence as well.
                 lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
                                          Net_80211_Constants::cFCSLength);
@@ -181,7 +265,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 
                 lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
 
-                lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cTypeLength));
+                lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cEtherTypeLength));
 
                 lConvertedPacket.append(
                     aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
@@ -196,7 +280,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 }
 
 // Helper function for ConvertPacketTo80211, adds the radiotap header.
-void PacketConverter::InsertRadioTapHeader(std::string_view aData, char* aPacket) const
+void PacketConverter::InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, uint8_t aMaxRate) const
 {
     unsigned int lIndex{sizeof(RadioTapHeader)};
 
@@ -216,16 +300,16 @@ void PacketConverter::InsertRadioTapHeader(std::string_view aData, char* aPacket
     lIndex += sizeof(lFlags);
 
     // Optional header (Rate Flags)
-    uint8_t lRateFlags{mDataRate};
+    uint8_t lRateFlags{aMaxRate};
     memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
     lIndex += sizeof(lRateFlags);
 
     // Optional headers (Channel & Channel Flags)
-    uint16_t lChannel{mFrequency};
+    uint16_t lChannel{aFrequency};
     memcpy(aPacket + lIndex, &lChannel, sizeof(lChannel));
     lIndex += sizeof(lChannel);
 
-    uint16_t lChannelFlags{mChannelFlags};
+    uint16_t lChannelFlags{RadioTap_Constants::cChannelFlags};
     memcpy(aPacket + lIndex, &lChannelFlags, sizeof(lChannelFlags));
     lIndex += sizeof(lChannelFlags);
 
@@ -268,7 +352,10 @@ void InsertIeee80211Header(std::string_view aData, uint64_t aBSSID, char* aPacke
     memcpy(aPacket + aPacketIndex, &lIeee80211Header, sizeof(lIeee80211Header));
 }
 
-std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID)
+std::string PacketConverter::ConvertPacketTo80211(std::string_view aData,
+                                                  uint64_t         aBSSID,
+                                                  uint16_t         aFrequency,
+                                                  uint8_t          aMaxRate)
 {
     std::string lReturn;
     if (aData.size() > Net_8023_Constants::cHeaderLength) {
@@ -290,7 +377,7 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, uint64
 
         if (mRadioTap) {
             // RadioTap Header
-            InsertRadioTapHeader(aData, &lFullPacket[0]);
+            InsertRadioTapHeader(&lFullPacket[0], aFrequency, aMaxRate);
             lIndex += RadioTap_Constants::cRadioTapSize;
         }
 
@@ -327,19 +414,4 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData, uint64
 void PacketConverter::SetRadioTap(bool aRadioTap)
 {
     mRadioTap = aRadioTap;
-}
-
-void PacketConverter::SetFrequency(uint16_t aFrequency)
-{
-    mFrequency = aFrequency;
-}
-
-void PacketConverter::SetRate(uint8_t aDataRate)
-{
-    mDataRate = aDataRate;
-}
-
-void PacketConverter::SetChannelFlags(uint8_t aChannelFlags)
-{
-    mChannelFlags = aChannelFlags;
 }

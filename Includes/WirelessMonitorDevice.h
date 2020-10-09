@@ -59,13 +59,11 @@ private:
     bool                                mConnected{false};
     PacketConverter                     mPacketConverter{true};
     const unsigned char*                mData{nullptr};
-    uint16_t                            mFrequency{RadioTap_Constants::cChannel};
     std::vector<std::string>            mSSIDFilter;
-    uint64_t                            mBSSID{1};
-    std::string                         mSSID{};
     pcap_t*                             mHandler{nullptr};
     const pcap_pkthdr*                  mHeader{nullptr};
     unsigned int                        mPacketCount{0};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
     std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
+    PacketConverter_Constants::WiFiBeaconInformation mWifiInformation{};
 };

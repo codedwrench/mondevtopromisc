@@ -36,23 +36,11 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
     }
 }
 
-int ConvertChannelToFrequency(int aChannel)
-{
-    int lReturn{-1};
-
-    // 2.4GHz, steps of 5hz.
-    if (aChannel >= 1 && aChannel <= 13) {
-        lReturn = 2412 + ((aChannel - 1) * 5);
-    }
-
-    return lReturn;
-}
-
 int main(int argc, char* argv[])
 {
     std::string lProgramPath{"./"};
 
-    #if not defined(_MSC_VER) && not defined(__MINGW32__)
+#if not defined(_MSC_VER) && not defined(__MINGW32__)
     // Make robust against sudo path change.
     std::array<char, PATH_MAX> lResolvedPath{};
     if (realpath(argv[0], lResolvedPath.data()) != nullptr) {
@@ -60,12 +48,11 @@ int main(int argc, char* argv[])
 
         // Remove excecutable name from path
         size_t lExcecutableNameIndex{lProgramPath.rfind('/')};
-        if(lExcecutableNameIndex != std::string::npos)
-        {
+        if (lExcecutableNameIndex != std::string::npos) {
             lProgramPath.erase(lExcecutableNameIndex + 1, lProgramPath.length() - lExcecutableNameIndex - 1);
         }
     }
-    #endif
+#endif
 
     Logger::GetInstance().Init(cLogLevel, cLogToDisk, lProgramPath + cLogFileName.data());
 
@@ -109,15 +96,13 @@ int main(int argc, char* argv[])
 
                     // Now set up the wifi interface
                     if (lSuccess) {
-                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter,
-                                                 lSSIDFilters,
-                                                 ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
-                            
-                            if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread())
-                            {
+                        if (lMonitorDevice->Open(
+                                mWindowModel.mWifiAdapter,
+                                lSSIDFilters,
+                                PacketConverter::ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
+                            if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
-                            }
-                            else {
+                            } else {
                                 Logger::GetInstance().Log("Failed to start receiver threads", Logger::Level::ERROR);
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
                             }
@@ -136,7 +121,7 @@ int main(int argc, char* argv[])
                     lXLinkKaiConnection->Close();
                     lMonitorDevice->Close();
                     lSSIDFilters.clear();
-                    
+
                     mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Idle;
                     mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
                     break;

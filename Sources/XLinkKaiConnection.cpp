@@ -29,7 +29,7 @@ bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
 {
     bool lReturn{true};
 
-    std::string lIp{aIp};
+    std::string  lIp{aIp};
     unsigned int lPort{aPort};
 
     // TODO: Do broadcast, but for now, use default stuff

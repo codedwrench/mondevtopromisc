@@ -10,6 +10,17 @@
 
 #include "NetworkingHeaders.h"
 
+namespace PacketConverter_Constants
+{
+    struct WiFiBeaconInformation
+    {
+        uint64_t    BSSID{};
+        std::string SSID{};
+        uint8_t     MaxRate{RadioTap_Constants::cRateFlags};
+        uint16_t    Frequency{RadioTap_Constants::cChannel};
+    };
+}  // namespace PacketConverter_Constants
+
 /**
  * This class converts packets from a monitor format to promiscuous format and vice versa.
  */
@@ -55,18 +66,11 @@ public:
     uint64_t GetBSSID(std::string_view aData);
 
     /**
-     * Tries to find the datarate in a beacon frame.
-     * Note: Only works is this packet is a beacon frame.
-     * @return uint64_t containing the datarate of this beacon frame. 0 if not found.
+     * Reads WiFi information from the 802.11 Wireless Management header in a beacon frame.
+     * @param aWifiInfo - Wireless information to fill.
+     * @return true if successful.
      */
-    uint8_t GetBeaconRate(std::string_view aData);
-
-    /**
-     * Tries to find the channel flags in a beacon frame.
-     * Note: Only works is this packet is a beacon frame.
-     * @return uint8_t containing the channel flags of this beacon frame.
-     */
-    std::string GetBeaconChannelFlags(std::string_view aData);
+    bool FillWiFiInformation(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo);
 
     /**
      * Checks if the provided data is part of a data packet.
@@ -115,7 +119,7 @@ public:
      * @param aBSSID - The BSSID to use when constructing the packet.
      * @return converted packet data, empty string if failed.
      */
-    std::string ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID);
+    std::string ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID, uint16_t aFrequency, uint8_t aMaxRate);
 
     /**
      * Sets whether this converter should convert keeping a radiotap header in mind.
@@ -125,37 +129,15 @@ public:
     void SetRadioTap(bool aRadioTap);
 
     /**
-     * Sets the frequency to set in the the 802.11 radiotap header.
-     * @param aFrequency - The frequency to set.
+     * Converts a channel into a frequency.
+     * @param aChannel - Channel to convert.
+     * @return frequency as int or -1 if invalid.
      */
-    void SetFrequency(uint16_t aFrequency);
-
-    /**
-     * Sets the data rate to set in the 802.11 radiotap header.
-     * @param aDataRate - The datarate to set.
-     */
-    void SetRate(uint8_t aDataRate);
-
-    /**
-     * Sets the channel flags to set in the 802.11 radiotap header.
-     * @param aChannelFlags - The channel flags to set.
-     */
-    void SetChannelFlags(uint8_t aChannelFlags);
-
-    /**
-     * Sets the SSID.
-     * @param aSSID - The SSID to listen to.
-     */
-    void SetSSID(std::string_view aSSID);
+    static int ConvertChannelToFrequency(int aChannel);
 
 private:
-    void InsertRadioTapHeader(std::string_view aData, char* aPacket) const;
+    void InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, uint8_t aMaxRate) const;
     bool UpdateIndexAfterRadioTap(std::string_view aData);
-
-    // TODO: Move these to a struct somewhere else, probably WirelessMonitorDevice. This doesn't really belong here
-    uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
-    uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
-    uint16_t mFrequency{RadioTap_Constants::cChannel};
 
     bool     mRadioTap{false};
     uint64_t mIndexAfterRadioTap{0};
