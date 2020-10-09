@@ -99,7 +99,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
                 }
             }
         }
-    } else if (mPacketConverter.Is80211Data(lData) && (mWifiInformation.BSSID == 0 || mPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID))) {
+    } else if (mPacketConverter.Is80211Data(lData) && mPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID)) {
         ++mPacketCount;
 
         // Don't even bother setting up these strings if loglevel is not trace.

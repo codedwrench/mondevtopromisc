@@ -157,6 +157,9 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
 
     if (UpdateIndexAfterRadioTap(aData))
     {
+        // Add the BSSID
+        aWifiInfo.BSSID = GetBSSID(aData);
+
         // First parameter is always SSID
         unsigned long lIndex{mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1};
         int lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
@@ -170,17 +173,19 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
                 uint8_t lParameterType = *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex));
                 switch (lParameterType) {
                     case Net_80211_Constants::cFixedParameterTypeSupportedRates:
-                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 1;
+                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
                         break;
                     case Net_80211_Constants::cFixedParameterTypeDSParameterSet:
-                        lIndex += FillChannelInfo(aData, aWifiInfo, lIndex + 1) + 1;
+                        lIndex += FillChannelInfo(aData, aWifiInfo, lIndex + 1) + 2;
                         break;
                     case Net_80211_Constants::cFixedParameterTypeExtendedRates:
-                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 1;
+                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
                         break;
                     default:
                         // Skip past unsupported parameters
-                        lIndex += *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex + 2));
+                        // Skip past type, always add atleast one so this loop never becomes an infinite one
+                        lIndex += 1;
+                        lIndex += *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex)) + 1;
                         break;
                 }
             }
