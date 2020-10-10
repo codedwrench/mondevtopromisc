@@ -18,13 +18,18 @@ class PCapReader : public IPCapDevice
 public:
     void Close() override;
 
-    bool Open(std::string_view aName);
+    // For promiscuous mode
+    bool Open(std::string_view aName, uint16_t aFrequency);
+
+    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) override;
 
     bool ReadNextData() override;
 
     const unsigned char* GetData() override;
 
     const pcap_pkthdr* GetHeader() override;
+
+    const IPCapDevice_Constants::WiFiBeaconInformation& GetWifiInformation();
 
     std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
 
@@ -34,6 +39,8 @@ public:
     void SetBSSID(uint64_t aBSSID) override{};
 
     bool Send(std::string_view aData) override;
+
+    bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation) override;
 
     /**
      * Replays packets from file to injection device / XLink Kai.
@@ -47,21 +54,24 @@ public:
 
     void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
 
-private:
     /**
      * Constructs and replays a packet to given interface.
-     * @param aConnection - Connection to send the packet on.
+     * @param aData - The data to replay.
+     * @param aHeader - The header to replay.
      * @param aPacketConverter - A PacketConverter object.
      * @param aMonitorCapture - Whether the capture was made in monitor mode.
      * @return a pair containing, succesfully sent (or ignored) and whether the packet was useful enough to be sent.
      */
-    std::pair<bool, bool> ConstructAndReplayPacket(ISendReceiveDevice& aConnection,
+    std::pair<bool, bool> ConstructAndReplayPacket(const unsigned char* aData,
+                                                   const pcap_pkthdr* aHeader,
                                                    PacketConverter     aPacketConverter,
                                                    bool                aMonitorCapture);
-
-    const unsigned char*                mData{nullptr};
-    pcap_t*                             mHandler{nullptr};
-    pcap_pkthdr*                        mHeader{nullptr};
-    unsigned int                        mPacketCount{0};
-    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
+private:
+    const unsigned char*                             mData{nullptr};
+    pcap_t*                                          mHandler{nullptr};
+    pcap_pkthdr*                                     mHeader{nullptr};
+    std::vector<std::string>                         mSSIDFilter{};
+    unsigned int                                     mPacketCount{0};
+    std::shared_ptr<ISendReceiveDevice>              mSendReceiveDevice{nullptr};
+    IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
 };

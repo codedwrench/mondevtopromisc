@@ -117,7 +117,7 @@ uint64_t PacketConverter::GetBSSID(std::string_view aData)
     return lBSSID;
 }
 
-int FillSSID(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+int FillSSID(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
     uint8_t     lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
     std::string lSSID       = std::string(reinterpret_cast<const char*>(aData.data() + aIndex + 1), lSSIDLength);
@@ -128,7 +128,7 @@ int FillSSID(std::string_view aData, PacketConverter_Constants::WiFiBeaconInform
 }
 
 
-int FillMaxRate(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+int FillMaxRate(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
     uint8_t lMaxRateLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
 
@@ -142,7 +142,7 @@ int FillMaxRate(std::string_view aData, PacketConverter_Constants::WiFiBeaconInf
 }
 
 int FillChannelInfo(std::string_view                                  aData,
-                    PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo,
+                    IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo,
                     uint64_t                                          aIndex)
 {
     // Don't need to know the size for channel, so just grab the channel immediately
@@ -154,7 +154,7 @@ int FillChannelInfo(std::string_view                                  aData,
 }
 
 bool PacketConverter::FillWiFiInformation(std::string_view                                  aData,
-                                          PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo)
+                                          IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo)
 {
     bool lReturn{false};
 

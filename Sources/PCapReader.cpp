@@ -11,7 +11,7 @@
 #include "../Includes/Logger.h"
 using namespace std::chrono;
 
-bool PCapReader::Open(std::string_view aName)
+bool PCapReader::Open(std::string_view aName, uint16_t aFrequency)
 {
     bool                               lReturn{true};
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
@@ -21,6 +21,16 @@ bool PCapReader::Open(std::string_view aName)
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
                                   Logger::Level::ERROR);
     }
+    mWifiInformation.Frequency = aFrequency;
+
+    return lReturn;
+}
+
+bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
+{
+    bool lReturn = Open(aName, aFrequency);
+    mSSIDFilter = aSSIDFilter;
+
     return lReturn;
 }
 
@@ -96,29 +106,46 @@ std::string PCapReader::LastDataToString()
     return DataToString(mData, mHeader);
 }
 
-std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(ISendReceiveDevice& aConnection,
-                                                           PacketConverter     aPacketConverter,
-                                                           bool                aMonitorCapture)
+std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* aData,
+                                                           const pcap_pkthdr*   aHeader,
+                                                           PacketConverter      aPacketConverter,
+                                                           bool                 aMonitorCapture)
 {
-    bool        lUsefulPacket{true};
-    bool        lSuccesfulPacket{true};
-    std::string lData{LastDataToString()};
+    bool lUsefulPacket{true};
+    bool lSuccesfulPacket{true};
 
-    // Convert to promiscuous packet and proceed as normal.
-    if (aMonitorCapture) {
-        // If Data Frame
-        lUsefulPacket = aPacketConverter.Is80211Data(lData);
-        if (lUsefulPacket) {
-            lData = aPacketConverter.ConvertPacketTo8023(lData);
-            if (lData.empty()) {
-                lSuccesfulPacket = false;
+    std::string lData{DataToString(aData, aHeader)};
+
+    if(aMonitorCapture) {
+        lUsefulPacket = false;
+
+        if (aPacketConverter.Is80211Beacon(lData)) {
+            // Try to match SSID to filter list
+            std::string lSSID = aPacketConverter.GetBeaconSSID(lData);
+
+            for (auto &lFilter : mSSIDFilter) {
+                if (lSSID.find(lFilter) != std::string::npos) {
+                    if (lSSID != mWifiInformation.SSID) {
+                        aPacketConverter.FillWiFiInformation(lData, mWifiInformation);
+                        Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
+                    }
+                }
             }
+        } else if (aPacketConverter.Is80211Data(lData) && aPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID)) {
+            ++mPacketCount;
+            lUsefulPacket = true;
         }
     }
 
-    if (lSuccesfulPacket && lUsefulPacket) {
-        if (!aConnection.Send(lData)) {
-            lSuccesfulPacket = false;
+    if ((mSendReceiveDevice != nullptr) && lUsefulPacket) {
+        if(aMonitorCapture) {
+            lData = aPacketConverter.ConvertPacketTo8023(lData);
+        }
+        if (!lData.empty()) {
+            lUsefulPacket = true;
+            if (!mSendReceiveDevice->Send(lData)) {
+                lSuccesfulPacket = false;
+            }
         }
     }
 
@@ -138,7 +165,7 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
             microseconds    lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 
             std::tie(lSuccesfulPacket, lUsefulPacket) =
-                ConstructAndReplayPacket(*mSendReceiveDevice, lPacketConverter, aMonitorCapture);
+                ConstructAndReplayPacket(mData, mHeader, lPacketConverter, aMonitorCapture);
 
             if (lSuccesfulPacket && lUsefulPacket) {
                 lPacketsSent++;
@@ -153,7 +180,7 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
                 std::this_thread::sleep_for(lSleepFor);
 
                 std::tie(lSuccesfulPacket, lUsefulPacket) =
-                    ConstructAndReplayPacket(*mSendReceiveDevice, lPacketConverter, aMonitorCapture);
+                    ConstructAndReplayPacket(mData, mHeader, lPacketConverter, aMonitorCapture);
 
                 if (lSuccesfulPacket && lUsefulPacket) {
                     lPacketsSent++;
@@ -167,7 +194,11 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
     return std::pair{lSuccesfulPacket, lPacketsSent};
 }
 
-bool PCapReader::Send(std::string_view aData)
+bool PCapReader::Send(std::string_view  /*aData*/, IPCapDevice_Constants::WiFiBeaconInformation & /*aWiFiInformation*/) {
+    return false;
+}
+
+bool PCapReader::Send(std::string_view  /*aData*/)
 {
     // Maybe make it possible to inject a packet into the capture file here, but not sure if that's beneficial.
     return false;
@@ -177,3 +208,9 @@ void PCapReader::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevic
 {
     mSendReceiveDevice = aDevice;
 }
+
+const IPCapDevice_Constants::WiFiBeaconInformation& PCapReader::GetWifiInformation() {
+    return mWifiInformation;
+}
+
+

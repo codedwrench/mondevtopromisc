@@ -6,9 +6,18 @@
 #include "../Includes/PacketConverter.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "../Includes/PCapReader.h"
-
+class ISendReceiveDevice_Mock : public ISendReceiveDevice
+{
+public:
+    MOCK_METHOD(void, Close, ());
+    MOCK_METHOD(std::string, LastDataToString, ());
+    MOCK_METHOD(bool, ReadNextData, ());
+    MOCK_METHOD(bool, Send, (std::string_view aData));
+    MOCK_METHOD(void, SetSendReceiveDevice, (std::shared_ptr<ISendReceiveDevice> aDevice));
+};
 class PacketConverterTest : public ::testing::Test
 {
 protected:
@@ -29,8 +38,11 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
     pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
     const std::string lOutputFileName = "../Tests/Output/PromiscuousToMonitorOutput.pcap";
     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
-    lPCapReader.Open("../Tests/Input/PromiscuousHelloWorld.pcapng");
-    lPCapExpectedReader.Open("../Tests/Input/PromiscuousToMonitorOutput_Expected.pcap");
+    lPCapReader.Open("../Tests/Input/PromiscuousHelloWorld.pcapng", 2412);
+
+    // We're manually entering the BSSID, so we don't have to match it or anything.
+    std::vector<std::string> lSSIDFilter{"None"};
+    lPCapExpectedReader.Open("../Tests/Input/PromiscuousToMonitorOutput_Expected.pcap", lSSIDFilter, 2412);
 
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
@@ -70,8 +82,9 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
     pcap_t*           lHandler        = pcap_open_dead(DLT_EN10MB, 65535);
     const std::string lOutputFileName = "../Tests/Output/MonitorToPromiscuousOutput.pcap";
     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
-    lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng");
-    lPCapExpectedReader.Open("../Tests/Input/MonitorToPromiscuousOutput_Expected.pcap");
+    std::vector<std::string> lSSIDFilter{"None"};
+    lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng", lSSIDFilter, 2412);
+    lPCapExpectedReader.Open("../Tests/Input/MonitorToPromiscuousOutput_Expected.pcap", 2412);
 
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
@@ -104,4 +117,49 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
 
     lPCapReader.Close();
     lPCapExpectedReader.Close();
+}
+
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::Return;
+using ::testing::SaveArg;
+TEST_F(PacketConverterTest, CopyBeaconInformation)
+{
+    std::shared_ptr<ISendReceiveDevice> lSendReceiveDeviceMock{std::make_shared<ISendReceiveDevice_Mock>()};
+    PCapReader        lPCapReader{};
+    PCapReader        lPCapExpectedReader{};
+    pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
+    const std::string lOutputFileName = "../Tests/Output/MonitorBeaconChange.pcap";
+    pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+    std::vector<std::string> lSSIDFilter{"None"};
+    lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng", lSSIDFilter, 2412);
+    lPCapReader.SetSendReceiveDevice(lSendReceiveDeviceMock);
+
+    std::string lSendBuffer{};
+
+    EXPECT_CALL(*std::dynamic_pointer_cast<ISendReceiveDevice_Mock>(lSendReceiveDeviceMock), Send(_)).WillRepeatedly(DoAll(SaveArg<0>(&lSendBuffer), Return(true)));
+    while (lPCapReader.ReadNextData()) {
+        // Convert the packet and "Send" it so we get the converted information
+        std::pair<bool, bool> lSuccessfulAndUseful{lPCapReader.ConstructAndReplayPacket(lPCapReader.GetData(), lPCapReader.GetHeader(), mPacketConverter, true)};
+        if (lSuccessfulAndUseful.first && lSuccessfulAndUseful.second) {
+           IPCapDevice_Constants::WiFiBeaconInformation lBeaconInformation{lPCapReader.GetWifiInformation()};
+
+           // So from 802.3 straight back to 802.11, hopefully losing as little information as possible.
+           std::string lDataToConvert = mPacketConverter.ConvertPacketTo80211(lSendBuffer, lBeaconInformation.BSSID, lBeaconInformation.Frequency, lBeaconInformation.MaxRate);
+
+           pcap_pkthdr lHeader{};
+            lHeader.caplen = lDataToConvert.size();
+            lHeader.len    = lDataToConvert.size();
+            lHeader.ts     = lPCapReader.GetHeader()->ts;
+
+            pcap_dump(
+                    reinterpret_cast<u_char *>(lDumper), &lHeader,
+                    reinterpret_cast<const u_char *>(lDataToConvert.c_str()));
+        }
+    }
+
+    pcap_dump_close(lDumper);
+    pcap_close(lHandler);
+
+    lPCapReader.Close();
 }

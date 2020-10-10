@@ -179,12 +179,12 @@ void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
     mWifiInformation.SSID = aSSID;
 }
 
-bool WirelessMonitorDevice::Send(std::string_view aData)
+bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
         std::string lData = mPacketConverter.ConvertPacketTo80211(
-            aData, mWifiInformation.BSSID, mWifiInformation.Frequency, mWifiInformation.MaxRate);
+                aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 
@@ -201,6 +201,11 @@ bool WirelessMonitorDevice::Send(std::string_view aData)
     }
 
     return lReturn;
+}
+
+bool WirelessMonitorDevice::Send(std::string_view aData)
+{
+    return Send(aData, mWifiInformation);
 }
 
 void WirelessMonitorDevice::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)

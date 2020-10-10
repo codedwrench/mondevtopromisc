@@ -28,9 +28,9 @@ using namespace WirelessMonitorDevice_Constants;
 class WirelessMonitorDevice : public IPCapDevice
 {
 public:
-    void                 Close() override;
-    bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency);
-    bool                 ReadNextData() override;
+    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) override;
+    void Close() override;
+    bool ReadNextData() override;
     const unsigned char* GetData() override;
 
     const pcap_pkthdr* GetHeader() override;
@@ -42,7 +42,10 @@ public:
 
     void SetSSID(std::string_view aSSID);
 
+    // Only use if you're planning to use the internal wifi information
     bool Send(std::string_view aData) override;
+
+    bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation) override;
 
     void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
 
@@ -65,5 +68,5 @@ private:
     unsigned int                        mPacketCount{0};
     std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
     std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
-    PacketConverter_Constants::WiFiBeaconInformation mWifiInformation{};
+    IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
 };

@@ -8,18 +8,8 @@
 
 #include <string>
 
+#include "IPCapDevice.h"
 #include "NetworkingHeaders.h"
-
-namespace PacketConverter_Constants
-{
-    struct WiFiBeaconInformation
-    {
-        uint64_t    BSSID{};
-        std::string SSID{};
-        uint8_t     MaxRate{RadioTap_Constants::cRateFlags};
-        uint16_t    Frequency{RadioTap_Constants::cChannel};
-    };
-}  // namespace PacketConverter_Constants
 
 /**
  * This class converts packets from a monitor format to promiscuous format and vice versa.
@@ -70,7 +60,7 @@ public:
      * @param aWifiInfo - Wireless information to fill.
      * @return true if successful.
      */
-    bool FillWiFiInformation(std::string_view aData, PacketConverter_Constants::WiFiBeaconInformation& aWifiInfo);
+    bool FillWiFiInformation(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo);
 
     /**
      * Checks if the provided data is part of a data packet.
