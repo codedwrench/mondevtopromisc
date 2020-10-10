@@ -131,7 +131,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
     pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
     const std::string lOutputFileName = "../Tests/Output/MonitorBeaconChange.pcap";
     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
-    std::vector<std::string> lSSIDFilter{"None"};
+    std::vector<std::string> lSSIDFilter{"T#STNET"};
     lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng", lSSIDFilter, 2412);
     lPCapReader.SetSendReceiveDevice(lSendReceiveDeviceMock);
 

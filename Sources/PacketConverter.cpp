@@ -307,9 +307,9 @@ void PacketConverter::InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, u
     lIndex += sizeof(lFlags);
 
     // Optional header (Rate Flags)
-    //uint8_t lRateFlags{aMaxRate};
-    //memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
-    //lIndex += sizeof(lRateFlags);
+    uint8_t lRateFlags{aMaxRate};
+    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+    lIndex += sizeof(lRateFlags);
 
     // Optional headers (Channel & Channel Flags)
     uint16_t lChannel{aFrequency};
