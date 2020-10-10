@@ -136,7 +136,10 @@ int FillMaxRate(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInforma
     // rate
     uint8_t lMaxRate = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1 + lMaxRateLength - 1));
 
-    aWifiInfo.MaxRate = lMaxRate;
+    if(aWifiInfo.MaxRate < lMaxRate)
+    {
+        aWifiInfo.MaxRate = lMaxRate;
+    }
 
     return lMaxRateLength;
 }
@@ -304,9 +307,9 @@ void PacketConverter::InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, u
     lIndex += sizeof(lFlags);
 
     // Optional header (Rate Flags)
-    uint8_t lRateFlags{aMaxRate};
-    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
-    lIndex += sizeof(lRateFlags);
+    //uint8_t lRateFlags{aMaxRate};
+    //memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+    //lIndex += sizeof(lRateFlags);
 
     // Optional headers (Channel & Channel Flags)
     uint16_t lChannel{aFrequency};
