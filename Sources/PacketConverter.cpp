@@ -463,7 +463,7 @@ std::string PacketConverter::ConstructAcknowledgementFrame(std::array<uint8_t, 6
                                                            uint8_t                aMaxRate)
 {
     std::string  lReturn;
-    unsigned int lReserveSize{};
+    unsigned int lReserveSize{sizeof(AcknowledgementHeader)};
     if (mRadioTap) {
         lReserveSize += RadioTap_Constants::cRadioTapSize;
     }
