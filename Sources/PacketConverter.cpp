@@ -482,6 +482,7 @@ std::string PacketConverter::ConstructAcknowledgementFrame(std::array<uint8_t, 6
 
     InsertAcknowledgementFrame(aReceiverMac, lFullPacket.data(), lIndex);
 
+    lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     return lReturn;
 }
 
