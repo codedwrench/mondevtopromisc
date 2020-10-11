@@ -240,6 +240,33 @@ bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
     return aBSSID == GetBSSID(aData);
 }
 
+uint64_t PacketConverter::GetSourceMac(std::string_view aData)
+{
+    uint64_t lSourceMac{0};
+
+    if (UpdateIndexAfterRadioTap(aData)) {
+        lSourceMac = *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap +
+                                                        Net_80211_Constants::cSourceAddressIndex);
+        lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
+    }
+
+    return lSourceMac;
+}
+
+
+uint64_t PacketConverter::GetDestinationMac(std::string_view aData)
+{
+    uint64_t lDestinationMac{0};
+
+    if (UpdateIndexAfterRadioTap(aData)) {
+        lDestinationMac = *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap +
+                                                             Net_80211_Constants::cDestinationAddressIndex);
+        lDestinationMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
+    }
+
+    return lDestinationMac;
+}
+
 std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 {
     std::string lConvertedPacket{};
@@ -411,6 +438,49 @@ std::string PacketConverter::ConvertPacketTo80211(std::string_view aData,
         Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
                                   Logger::Level::WARNING);
     }
+
+    return lReturn;
+}
+
+// Helper function for ConstructAcknowledgementFrame, adds the acknowledgement frame
+void InsertAcknowledgementFrame(std::array<uint8_t, 6> aReceiverMac, char* aPacket, unsigned int aPacketIndex)
+{
+    AcknowledgementHeader lAcknowledgementHeader{};
+    memset(&lAcknowledgementHeader, 0, sizeof(lAcknowledgementHeader));
+
+    lAcknowledgementHeader.frame_control = Net_80211_Constants::cAcknowledgementType;
+    lAcknowledgementHeader.duration_id   = 0xffff;  // Just an arbitrarily high number.
+
+    memcpy(&lAcknowledgementHeader.recv_address[0],
+           aReceiverMac.data(),
+           Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
+
+    memcpy(aPacket + aPacketIndex, &lAcknowledgementHeader, sizeof(lAcknowledgementHeader));
+}
+
+std::string PacketConverter::ConstructAcknowledgementFrame(std::array<uint8_t, 6> aReceiverMac,
+                                                           uint16_t               aFrequency,
+                                                           uint8_t                aMaxRate)
+{
+    std::string  lReturn;
+    unsigned int lReserveSize{};
+    if (mRadioTap) {
+        lReserveSize += RadioTap_Constants::cRadioTapSize;
+    }
+
+    std::vector<char> lFullPacket;
+    lFullPacket.reserve(lReserveSize);
+    lFullPacket.resize(lReserveSize);
+
+    unsigned int lIndex{0};
+
+    if (mRadioTap) {
+        // RadioTap Header
+        InsertRadioTapHeader(&lFullPacket[0], aFrequency, aMaxRate);
+        lIndex += RadioTap_Constants::cRadioTapSize;
+    }
+
+    InsertAcknowledgementFrame(aReceiverMac, lFullPacket.data(), lIndex);
 
     return lReturn;
 }

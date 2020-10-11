@@ -47,6 +47,11 @@ public:
 
     bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation) override;
 
+    // Extra function which will make it possible to send without converting to 802.11 specifically.
+    bool Send(std::string_view                              aData,
+              IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation,
+              bool                                          aConvertData);
+
     void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
 
     // TODO: Put in ISendReceiveDevice, all types of devices can use this.

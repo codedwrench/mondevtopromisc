@@ -30,6 +30,17 @@ PACK(struct ieee80211_hdr {
     // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
 });
 
+
+/**
+ * This is the Acknowledgement header.
+ **/
+PACK(struct AcknowledgementHeader {
+    uint16_t /*__le16*/ frame_control;   /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
+    uint16_t /*__le16*/ duration_id;     /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
+    uint8_t             recv_address[6]; /**< Receiver address. */
+    // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
+});
+
 /**
  * The Radiotap header needed to construct a WiFi packet.
  **/
@@ -71,6 +82,7 @@ namespace Net_80211_Constants
     constexpr uint8_t  cDataType{0x08};
     constexpr uint8_t  cDataQOSType{0x88};
     constexpr uint8_t  cDataNullFuncType{0x48};
+    constexpr uint8_t  cAcknowledgementType{0xd4};
 
     // IEEE 802.11 Data Flags
     constexpr uint8_t cTypeIndex{0};

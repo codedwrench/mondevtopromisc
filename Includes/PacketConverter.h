@@ -56,6 +56,20 @@ public:
     uint64_t GetBSSID(std::string_view aData);
 
     /**
+     * Tries to find the source mac in an 802.11 frame.
+     * Note: Only works is this packet is a data frame.
+     * @return uint64_t containing source mac of this data frame. 0 if not found.
+     */
+    uint64_t GetSourceMac(std::string_view aData);
+
+    /**
+     * Tries to find the destination mac in an 802.11 frame.
+     * Note: Only works is this packet is a data frame.
+     * @return uint64_t containing destination mac of this data frame. 0 if not found.
+     */
+    uint64_t GetDestinationMac(std::string_view aData);
+
+    /**
      * Reads WiFi information from the 802.11 Wireless Management header in a beacon frame.
      * @param aWifiInfo - Wireless information to fill.
      * @return true if successful.
@@ -124,6 +138,17 @@ public:
      * @return frequency as int or -1 if invalid.
      */
     static int ConvertChannelToFrequency(int aChannel);
+
+    /**
+     * Creaetes an acknowledgement frame based on MAC-address.
+     * @param aReceiverMac - MAC address to fill in.
+     * @param aFrequency - Frequency to fill in.
+     * @param aMaxRate  - Max rate to fill in.
+     * @return A string with the full packet.
+     */
+    std::string ConstructAcknowledgementFrame(std::array<uint8_t, 6> aReceiverMac,
+                                              uint16_t               aFrequency,
+                                              uint8_t                aMaxRate);
 
 private:
     void InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, uint8_t aMaxRate) const;

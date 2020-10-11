@@ -125,6 +125,17 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         mData   = aData;
         mHeader = aHeader;
 
+        // If it's not a broadcast frame, acknowledge the packet.
+        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
+            uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
+            std::array<uint8_t, 6> lSourceMac{};
+            memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+
+            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
+                lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
+            Send(lAcknowledgementFrame, mWifiInformation, false);
+        }
+
         if (mSendReceivedData && (mSendReceiveDevice != nullptr)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
             if (!lConvertedData.empty()) {
@@ -178,12 +189,21 @@ void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
     mWifiInformation.SSID = aSSID;
 }
 
-bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation)
+bool WirelessMonitorDevice::Send(std::string_view                              aData,
+                                 IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation,
+                                 bool                                          aConvertData)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
-        std::string lData = mPacketConverter.ConvertPacketTo80211(
-            aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
+        std::string lData{};
+
+        if (aConvertData) {
+            lData = mPacketConverter.ConvertPacketTo80211(
+                aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
+        } else {
+            lData = aData;
+        }
+
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 
@@ -200,6 +220,11 @@ bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::
     }
 
     return lReturn;
+}
+
+bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation)
+{
+    return Send(aData, mWifiInformation, true);
 }
 
 bool WirelessMonitorDevice::Send(std::string_view aData)
