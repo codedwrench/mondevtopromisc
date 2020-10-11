@@ -27,8 +27,7 @@ bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string
     pcap_set_timeout(mHandler, cTimeout);
     pcap_set_immediate_mode(mHandler, 1);
 
-    int lStatus{0};
-    lStatus = pcap_activate(mHandler);
+    int lStatus{pcap_activate(mHandler)};
 
     if (lStatus == 0) {
         mConnected = true;

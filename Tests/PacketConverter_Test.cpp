@@ -131,9 +131,12 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
     pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
     const std::string lOutputFileName = "../Tests/Output/MonitorBeaconChange.pcap";
     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+
     std::vector<std::string> lSSIDFilter{"T#STNET"};
     lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng", lSSIDFilter, 2412);
     lPCapReader.SetSendReceiveDevice(lSendReceiveDeviceMock);
+    lPCapExpectedReader.Open("../Tests/Input/MonitorBeaconChange_Expected.pcap", lSSIDFilter, 2412);
+
 
     std::string lSendBuffer{};
 
@@ -155,11 +158,21 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
             pcap_dump(
                     reinterpret_cast<u_char *>(lDumper), &lHeader,
                     reinterpret_cast<const u_char *>(lDataToConvert.c_str()));
+
+            // It should never be the case that there is no next packet available, then the expected output doesn't
+            // match.
+            ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
+
+            ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
         }
     }
+
+    // No new packets should be available on the expected output.
+    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
 
     lPCapReader.Close();
+    lPCapExpectedReader.Close();
 }
