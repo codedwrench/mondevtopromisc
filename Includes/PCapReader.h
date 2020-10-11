@@ -63,15 +63,16 @@ public:
      * @return a pair containing, succesfully sent (or ignored) and whether the packet was useful enough to be sent.
      */
     std::pair<bool, bool> ConstructAndReplayPacket(const unsigned char* aData,
-                                                   const pcap_pkthdr* aHeader,
-                                                   PacketConverter     aPacketConverter,
-                                                   bool                aMonitorCapture);
+                                                   const pcap_pkthdr*   aHeader,
+                                                   PacketConverter      aPacketConverter,
+                                                   bool                 aMonitorCapture);
+
 private:
-    const unsigned char*                             mData{nullptr};
-    pcap_t*                                          mHandler{nullptr};
-    pcap_pkthdr*                                     mHeader{nullptr};
-    std::vector<std::string>                         mSSIDFilter{};
-    unsigned int                                     mPacketCount{0};
-    std::shared_ptr<ISendReceiveDevice>              mSendReceiveDevice{nullptr};
+    const unsigned char*                         mData{nullptr};
+    pcap_t*                                      mHandler{nullptr};
+    pcap_pkthdr*                                 mHeader{nullptr};
+    std::vector<std::string>                     mSSIDFilter{};
+    unsigned int                                 mPacketCount{0};
+    std::shared_ptr<ISendReceiveDevice>          mSendReceiveDevice{nullptr};
     IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
 };

@@ -183,7 +183,7 @@ bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::
     bool lReturn{false};
     if (mHandler != nullptr) {
         std::string lData = mPacketConverter.ConvertPacketTo80211(
-                aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
+            aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 

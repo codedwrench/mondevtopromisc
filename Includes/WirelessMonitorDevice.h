@@ -57,16 +57,16 @@ public:
     bool StartReceiverThread();
 
 private:
-    bool                                ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
-    bool                                mSendReceivedData{false};
-    bool                                mConnected{false};
-    PacketConverter                     mPacketConverter{true};
-    const unsigned char*                mData{nullptr};
-    std::vector<std::string>            mSSIDFilter;
-    pcap_t*                             mHandler{nullptr};
-    const pcap_pkthdr*                  mHeader{nullptr};
-    unsigned int                        mPacketCount{0};
-    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
-    std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
+    bool                                         ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
+    bool                                         mSendReceivedData{false};
+    bool                                         mConnected{false};
+    PacketConverter                              mPacketConverter{true};
+    const unsigned char*                         mData{nullptr};
+    std::vector<std::string>                     mSSIDFilter;
+    pcap_t*                                      mHandler{nullptr};
+    const pcap_pkthdr*                           mHeader{nullptr};
+    unsigned int                                 mPacketCount{0};
+    std::shared_ptr<ISendReceiveDevice>          mSendReceiveDevice{nullptr};
+    std::shared_ptr<boost::thread>               mReceiverThread{nullptr};
     IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
 };

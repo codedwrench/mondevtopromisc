@@ -29,7 +29,7 @@ bool PCapReader::Open(std::string_view aName, uint16_t aFrequency)
 bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
 {
     bool lReturn = Open(aName, aFrequency);
-    mSSIDFilter = aSSIDFilter;
+    mSSIDFilter  = aSSIDFilter;
 
     return lReturn;
 }
@@ -116,14 +116,14 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* 
 
     std::string lData{DataToString(aData, aHeader)};
 
-    if(aMonitorCapture) {
+    if (aMonitorCapture) {
         lUsefulPacket = false;
 
         if (aPacketConverter.Is80211Beacon(lData)) {
             // Try to match SSID to filter list
             std::string lSSID = aPacketConverter.GetBeaconSSID(lData);
 
-            for (auto &lFilter : mSSIDFilter) {
+            for (auto& lFilter : mSSIDFilter) {
                 if (lSSID.find(lFilter) != std::string::npos) {
                     if (lSSID != mWifiInformation.SSID) {
                         aPacketConverter.FillWiFiInformation(lData, mWifiInformation);
@@ -138,7 +138,7 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* 
     }
 
     if ((mSendReceiveDevice != nullptr) && lUsefulPacket) {
-        if(aMonitorCapture) {
+        if (aMonitorCapture) {
             lData = aPacketConverter.ConvertPacketTo8023(lData);
         }
         if (!lData.empty()) {
@@ -194,11 +194,12 @@ std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bo
     return std::pair{lSuccesfulPacket, lPacketsSent};
 }
 
-bool PCapReader::Send(std::string_view  /*aData*/, IPCapDevice_Constants::WiFiBeaconInformation & /*aWiFiInformation*/) {
+bool PCapReader::Send(std::string_view /*aData*/, IPCapDevice_Constants::WiFiBeaconInformation& /*aWiFiInformation*/)
+{
     return false;
 }
 
-bool PCapReader::Send(std::string_view  /*aData*/)
+bool PCapReader::Send(std::string_view /*aData*/)
 {
     // Maybe make it possible to inject a packet into the capture file here, but not sure if that's beneficial.
     return false;
@@ -209,8 +210,7 @@ void PCapReader::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevic
     mSendReceiveDevice = aDevice;
 }
 
-const IPCapDevice_Constants::WiFiBeaconInformation& PCapReader::GetWifiInformation() {
+const IPCapDevice_Constants::WiFiBeaconInformation& PCapReader::GetWifiInformation()
+{
     return mWifiInformation;
 }
-
-

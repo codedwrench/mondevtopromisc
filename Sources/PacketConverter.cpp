@@ -136,17 +136,14 @@ int FillMaxRate(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInforma
     // rate
     uint8_t lMaxRate = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1 + lMaxRateLength - 1));
 
-    if(aWifiInfo.MaxRate < lMaxRate)
-    {
+    if (aWifiInfo.MaxRate < lMaxRate) {
         aWifiInfo.MaxRate = lMaxRate;
     }
 
     return lMaxRateLength;
 }
 
-int FillChannelInfo(std::string_view                                  aData,
-                    IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo,
-                    uint64_t                                          aIndex)
+int FillChannelInfo(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
     // Don't need to know the size for channel, so just grab the channel immediately
     uint8_t lChannel = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1));
@@ -156,7 +153,7 @@ int FillChannelInfo(std::string_view                                  aData,
     return 1;
 }
 
-bool PacketConverter::FillWiFiInformation(std::string_view                                  aData,
+bool PacketConverter::FillWiFiInformation(std::string_view                              aData,
                                           IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo)
 {
     bool lReturn{false};

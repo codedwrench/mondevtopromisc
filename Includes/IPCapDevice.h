@@ -7,21 +7,23 @@
  **/
 
 #include <string>
+#include <vector>
 
 #include <pcap/pcap.h>
-#include <vector>
 
 #include "ISendReceiveDevice.h"
 #include "NetworkingHeaders.h"
 
-namespace IPCapDevice_Constants {
-    struct WiFiBeaconInformation {
-        uint64_t BSSID{};
+namespace IPCapDevice_Constants
+{
+    struct WiFiBeaconInformation
+    {
+        uint64_t    BSSID{};
         std::string SSID{};
-        uint8_t MaxRate{RadioTap_Constants::cRateFlags};
-        uint16_t Frequency{RadioTap_Constants::cChannel};
+        uint8_t     MaxRate{RadioTap_Constants::cRateFlags};
+        uint16_t    Frequency{RadioTap_Constants::cChannel};
     };
-} // namespace IPCapDevice_Constants
+}  // namespace IPCapDevice_Constants
 
 
 /**
