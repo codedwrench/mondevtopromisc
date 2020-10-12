@@ -22,6 +22,7 @@ It requires the following packages to be installed:
 - libboost-dev (version 1.71 or above)
 - libboost-thread-dev
 - libboost-program-options-dev
+- libncurses5-dev
 - libpcap-dev
 - libpthread-stubs0-dev
 
