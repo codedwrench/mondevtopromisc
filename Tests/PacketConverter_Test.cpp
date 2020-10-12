@@ -5,12 +5,11 @@
 
 #include "../Includes/PacketConverter.h"
 
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <sys/time.h>
+#include <gtest/gtest.h>
 
 #include "../Includes/PCapReader.h"
+
 class ISendReceiveDevice_Mock : public ISendReceiveDevice
 {
 public:
@@ -185,17 +184,17 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
 
 TEST_F(PacketConverterTest, ConstructAcknowledgementFrame)
 {
-    pcap_t*                             lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
-    const std::string                   lOutputFileName = "../Tests/Output/ConstructAcknowledgementFrame.pcap";
-    pcap_dumper_t*                      lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+    pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
+    const std::string lOutputFileName = "../Tests/Output/ConstructAcknowledgementFrame.pcap";
+    pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
 
-    PCapReader                          lPCapExpectedReader{};
+    PCapReader               lPCapExpectedReader{};
     std::vector<std::string> lFilter{"None"};
     lPCapExpectedReader.Open("../Tests/Input/ConstructAcknowledgementFrame_Expected.pcap", lFilter, 2412);
 
 
     // Create Acknowledgement frame
-    std::array<uint8_t, 6> lTransmitterAddress{0x01,0x23,0x45,0x67,0x89,0xab};
+    std::array<uint8_t, 6> lTransmitterAddress{0x01, 0x23, 0x45, 0x67, 0x89, 0xab};
     std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(lTransmitterAddress, 2412, 0x6c)};
 
     pcap_pkthdr lAcknowledgementFrameHeader{};
@@ -203,8 +202,9 @@ TEST_F(PacketConverterTest, ConstructAcknowledgementFrame)
     lAcknowledgementFrameHeader.len    = lAcknowledgementFrame.size();
 
     // Output to file for easy inspection
-    pcap_dump(
-            reinterpret_cast<u_char*>(lDumper), &lAcknowledgementFrameHeader, reinterpret_cast<const u_char*>(lAcknowledgementFrame.c_str()));
+    pcap_dump(reinterpret_cast<u_char*>(lDumper),
+              &lAcknowledgementFrameHeader,
+              reinterpret_cast<const u_char*>(lAcknowledgementFrame.c_str()));
 
     // Now compare against expectation
     ASSERT_TRUE(lPCapExpectedReader.ReadNextData());

@@ -74,7 +74,7 @@ IncludeCategories:
   - Regex:           '<([A-Za-z0-9\Q/-_\E])+>'
     Priority:        1
     SortPriority:    0
-  - Regex:           '<(linux|boost|pcap|sys|gtest)\/'
+  - Regex:           '<(linux|boost|pcap|sys|gtest|gmock)\/'
     Priority:        2
     SortPriority:    0
   - Regex:           '<([A-Za-z0-9.\Q/-_\E])+>'
