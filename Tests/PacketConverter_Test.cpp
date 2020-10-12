@@ -6,8 +6,9 @@
 #include "../Includes/PacketConverter.h"
 
 #include <gtest/gtest.h>
-
 #include <gmock/gmock.h>
+
+#include <sys/time.h>
 
 #include "../Includes/PCapReader.h"
 class ISendReceiveDevice_Mock : public ISendReceiveDevice
@@ -147,6 +148,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
         // Convert the packet and "Send" it so we get the converted information
         std::pair<bool, bool> lSuccessfulAndUseful{lPCapReader.ConstructAndReplayPacket(
             lPCapReader.GetData(), lPCapReader.GetHeader(), mPacketConverter, true)};
+
         if (lSuccessfulAndUseful.first && lSuccessfulAndUseful.second) {
             IPCapDevice_Constants::WiFiBeaconInformation lBeaconInformation{lPCapReader.GetWifiInformation()};
 
@@ -154,6 +156,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
             std::string lDataToConvert = mPacketConverter.ConvertPacketTo80211(
                 lSendBuffer, lBeaconInformation.BSSID, lBeaconInformation.Frequency, lBeaconInformation.MaxRate);
 
+            // Save the file for easy inspection
             pcap_pkthdr lHeader{};
             lHeader.caplen = lDataToConvert.size();
             lHeader.len    = lDataToConvert.size();
@@ -178,4 +181,32 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
 
     lPCapReader.Close();
     lPCapExpectedReader.Close();
+}
+
+TEST_F(PacketConverterTest, ConstructAcknowledgementFrame)
+{
+    pcap_t*                             lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
+    const std::string                   lOutputFileName = "../Tests/Output/ConstructAcknowledgementFrame.pcap";
+    pcap_dumper_t*                      lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+
+    PCapReader                          lPCapExpectedReader{};
+    std::vector<std::string> lFilter{"None"};
+    lPCapExpectedReader.Open("../Tests/Input/ConstructAcknowledgementFrame_Expected.pcap", lFilter, 2412);
+
+
+    // Create Acknowledgement frame
+    std::array<uint8_t, 6> lTransmitterAddress{0x01,0x23,0x45,0x67,0x89,0xab};
+    std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(lTransmitterAddress, 2412, 0x6c)};
+
+    pcap_pkthdr lAcknowledgementFrameHeader{};
+    lAcknowledgementFrameHeader.caplen = lAcknowledgementFrame.size();
+    lAcknowledgementFrameHeader.len    = lAcknowledgementFrame.size();
+
+    // Output to file for easy inspection
+    pcap_dump(
+            reinterpret_cast<u_char*>(lDumper), &lAcknowledgementFrameHeader, reinterpret_cast<const u_char*>(lAcknowledgementFrame.c_str()));
+
+    // Now compare against expectation
+    ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
+    ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lAcknowledgementFrame);
 }
