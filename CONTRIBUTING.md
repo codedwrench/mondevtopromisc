@@ -46,7 +46,7 @@ Label bugs as "bug" and try to add labels that seem appropriate.
 
 ### Suggesting Enhancements
 
-Feel free to submit enhancements as an issue, but do tag the issue as an enhancement and check if none of the other issues opened or closed already suggested it.
+Feel free to submit enhancements as an issue, but do tag the issue as an "enhancement" and check if none of the other issues opened or closed already suggested it.
 Also try to attach labels that seem to match with the enhancement, like "backend".
 
 ### Your First Code Contribution
