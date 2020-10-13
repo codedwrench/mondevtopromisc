@@ -34,6 +34,7 @@ If you find anything that does not work, it's important to file a bug report. Wh
 - What WiFi adapter were you using?
 - What version of XLink Kai was running.
 - What device were you testing with?
+- What game were you trying?
 - Could the device be seen in XLink Kai?
 - What commit of mondevtopromisc did the bug happen in?
 - How do you reproduce the bug? Or are you not able to reproduce it easily?
