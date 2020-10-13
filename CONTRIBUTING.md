@@ -12,7 +12,7 @@ This project and everyone participating in it is governed by the [Code of Conduc
 
 ### Packages
 
-The packages you need are essentially the same as in the build guide of the [Read me](README.md) with the addition of the following programs/packages.
+The packages you need are essentially the same as in the build guide of the [Read Me](README.md) with the addition of the following programs/packages.
 
 - clang-format-11
 - clang-tidy-11
