@@ -2,7 +2,7 @@
 
 Thanks for wanting to contribute! It's really appreciated.
 
-The following is a set of guidelines for contributing to Mondevtopromisc.
+The following is a set of guidelines for contributing to mondevtopromisc.
 
 ## Code of Conduct
 
