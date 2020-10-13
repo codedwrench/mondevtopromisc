@@ -89,3 +89,6 @@ sudo ./mondevtopromisc
 - Packet injection on Windows does not work.
 - Resizing the window in Windows causes the window to corrupt due to Windows not providing the right size hints.
 - Packet injection fails when the packet is at an MTU of 1500 (max size), might be able to work around that by setting a higher MTU in the WiFi card. So far this made Freedom Wars and PSP Gamesharing fail to work.
+
+## Contributing
+See [Contributing](CONTRIBUTING.MD)
