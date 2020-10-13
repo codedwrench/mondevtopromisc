@@ -161,7 +161,7 @@ namespace RadioTap_Constants
     constexpr uint8_t cRateFlags{0x16};
 
     // No Ack
-    constexpr uint32_t cTXFlags{0x00000008};
+    constexpr uint16_t cTXFlags{0x0008};
 
     // RadioTapHeader length with all the optional options:
     constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
