@@ -128,15 +128,15 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
 
         // TODO: Fix
         // If it's not a broadcast frame, acknowledge the packet.
-//        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
-//            uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
-//            std::array<uint8_t, 6> lSourceMac{};
-//            memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
-//
-//            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
-//                lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
-//            Send(lAcknowledgementFrame, mWifiInformation, false);
-//        }
+        //        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
+        //            uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
+        //            std::array<uint8_t, 6> lSourceMac{};
+        //            memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+        //
+        //            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
+        //                lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
+        //            Send(lAcknowledgementFrame, mWifiInformation, false);
+        //        }
 
         if (mSendReceivedData && (mSendReceiveDevice != nullptr)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);

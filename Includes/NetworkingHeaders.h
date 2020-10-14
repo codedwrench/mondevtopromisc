@@ -138,10 +138,13 @@ namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {
-    constexpr uint8_t cRadioTapLengthIndex{2};
+    constexpr uint8_t cLengthIndex{2};
+    constexpr uint8_t cPresentFlagsIndex{4};
+    constexpr uint8_t cDataIndex{8};
+
 
     // If when receiving the radiotap header length is higher than this, assume the packet is broken.
-    constexpr uint16_t cMaxRadioTapLength{64};
+    constexpr uint16_t cMaxLength{64};
 
     // Note padding for these options is embedded in the different variables, so if adding a variable that's requiring
     // an alignment, make the variable a step bigger. Also do not forget to add the variable to cRadioTapSize and to

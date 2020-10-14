@@ -59,10 +59,9 @@ bool PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
     bool lReturn{true};
 
     if (mRadioTap) {
-        mIndexAfterRadioTap =
-            *reinterpret_cast<const uint16_t*>(aData.data() + RadioTap_Constants::cRadioTapLengthIndex);
+        mIndexAfterRadioTap = *reinterpret_cast<const uint16_t*>(aData.data() + RadioTap_Constants::cLengthIndex);
 
-        if (mIndexAfterRadioTap > RadioTap_Constants::cMaxRadioTapLength) {
+        if (mIndexAfterRadioTap > RadioTap_Constants::cMaxLength) {
             // Invalid length, failed to read index.
             lReturn = false;
         }
@@ -169,7 +168,7 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
         if (lParameterLength > 0) {
             // Then go fill out all the others, always adding +1 to skip past the type info
             lIndex = lIndex + lParameterLength + 1;
-            while (lIndex < (aData.length() - Net_80211_Constants::cFCSLength)) {
+            while (lIndex < (aData.length())) {
                 uint8_t lParameterType = *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex));
                 switch (lParameterType) {
                     case Net_80211_Constants::cFixedParameterTypeSupportedRates:
@@ -183,7 +182,7 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
                         break;
                     default:
                         // Skip past unsupported parameters
-                        // Skip past type, always add atleast one so this loop never becomes an infinite one
+                        // Skip past type, always add at least one so this loop never becomes an infinite one
                         lIndex += 1;
                         lIndex += *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex)) + 1;
                         break;
@@ -288,8 +287,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
             // The header should have it's complete size for the packet to be valid.
             if (aData.size() > Net_80211_Constants::cDataHeaderLength + mIndexAfterRadioTap) {
                 // Strip framecheck sequence as well.
-                lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap -
-                                         Net_80211_Constants::cFCSLength);
+                lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap);
 
                 lConvertedPacket.append(
                     aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
@@ -298,8 +296,7 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 
                 lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cEtherTypeLength));
 
-                lConvertedPacket.append(
-                    aData.substr(lDataIndex, aData.size() - lDataIndex - Net_80211_Constants::cFCSLength));
+                lConvertedPacket.append(aData.substr(lDataIndex, aData.size() - lDataIndex));
             } else {
                 Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
                                           Logger::Level::WARNING);

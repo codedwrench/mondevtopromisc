@@ -84,6 +84,7 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/Button.cpp
         Sources/UserInterface/CheckBox.cpp
         Sources/UserInterface/NetworkingWindow.cpp
+        Sources/RadioTapReader.cpp
         Sources/UserInterface/String.cpp
         Sources/UserInterface/TextField.cpp
         Sources/UserInterface/UIObject.cpp
@@ -96,6 +97,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/NetworkingHeaders.h
         Includes/PacketConverter.h
         Includes/PCapReader.h
+        Includes/RadioTapReader.h
         Includes/WirelessMonitorDevice.h
         Includes/XLinkKaiConnection.h
         Includes/UserInterface/Button.h
