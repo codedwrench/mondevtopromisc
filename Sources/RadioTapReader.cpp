@@ -25,15 +25,25 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
 
         uint8_t lIndex{RadioTap_Constants::cDataIndex};
 
-        if ((mPresentFlags & 0x1U) == 0x1U) {
+        if ((mPresentFlags & 1U) == 1) {
             // TSFT, don't care, skip over it
             lIndex += sizeof(uint64_t);
         }
-        if ((mPresentFlags & 0x2U) == 0x2U) {
+        if (((mPresentFlags >> 1U) & 1U) == 1) {
             // Flags, contains important information like datapad and fcs at the end of a packet
             mFlags = GetRawData<uint8_t>(aData, lIndex);
             lIndex += sizeof(uint8_t);
         }
-        if ((mPresentFlags & 0x4U) == 0x4U) {}
+        if (((mPresentFlags >> 2U) & 1U) == 1) {
+            // Rate
+            mDataRate = GetRawData<uint8_t>(aData, lIndex);
+            lIndex += sizeof(uint8_t);
+        }
+        if (((mPresentFlags >> 3U) & 1U) == 1) {
+            // Channel and channel flags
+            mFrequency = GetRawData<uint16_t>(aData, lIndex);
+            lIndex += sizeof(uint16_t);
+            mChannelFlags = GetRawData<uint16_t>(aData, lIndex);
+        }
     }
 }
