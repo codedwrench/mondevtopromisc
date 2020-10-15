@@ -58,7 +58,8 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
         lHeader.ts     = lPCapReader.GetHeader()->ts;
 
         // Output a file with the results as well so the results can be further inspected
-        pcap_dump((u_char*) lDumper, &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
+        pcap_dump(
+            reinterpret_cast<u_char*>(lDumper), &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
         // It should never be the case that there is no next packet available, then the expected output doesn't match.
         ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
@@ -89,6 +90,7 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
 
     while (lPCapReader.ReadNextData()) {
         std::string lDataToConvert = lPCapReader.LastDataToString();
+        mPacketConverter.Update(lDataToConvert);
         if (mPacketConverter.Is80211Data(lDataToConvert) &&
             mPacketConverter.IsForBSSID(lDataToConvert, mPacketConverter.MacToInt("62:58:c5:07:95:5e"))) {
             lDataToConvert = mPacketConverter.ConvertPacketTo8023(lDataToConvert);
@@ -145,6 +147,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
         .WillRepeatedly(DoAll(SaveArg<0>(&lSendBuffer), Return(true)));
     while (lPCapReader.ReadNextData()) {
         // Convert the packet and "Send" it so we get the converted information
+        mPacketConverter.Update(lPCapReader.LastDataToString());
         std::pair<bool, bool> lSuccessfulAndUseful{lPCapReader.ConstructAndReplayPacket(
             lPCapReader.GetData(), lPCapReader.GetHeader(), mPacketConverter, true)};
 

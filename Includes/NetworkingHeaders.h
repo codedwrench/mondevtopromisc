@@ -140,8 +140,6 @@ namespace RadioTap_Constants
 {
     constexpr uint8_t cLengthIndex{2};
     constexpr uint8_t cPresentFlagsIndex{4};
-    constexpr uint8_t cDataIndex{8};
-
 
     // If when receiving the radiotap header length is higher than this, assume the packet is broken.
     constexpr uint16_t cMaxLength{64};
@@ -155,6 +153,7 @@ namespace RadioTap_Constants
 
     // Short preamble
     constexpr uint8_t cFlags{0x02};
+    constexpr uint8_t cFCSAvailableFlag{0x10};
 
     // Channel 1 (2412hz)
     constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz

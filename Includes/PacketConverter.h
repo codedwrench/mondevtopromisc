@@ -8,6 +8,7 @@
 
 #include <string>
 
+#include "../Includes/RadioTapReader.h"
 #include "IPCapDevice.h"
 #include "NetworkingHeaders.h"
 
@@ -24,6 +25,12 @@ public:
      * added to them.
      */
     explicit PacketConverter(bool aRadioTap = false);
+
+    /**
+     * Preload data about this packet into this class.
+     * @param aData - Packet to dissect.
+     */
+    void Update(std::string_view aData);
 
     /**
      * Converts a mac address string in format (xx:xx:xx:xx:xx:xx) to an int, has no safety build in for invalid
@@ -153,7 +160,8 @@ public:
 private:
     void InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, uint8_t aMaxRate) const;
     bool UpdateIndexAfterRadioTap(std::string_view aData);
+    int  FillSSID(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex);
 
-    bool     mRadioTap{false};
-    uint64_t mIndexAfterRadioTap{0};
+    RadioTapReader mRadioTapReader{};
+    bool           mRadioTap{false};
 };

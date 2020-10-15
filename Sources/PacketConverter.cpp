@@ -21,8 +21,30 @@
 #include "../Includes/Logger.h"
 #include "../Includes/NetworkingHeaders.h"
 
+// Helper function to get raw data more easily
+template<typename Type> Type GetRawData(std::string_view aData, unsigned int aIndex)
+{
+    return (*reinterpret_cast<const Type*>(aData.data() + aIndex));
+}
 
-// Skip use of ether_aton because that could hinder Windows support.
+std::string GetRawString(std::string_view aData, unsigned int aIndex, unsigned int aLength)
+{
+    const char* lData{reinterpret_cast<const char*>(aData.data() + aIndex)};
+    return std::string(lData, aLength);
+}
+
+void PacketConverter::Update(std::string_view aData)
+{
+    // TODO: Preload more data, like packet type and MAC addresses
+    if (mRadioTap) {
+        mRadioTapReader.FillRadioTapParameters(aData);
+    } else {
+        // If no radiotap present, reset parameters to default
+        mRadioTapReader.Reset();
+    }
+}
+
+// Skip use of ether_aton because that could hinder Windows support
 uint64_t PacketConverter::MacToInt(std::string_view aMac)
 {
     std::istringstream lStringStream(aMac.data());
@@ -54,31 +76,9 @@ PacketConverter::PacketConverter(bool aRadioTap)
     mRadioTap = aRadioTap;
 }
 
-bool PacketConverter::UpdateIndexAfterRadioTap(std::string_view aData)
-{
-    bool lReturn{true};
-
-    if (mRadioTap) {
-        mIndexAfterRadioTap = *reinterpret_cast<const uint16_t*>(aData.data() + RadioTap_Constants::cLengthIndex);
-
-        if (mIndexAfterRadioTap > RadioTap_Constants::cMaxLength) {
-            // Invalid length, failed to read index.
-            lReturn = false;
-        }
-    } else {
-        mIndexAfterRadioTap = 0;
-    }
-
-    return lReturn;
-}
-
 bool PacketConverter::Is80211Beacon(std::string_view aData)
 {
-    bool lReturn{false};
-    if (UpdateIndexAfterRadioTap(aData)) {
-        lReturn = (*(reinterpret_cast<const uint16_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                   Net_80211_Constants::cBeaconType);
-    }
+    bool lReturn{GetRawData<uint16_t>(aData, mRadioTapReader.GetLength()) == Net_80211_Constants::cBeaconType};
 
     return lReturn;
 }
@@ -87,14 +87,10 @@ std::string PacketConverter::GetBeaconSSID(std::string_view aData)
 {
     std::string lReturn{};
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        uint8_t lSSIDLength = *(reinterpret_cast<const uint8_t*>(
-            aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1));
-
-        lReturn = std::string(reinterpret_cast<const char*>(aData.data() + mIndexAfterRadioTap +
-                                                            Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2),
-                              lSSIDLength);
-    }
+    uint8_t lSSIDLength{GetRawData<uint8_t>(
+        aData, mRadioTapReader.GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1)};
+    lReturn = GetRawString(
+        aData, mRadioTapReader.GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2, lSSIDLength);
 
     return lReturn;
 }
@@ -102,38 +98,34 @@ std::string PacketConverter::GetBeaconSSID(std::string_view aData)
 uint64_t PacketConverter::GetBSSID(std::string_view aData)
 {
     uint64_t lBSSID{0};
+    lBSSID = GetRawData<uint64_t>(aData, mRadioTapReader.GetLength() + Net_80211_Constants::cBSSIDIndex);
+    lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        lBSSID =
-            *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap + Net_80211_Constants::cBSSIDIndex);
-        lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
-
-        // Big- to Little endian
-        lBSSID = bswap_64(lBSSID);
-        lBSSID = lBSSID >> 16U;
-    }
+    // Big- to Little endian
+    lBSSID = bswap_64(lBSSID);
+    lBSSID = lBSSID >> 16U;
 
     return lBSSID;
 }
 
-int FillSSID(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
+int PacketConverter::FillSSID(std::string_view                              aData,
+                              IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo,
+                              uint64_t                                      aIndex)
 {
-    uint8_t     lSSIDLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
-    std::string lSSID       = std::string(reinterpret_cast<const char*>(aData.data() + aIndex + 1), lSSIDLength);
+    std::string lSSID = GetBeaconSSID(aData);
+    aWifiInfo.SSID    = lSSID;
 
-    aWifiInfo.SSID = lSSID;
-
-    return lSSIDLength;
+    return lSSID.length();
 }
 
 
 int FillMaxRate(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
-    uint8_t lMaxRateLength = *(reinterpret_cast<const uint8_t*>(aData.data() + aIndex));
+    auto lMaxRateLength = GetRawData<uint8_t>(aData, aIndex);
 
     // Go to index, skip past length info, then go past the highest rate and down 1 byte again so we get to the actual
     // rate
-    uint8_t lMaxRate = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1 + lMaxRateLength - 1));
+    auto lMaxRate = GetRawData<uint8_t>(aData, aIndex + 1 + lMaxRateLength - 1);
 
     if (aWifiInfo.MaxRate < lMaxRate) {
         aWifiInfo.MaxRate = lMaxRate;
@@ -145,7 +137,7 @@ int FillMaxRate(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInforma
 int FillChannelInfo(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex)
 {
     // Don't need to know the size for channel, so just grab the channel immediately
-    uint8_t lChannel = *(reinterpret_cast<const char*>(aData.data() + aIndex + 1));
+    auto lChannel = GetRawData<uint8_t>(aData, aIndex + 1);
 
     aWifiInfo.Frequency = PacketConverter::ConvertChannelToFrequency(lChannel);
 
@@ -157,36 +149,38 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
 {
     bool lReturn{false};
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        // Add the BSSID
-        aWifiInfo.BSSID = GetBSSID(aData);
+    // If there is an FCS remove 4 bytes from total length
+    unsigned int lFCSLength = ((mRadioTapReader.GetFlags() & RadioTap_Constants::cFCSAvailableFlag) != 0) ? 4 : 0;
 
-        // First parameter is always SSID
-        unsigned long lIndex{mIndexAfterRadioTap + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1};
-        int           lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
+    // Add the BSSID
+    aWifiInfo.BSSID = GetBSSID(aData);
 
-        if (lParameterLength > 0) {
-            // Then go fill out all the others, always adding +1 to skip past the type info
-            lIndex = lIndex + lParameterLength + 1;
-            while (lIndex < (aData.length())) {
-                uint8_t lParameterType = *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex));
-                switch (lParameterType) {
-                    case Net_80211_Constants::cFixedParameterTypeSupportedRates:
-                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
-                        break;
-                    case Net_80211_Constants::cFixedParameterTypeDSParameterSet:
-                        lIndex += FillChannelInfo(aData, aWifiInfo, lIndex + 1) + 2;
-                        break;
-                    case Net_80211_Constants::cFixedParameterTypeExtendedRates:
-                        lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
-                        break;
-                    default:
-                        // Skip past unsupported parameters
-                        // Skip past type, always add at least one so this loop never becomes an infinite one
-                        lIndex += 1;
-                        lIndex += *(reinterpret_cast<const uint8_t*>(aData.data() + lIndex)) + 1;
-                        break;
-                }
+    // First parameter is always SSID
+    unsigned long lIndex{static_cast<unsigned long>(mRadioTapReader.GetLength() +
+                                                    Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1)};
+    int           lParameterLength{FillSSID(aData, aWifiInfo, lIndex)};
+
+    if (lParameterLength > 0) {
+        // Then go fill out all the others, always adding +1 to skip past the type info
+        lIndex = lIndex + lParameterLength + 1;
+        while (lIndex < (aData.length()) - lFCSLength) {
+            auto lParameterType = GetRawData<uint8_t>(aData, lIndex);
+            switch (lParameterType) {
+                case Net_80211_Constants::cFixedParameterTypeSupportedRates:
+                    lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
+                    break;
+                case Net_80211_Constants::cFixedParameterTypeDSParameterSet:
+                    lIndex += FillChannelInfo(aData, aWifiInfo, lIndex + 1) + 2;
+                    break;
+                case Net_80211_Constants::cFixedParameterTypeExtendedRates:
+                    lIndex += FillMaxRate(aData, aWifiInfo, lIndex + 1) + 2;
+                    break;
+                default:
+                    // Skip past unsupported parameters
+                    // Skip past type, always add at least one so this loop never becomes an infinite one
+                    lIndex += 1;
+                    lIndex += GetRawData<uint8_t>(aData, lIndex) + 1;
+                    break;
             }
         }
     }
@@ -196,42 +190,18 @@ bool PacketConverter::FillWiFiInformation(std::string_view                      
 
 bool PacketConverter::Is80211Data(std::string_view aData)
 {
-    bool lReturn{false};
-    if (UpdateIndexAfterRadioTap(aData)) {
-        // Do not care about subtype!
-        lReturn = ((*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) & 0x0FU) ==
-                   Net_80211_Constants::cDataType);
-    }
-
-    return lReturn;
+    // Do not care about subtype!
+    return (GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) & 0x0FU) == Net_80211_Constants::cDataType;
 }
 
 bool PacketConverter::Is80211QOS(std::string_view aData)
 {
-    bool lReturn{false};
-
-    if (UpdateIndexAfterRadioTap(aData)) {
-        // Sometimes it seems to send malformed packets.
-        // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                   Net_80211_Constants::cDataQOSType);
-    }
-
-    return lReturn;
+    return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) == Net_80211_Constants::cDataQOSType;
 }
 
 bool PacketConverter::Is80211NullFunc(std::string_view aData)
 {
-    bool lReturn{false};
-
-    if (UpdateIndexAfterRadioTap(aData)) {
-        // Sometimes it seems to send malformed packets.
-        // Do not care about subtype!
-        lReturn = (*(reinterpret_cast<const uint8_t*>(aData.data() + mIndexAfterRadioTap)) ==
-                   Net_80211_Constants::cDataNullFuncType);
-    }
-
-    return lReturn;
+    return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) == Net_80211_Constants::cDataNullFuncType;
 }
 
 bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
@@ -241,27 +211,26 @@ bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
 
 uint64_t PacketConverter::GetSourceMac(std::string_view aData)
 {
-    uint64_t lSourceMac{0};
+    uint64_t lSourceMac{
+        GetRawData<uint64_t>(aData, mRadioTapReader.GetLength() + Net_80211_Constants::cSourceAddressIndex)};
+    lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        lSourceMac = *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap +
-                                                        Net_80211_Constants::cSourceAddressIndex);
-        lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
-    }
+    // Big- to Little endian
+    lSourceMac = bswap_64(lSourceMac);
+    lSourceMac = lSourceMac >> 16U;
 
     return lSourceMac;
 }
 
-
 uint64_t PacketConverter::GetDestinationMac(std::string_view aData)
 {
-    uint64_t lDestinationMac{0};
+    uint64_t lDestinationMac{
+        GetRawData<uint64_t>(aData, mRadioTapReader.GetLength() + Net_80211_Constants::cDestinationAddressIndex)};
+    lDestinationMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        lDestinationMac = *reinterpret_cast<const uint64_t*>(aData.data() + mIndexAfterRadioTap +
-                                                             Net_80211_Constants::cDestinationAddressIndex);
-        lDestinationMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
-    }
+    // Big- to Little endian
+    lDestinationMac = bswap_64(lDestinationMac);
+    lDestinationMac = lDestinationMac >> 16U;
 
     return lDestinationMac;
 }
@@ -270,37 +239,38 @@ std::string PacketConverter::ConvertPacketTo8023(std::string_view aData)
 {
     std::string lConvertedPacket{};
 
-    if (UpdateIndexAfterRadioTap(aData)) {
-        unsigned int lSourceAddressIndex      = Net_80211_Constants::cSourceAddressIndex + mIndexAfterRadioTap;
-        unsigned int lDestinationAddressIndex = Net_80211_Constants::cDestinationAddressIndex + mIndexAfterRadioTap;
-        unsigned int lTypeIndex               = Net_80211_Constants::cEtherTypeIndex + mIndexAfterRadioTap;
-        unsigned int lDataIndex               = Net_80211_Constants::cDataIndex + mIndexAfterRadioTap;
+    unsigned int lFCSLength = ((mRadioTapReader.GetFlags() & RadioTap_Constants::cFCSAvailableFlag) != 0) ? 4 : 0;
 
-        // If there is QOS data added to the 80211 header, we need to skip past that as well
-        if (Is80211QOS(aData)) {
-            lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
-            lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
-        }
+    unsigned int lSourceAddressIndex      = Net_80211_Constants::cSourceAddressIndex + mRadioTapReader.GetLength();
+    unsigned int lDestinationAddressIndex = Net_80211_Constants::cDestinationAddressIndex + mRadioTapReader.GetLength();
+    unsigned int lTypeIndex               = Net_80211_Constants::cEtherTypeIndex + mRadioTapReader.GetLength();
+    unsigned int lDataIndex               = Net_80211_Constants::cDataIndex + mRadioTapReader.GetLength();
 
-        // Null functions not supported.
-        if (!Is80211NullFunc(aData)) {
-            // The header should have it's complete size for the packet to be valid.
-            if (aData.size() > Net_80211_Constants::cDataHeaderLength + mIndexAfterRadioTap) {
-                // Strip framecheck sequence as well.
-                lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mIndexAfterRadioTap);
+    // If there is QOS data added to the 80211 header, we need to skip past that as well
+    if (Is80211QOS(aData)) {
+        lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+        lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+    }
 
-                lConvertedPacket.append(
-                    aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
+    // Null functions not supported.
+    if (!Is80211NullFunc(aData)) {
+        // The header should have it's complete size for the packet to be valid.
+        if (aData.size() > Net_80211_Constants::cDataHeaderLength + mRadioTapReader.GetLength()) {
+            // Strip framecheck sequence as well.
+            lConvertedPacket.reserve(aData.size() - Net_80211_Constants::cDataIndex - mRadioTapReader.GetLength() -
+                                     lFCSLength);
 
-                lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
+            lConvertedPacket.append(
+                aData.substr(lDestinationAddressIndex, Net_80211_Constants::cDestinationAddressLength));
 
-                lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cEtherTypeLength));
+            lConvertedPacket.append(aData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
 
-                lConvertedPacket.append(aData.substr(lDataIndex, aData.size() - lDataIndex));
-            } else {
-                Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
-                                          Logger::Level::WARNING);
-            }
+            lConvertedPacket.append(aData.substr(lTypeIndex, Net_80211_Constants::cEtherTypeLength));
+
+            lConvertedPacket.append(aData.substr(lDataIndex, aData.size() - lDataIndex - lFCSLength));
+        } else {
+            Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
+                                      Logger::Level::WARNING);
         }
     }
     // [ Destination MAC | Source MAC | EtherType ] [ Payload ]

@@ -86,6 +86,10 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
     bool lReturn{false};
 
     std::string lData = DataToString(aData, aHeader);
+
+    // Load information about this packet into the packet converter
+    mPacketConverter.Update(lData);
+
     if (mPacketConverter.Is80211Beacon(lData)) {
         // Try to match SSID to filter list
         std::string lSSID = mPacketConverter.GetBeaconSSID(lData);
