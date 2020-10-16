@@ -10,16 +10,16 @@
 
 namespace XLinkWindow_Constants
 {
-    constexpr std::string_view cAutoSearchXLinkInstancesMessage{"Automatically search for XLink Kai instances"};
-    constexpr std::string_view cIPAddressMessage{"XLink IP address"};
-    constexpr std::string_view cPortMessage{"XLink Port"};
-    constexpr std::string_view cTabMessage{"Press Tab to switch panes"};
-    constexpr std::string_view cQuitMessage{"Press q to quit"};
-    constexpr std::string_view cStartEngineMessage{"Start Engine"};
-    constexpr std::string_view cStopEngineMessage{"Stop Engine"};
-    constexpr std::string_view cSaveMessage{"Save config"};
-    constexpr std::string_view cStatusPrefix{" Status: "};
-    constexpr std::string_view cDefaultStatusMessage{"Idle"};
+    static constexpr std::string_view cAutoSearchXLinkInstancesMessage{"Automatically search for XLink Kai instances"};
+    static constexpr std::string_view cIPAddressMessage{"XLink IP address"};
+    static constexpr std::string_view cPortMessage{"XLink Port"};
+    static constexpr std::string_view cTabMessage{"Press Tab to switch panes"};
+    static constexpr std::string_view cQuitMessage{"Press q to quit"};
+    static constexpr std::string_view cStartEngineMessage{"Start Engine"};
+    static constexpr std::string_view cStopEngineMessage{"Stop Engine"};
+    static constexpr std::string_view cSaveMessage{"Save config"};
+    static constexpr std::string_view cStatusPrefix{" Status: "};
+    static constexpr std::string_view cDefaultStatusMessage{"Idle"};
 }  // namespace XLinkWindow_Constants
 
 using namespace XLinkWindow_Constants;

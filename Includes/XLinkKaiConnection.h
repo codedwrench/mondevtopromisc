@@ -15,34 +15,36 @@
 
 namespace XLinkKai_Constants
 {
-    constexpr int                  cMaxLength{4096};
-    constexpr std::string_view     cIp{"127.0.0.1"};
-    constexpr std::string_view     cSeparator{";"};
-    constexpr std::string_view     cKeepAliveFormat{"keepalive"};
-    constexpr std::string_view     cConnectFormat{"connect"};
-    constexpr std::string_view     cConnectedFormat{"connected"};
-    constexpr std::string_view     cDisconnectFormat{"disconnect"};
-    constexpr std::string_view     cDisconnectedFormat{"disconnected"};
-    constexpr std::string_view     cEthernetDataFormat{"e"};
-    constexpr std::string_view     cLocallyUniqueName{"PSP"};
-    constexpr std::string_view     cEmulatorName{"Real_PSP"};
-    constexpr unsigned int         cPort{34523};
-    constexpr std::chrono::seconds cConnectionTimeout{10};
+    static constexpr int                  cMaxLength{4096};
+    static constexpr std::string_view     cIp{"127.0.0.1"};
+    static constexpr std::string_view     cSeparator{";"};
+    static constexpr std::string_view     cKeepAliveFormat{"keepalive"};
+    static constexpr std::string_view     cConnectFormat{"connect"};
+    static constexpr std::string_view     cConnectedFormat{"connected"};
+    static constexpr std::string_view     cDisconnectFormat{"disconnect"};
+    static constexpr std::string_view     cDisconnectedFormat{"disconnected"};
+    static constexpr std::string_view     cEthernetDataFormat{"e"};
+    static constexpr std::string_view     cLocallyUniqueName{"PSP"};
+    static constexpr std::string_view     cEmulatorName{"Real_PSP"};
+    static constexpr unsigned int         cPort{34523};
+    static constexpr std::chrono::seconds cConnectionTimeout{10};
 
-    const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() + cLocallyUniqueName.data() +
-                                     cSeparator.data() + cEmulatorName.data() + cSeparator.data()};
+    static const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() +
+                                            cLocallyUniqueName.data() + cSeparator.data() + cEmulatorName.data() +
+                                            cSeparator.data()};
 
-    const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() + cLocallyUniqueName.data()};
+    static const std::string cConnectedString{std::string(cConnectedFormat) + cSeparator.data() +
+                                              cLocallyUniqueName.data()};
 
-    const std::string cDisconnectedString{std::string(cDisconnectedFormat) + cSeparator.data() +
-                                          cLocallyUniqueName.data()};
+    static const std::string cDisconnectedString{std::string(cDisconnectedFormat) + cSeparator.data() +
+                                                 cLocallyUniqueName.data()};
 
-    const std::string cDisconnectString{std::string(cDisconnectFormat) + cSeparator.data()};
+    static const std::string cDisconnectString{std::string(cDisconnectFormat) + cSeparator.data()};
 
-    const std::string cKeepAliveString{std::string(cKeepAliveFormat) + cSeparator.data()};
+    static const std::string cKeepAliveString{std::string(cKeepAliveFormat) + cSeparator.data()};
 
-    const std::string cEthernetDataString{std::string(cEthernetDataFormat) + cSeparator.data() +
-                                          cEthernetDataFormat.data() + cSeparator.data()};
+    static const std::string cEthernetDataString{std::string(cEthernetDataFormat) + cSeparator.data() +
+                                                 cEthernetDataFormat.data() + cSeparator.data()};
 }  // namespace XLinkKai_Constants
 
 using namespace XLinkKai_Constants;

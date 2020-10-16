@@ -10,10 +10,10 @@
 
 namespace
 {
-    constexpr std::string_view cWifiAdapterToUse{"WiFi adapter to use"};
-    constexpr std::string_view cChannel{"WiFi channel to listen to"};
-    constexpr std::string_view cScanWifiNetworksPSP{"Automatically connect to PSP/Vita networks"};
-    constexpr std::string_view cTakeHintsFromXlinkKai{"Take hints from XLink Kai."};
+    static constexpr std::string_view cWifiAdapterToUse{"WiFi adapter to use"};
+    static constexpr std::string_view cChannel{"WiFi channel to listen to"};
+    static constexpr std::string_view cScanWifiNetworksPSP{"Automatically connect to PSP/Vita networks"};
+    static constexpr std::string_view cTakeHintsFromXlinkKai{"Take hints from XLink Kai."};
 }  // namespace
 
 /**

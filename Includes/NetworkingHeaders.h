@@ -78,98 +78,98 @@ PACK(struct RadioTapHeader {
 namespace Net_80211_Constants
 {
     // Frame types
-    constexpr uint16_t cBeaconType{0x80};
-    constexpr uint8_t  cDataType{0x08};
-    constexpr uint8_t  cDataQOSType{0x88};
-    constexpr uint8_t  cDataNullFuncType{0x48};
-    constexpr uint8_t  cAcknowledgementType{0xd4};
+    static constexpr uint16_t cBeaconType{0x80};
+    static constexpr uint8_t  cDataType{0x08};
+    static constexpr uint8_t  cDataQOSType{0x88};
+    static constexpr uint8_t  cDataNullFuncType{0x48};
+    static constexpr uint8_t  cAcknowledgementType{0xd4};
 
     // IEEE 802.11 Data Flags
-    constexpr uint8_t cTypeIndex{0};
-    constexpr uint8_t cTypeLength{2};
-    constexpr uint8_t cDurationIndex{2};
-    constexpr uint8_t cDurationLength{2};
-    constexpr uint8_t cDestinationAddressIndex{4};
-    constexpr uint8_t cDestinationAddressLength{6};
-    constexpr uint8_t cSourceAddressIndex{10};
-    constexpr uint8_t cSourceAddressLength{6};
-    constexpr uint8_t cBSSIDIndex{16};
-    constexpr uint8_t cBSSIDLength{6};
-    constexpr uint8_t cFragmentNumberIndex{22};
-    constexpr uint8_t cFragmentNumberLength{2};
-    constexpr uint8_t c80211DataHeaderLength{cTypeLength + cDurationLength + cDestinationAddressLength +
-                                             cSourceAddressLength + cBSSIDLength + cFragmentNumberLength};
+    static constexpr uint8_t cTypeIndex{0};
+    static constexpr uint8_t cTypeLength{2};
+    static constexpr uint8_t cDurationIndex{2};
+    static constexpr uint8_t cDurationLength{2};
+    static constexpr uint8_t cDestinationAddressIndex{4};
+    static constexpr uint8_t cDestinationAddressLength{6};
+    static constexpr uint8_t cSourceAddressIndex{10};
+    static constexpr uint8_t cSourceAddressLength{6};
+    static constexpr uint8_t cBSSIDIndex{16};
+    static constexpr uint8_t cBSSIDLength{6};
+    static constexpr uint8_t cFragmentNumberIndex{22};
+    static constexpr uint8_t cFragmentNumberLength{2};
+    static constexpr uint8_t c80211DataHeaderLength{cTypeLength + cDurationLength + cDestinationAddressLength +
+                                                    cSourceAddressLength + cBSSIDLength + cFragmentNumberLength};
 
     // IEEE 802.11 Wireless Management
-    constexpr uint8_t cFixedParameterTypeSSIDIndex{36};
-    constexpr uint8_t cFixedParameterTypeSupportedRates{0x1};
-    constexpr uint8_t cFixedParameterTypeDSParameterSet{0x3};
-    constexpr uint8_t cFixedParameterTypeExtendedRates{0x32};
+    static constexpr uint8_t cFixedParameterTypeSSIDIndex{36};
+    static constexpr uint8_t cFixedParameterTypeSupportedRates{0x1};
+    static constexpr uint8_t cFixedParameterTypeDSParameterSet{0x3};
+    static constexpr uint8_t cFixedParameterTypeExtendedRates{0x32};
 
     // LLC
     // 0xAA 0xAA 0x03 is for enabling SNAP
-    constexpr uint64_t cSnapLLC{0x000000000003aaaa};
+    static constexpr uint64_t cSnapLLC{0x000000000003aaaa};
 
-    constexpr uint8_t cEtherTypeIndex{30};
-    constexpr uint8_t cEtherTypeLength{2};
-    constexpr uint8_t cLLCLength{8};
+    static constexpr uint8_t cEtherTypeIndex{30};
+    static constexpr uint8_t cEtherTypeLength{2};
+    static constexpr uint8_t cLLCLength{8};
 
     // IEEE 802.11 Data
-    constexpr uint8_t cDataIndex{32};
-    constexpr uint8_t cDataQOSLength{2};
+    static constexpr uint8_t cDataIndex{32};
+    static constexpr uint8_t cDataQOSLength{2};
 
-    constexpr uint16_t cWlanFCTypeData{0x0008};
+    static constexpr uint16_t cWlanFCTypeData{0x0008};
 
-    constexpr uint8_t cFCSLength{4};
-    constexpr uint8_t cDataHeaderLength{c80211DataHeaderLength + cLLCLength};
+    static constexpr uint8_t cFCSLength{4};
+    static constexpr uint8_t cDataHeaderLength{c80211DataHeaderLength + cLLCLength};
 }  // namespace Net_80211_Constants
 
 namespace Net_8023_Constants
 {
-    constexpr uint8_t cDestinationAddressIndex{0};
-    constexpr uint8_t cDestinationAddressLength{6};
-    constexpr uint8_t cSourceAddressIndex{6};
-    constexpr uint8_t cSourceAddressLength{6};
-    constexpr uint8_t cEtherTypeIndex{12};
-    constexpr uint8_t cEtherTypeLength{2};
-    constexpr uint8_t cDataIndex{14};
-    constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
+    static constexpr uint8_t cDestinationAddressIndex{0};
+    static constexpr uint8_t cDestinationAddressLength{6};
+    static constexpr uint8_t cSourceAddressIndex{6};
+    static constexpr uint8_t cSourceAddressLength{6};
+    static constexpr uint8_t cEtherTypeIndex{12};
+    static constexpr uint8_t cEtherTypeLength{2};
+    static constexpr uint8_t cDataIndex{14};
+    static constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
 }  // namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {
-    constexpr uint8_t cLengthIndex{2};
-    constexpr uint8_t cPresentFlagsIndex{4};
+    static constexpr uint8_t cLengthIndex{2};
+    static constexpr uint8_t cPresentFlagsIndex{4};
 
     // If when receiving the radiotap header length is higher than this, assume the packet is broken.
-    constexpr uint16_t cMaxLength{64};
+    static constexpr uint16_t cMaxLength{64};
 
     // Note padding for these options is embedded in the different variables, so if adding a variable that's requiring
     // an alignment, make the variable a step bigger. Also do not forget to add the variable to cRadioTapSize and to
     // InsertRadioTapHeader in PacketConverter.cpp
 
     // Enable: Flags, Rate, Channel and TX Flags
-    constexpr uint32_t cSendPresentFlags{0x0000800e};
+    static constexpr uint32_t cSendPresentFlags{0x0000800e};
 
     // Short preamble
-    constexpr uint8_t cFlags{0x02};
-    constexpr uint8_t cFCSAvailableFlag{0x10};
+    static constexpr uint8_t cFlags{0x02};
+    static constexpr uint8_t cFCSAvailableFlag{0x10};
 
     // Channel 1 (2412hz)
-    constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz
-    constexpr uint16_t cChannelFlags{0x00a0};  // 2.4Ghz, Turbo on
+    static constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz
+    static constexpr uint16_t cChannelFlags{0x00a0};  // 2.4Ghz, Turbo on
 
     // Using 11mbps for Vita and PSP traffic
-    constexpr uint8_t cRateFlags{0x16};
+    static constexpr uint8_t cRateFlags{0x16};
 
     // No Ack
-    constexpr uint16_t cTXFlags{0x0008};
+    static constexpr uint16_t cTXFlags{0x0008};
 
     // RadioTapHeader length with all the optional options:
-    constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
-                                       sizeof(RadioTap_Constants::cChannel) +
-                                       sizeof(RadioTap_Constants::cChannelFlags) +
-                                       sizeof(RadioTap_Constants::cRateFlags) + sizeof(RadioTap_Constants::cTXFlags);
+    static constexpr uint16_t cRadioTapSize =
+        sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) + sizeof(RadioTap_Constants::cChannel) +
+        sizeof(RadioTap_Constants::cChannelFlags) + sizeof(RadioTap_Constants::cRateFlags) +
+        sizeof(RadioTap_Constants::cTXFlags);
 
 
 }  // namespace RadioTap_Constants

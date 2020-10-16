@@ -6,4 +6,4 @@
  *
  **/
 
-constexpr unsigned int cKeyTab{9};
+static constexpr unsigned int cKeyTab{9};

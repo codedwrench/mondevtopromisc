@@ -15,14 +15,14 @@
 
 namespace
 {
-    constexpr Logger::Level    cLogLevel{Logger::Level::TRACE};
-    constexpr std::string_view cLogFileName{"log.txt"};
-    constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
-    constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
-    constexpr bool             cLogToDisk{true};
+    static constexpr Logger::Level    cLogLevel{Logger::Level::TRACE};
+    static constexpr std::string_view cLogFileName{"log.txt"};
+    static constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
+    static constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
+    static constexpr bool             cLogToDisk{true};
 
     // Indicates if the program should be running or not, used to gracefully exit the program.
-    bool gRunning{true};
+    static bool gRunning{true};
 }  // namespace
 
 
