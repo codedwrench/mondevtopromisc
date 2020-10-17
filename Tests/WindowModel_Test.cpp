@@ -45,3 +45,18 @@ TEST_F(WindowModelTest, SaveModel)
     // Same amount of lines
     ASSERT_TRUE(lOutputFile.eof() && lExpectedFile.eof());
 }
+
+TEST_F(WindowModelTest, LoadModel)
+{
+    ASSERT_TRUE(mWindowModel.LoadFromFile("../Tests/Input/config_expected.txt"));
+
+    // Check if those match
+    EXPECT_EQ(mWindowModel.mLogLevel, WindowModel_Constants::cDefaultLogLevel);
+    EXPECT_EQ(mWindowModel.mAutoDiscoverPSPVitaNetworks, WindowModel_Constants::cDefaultAutoDiscoverPSPVita);
+    EXPECT_EQ(mWindowModel.mAutoDiscoverXLinkKaiInstance, WindowModel_Constants::cDefaultAutoDiscoverXLinkKai);
+    EXPECT_EQ(mWindowModel.mXLinkKaiHints, WindowModel_Constants::cDefaultUseXLinkKaiHints);
+    EXPECT_EQ(mWindowModel.mChannel, WindowModel_Constants::cDefaultChannel);
+    EXPECT_EQ(mWindowModel.mWifiAdapter, WindowModel_Constants::cDefaultWifiAdapter);
+    EXPECT_EQ(mWindowModel.mXLinkIp, WindowModel_Constants::cDefaultXLinkIp);
+    EXPECT_EQ(mWindowModel.mXLinkPort, WindowModel_Constants::cDefaultXLinkPort);
+}

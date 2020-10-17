@@ -7,16 +7,25 @@
 
 namespace WindowModel_Constants
 {
-    const std::string_view cSaveFilePath{"config.txt"};
+    static constexpr std::string_view cSaveFilePath{"config.txt"};
 
-    const std::string_view cSaveLogLevel{"LogLevel"};
-    const std::string_view cSaveAutoDiscoverPSPVita{"AutoDiscoverPSPVita"};
-    const std::string_view cSaveAutoDiscoverXLinkKai{"AutoDiscoverXLinkKai"};
-    const std::string_view cSaveUseXLinkKaiHints{"UseXLinkKaiHints"};
-    const std::string_view cSaveWifiAdapter{"WifiAdapter"};
-    const std::string_view cSaveChannel{"Channel"};
-    const std::string_view cSaveXLinkIp{"XLinkIp"};
-    const std::string_view cSaveXLinkPort{"XLinkPort"};
+    static constexpr std::string_view cSaveLogLevel{"LogLevel"};
+    static constexpr std::string_view cSaveAutoDiscoverPSPVita{"AutoDiscoverPSPVita"};
+    static constexpr std::string_view cSaveAutoDiscoverXLinkKai{"AutoDiscoverXLinkKai"};
+    static constexpr std::string_view cSaveUseXLinkKaiHints{"UseXLinkKaiHints"};
+    static constexpr std::string_view cSaveWifiAdapter{"WifiAdapter"};
+    static constexpr std::string_view cSaveChannel{"Channel"};
+    static constexpr std::string_view cSaveXLinkIp{"XLinkIp"};
+    static constexpr std::string_view cSaveXLinkPort{"XLinkPort"};
+
+    static constexpr Logger::Level cDefaultLogLevel{Logger::Level::TRACE};
+    static constexpr bool cDefaultAutoDiscoverPSPVita{false};
+    static constexpr bool cDefaultAutoDiscoverXLinkKai{false};
+    static constexpr bool cDefaultUseXLinkKaiHints{false};
+    static constexpr std::string_view cDefaultChannel{"1"};
+    static constexpr std::string_view cDefaultWifiAdapter{""};
+    static constexpr std::string_view cDefaultXLinkIp{"127.0.0.1"};
+    static constexpr std::string_view cDefaultXLinkPort{"34523"};
 
     enum class EngineStatus
     {
@@ -42,16 +51,16 @@ class WindowModel
 {
 public:
     // Settings
-    Logger::Level mLogLevel{Logger::Level::TRACE};
-    bool          mAutoDiscoverPSPVitaNetworks{false};
-    bool          mAutoDiscoverXLinkKaiInstance{false};
-    bool          mXLinkKaiHints{false};
-    std::string   mWifiAdapter{""};
+    Logger::Level mLogLevel{WindowModel_Constants::cDefaultLogLevel};
+    bool          mAutoDiscoverPSPVitaNetworks{WindowModel_Constants::cDefaultAutoDiscoverPSPVita};
+    bool          mAutoDiscoverXLinkKaiInstance{WindowModel_Constants::cDefaultAutoDiscoverXLinkKai};
+    bool          mXLinkKaiHints{WindowModel_Constants::cDefaultUseXLinkKaiHints};
+    std::string   mWifiAdapter{WindowModel_Constants::cDefaultWifiAdapter};
 
     // Channel as a string because of the textfield this is bound to.
-    std::string mChannel{"1"};
-    std::string mXLinkIp{"127.0.0.1"};
-    std::string mXLinkPort{"34523"};
+    std::string mChannel{WindowModel_Constants::cDefaultChannel};
+    std::string mXLinkIp{WindowModel_Constants::cDefaultXLinkIp};
+    std::string mXLinkPort{WindowModel_Constants::cDefaultXLinkPort};
 
     // Statuses
     WindowModel_Constants::EngineStatus mEngineStatus{WindowModel_Constants::EngineStatus::Idle};
