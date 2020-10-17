@@ -28,7 +28,7 @@ TEST_F(WindowModelTest, SaveModel)
 
     std::string lOutputLine{};
     std::string lExpectedLine{};
-    while ((!lOutputFile.eof()) && (!lExpectedFile.eof())) {
+    while ((!lOutputFile.eof()) || (!lExpectedFile.eof())) {
         getline(lOutputFile, lExpectedLine);
         ASSERT_FALSE(lOutputFile.bad());
         // If failbit is set, eof bit should not be set, otherwise there is a real failure
@@ -39,7 +39,7 @@ TEST_F(WindowModelTest, SaveModel)
         // If failbit is set, eof bit should not be set, otherwise there is a real failure
         ASSERT_FALSE((!lExpectedFile.eof()) && lExpectedFile.fail());
 
-        EXPECT_EQ(lExpectedLine, lOutputLine);
+        ASSERT_EQ(lExpectedLine, lOutputLine);
     }
 
     // Same amount of lines
