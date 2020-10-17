@@ -19,6 +19,7 @@ namespace
     constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
     constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
     constexpr bool             cLogToDisk{true};
+    constexpr std::string_view cConfigFileName{"config.txt"};
 
     // Indicates if the program should be running or not, used to gracefully exit the program.
     bool gRunning{true};
@@ -59,6 +60,7 @@ int main(int argc, char* argv[])
     lSignals.async_wait(&SignalHandler);
     boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
     WindowModel   mWindowModel{};
+    mWindowModel.LoadFromFile(lProgramPath + cConfigFileName.data());
 
     Logger::GetInstance().Init(mWindowModel.mLogLevel, cLogToDisk, lProgramPath + cLogFileName.data());
 
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
                     // TODO: implement.
                     break;
                 case WindowModel_Constants::Command::SaveSettings:
-                    // TODO: implement.
+                    mWindowModel.SaveToFile(cConfigFileName);
                     break;
                 case WindowModel_Constants::Command::NoCommand:
                     break;

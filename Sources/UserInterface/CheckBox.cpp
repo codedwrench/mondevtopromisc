@@ -10,16 +10,15 @@ CheckBox::CheckBox(IWindow&                    aWindow,
                    std::function<Dimensions()> aCalculation,
                    bool&                       aModelCheckBox,
                    bool                        aSelected,
-                   bool                        aChecked,
                    bool                        aVisible,
                    bool                        aSelectable) :
     UIObject(aWindow, aName, std::move(aCalculation), aVisible, aSelectable),
-    mChecked(aChecked), mSelected(aSelected), mModelCheckBox{aModelCheckBox}
+    mSelected(aSelected), mModelCheckBox{aModelCheckBox}
 {}
 
 void CheckBox::Draw()
 {
-    std::string lCheckBoxString{std::string("[") + (mChecked ? std::string("X") : std::string(" ")) + "]  " +
+    std::string lCheckBoxString{std::string("[") + (mModelCheckBox ? std::string("X") : std::string(" ")) + "]  " +
                                 GetName().data()};
     int         lColorPair{mSelected ? 7 : 1};
     GetWindow().DrawString(GetYCoord(), GetXCoord(), lColorPair, lCheckBoxString);
@@ -30,8 +29,7 @@ bool CheckBox::HandleKey(unsigned int aKeyCode)
     bool lReturn{false};
 
     if (aKeyCode == ' ') {
-        mChecked       = !mChecked;
-        mModelCheckBox = mChecked;
+        mModelCheckBox = !mModelCheckBox;
         lReturn        = true;
     }
 
@@ -40,12 +38,12 @@ bool CheckBox::HandleKey(unsigned int aKeyCode)
 
 void CheckBox::SetChecked(bool aChecked)
 {
-    mChecked = aChecked;
+    mModelCheckBox = aChecked;
 }
 
 bool CheckBox::IsChecked() const
 {
-    return mChecked;
+    return mModelCheckBox;
 }
 
 void CheckBox::SetSelected(bool aSelected)

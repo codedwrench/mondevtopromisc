@@ -20,7 +20,6 @@ public:
              std::function<Dimensions()> aCalculation,
              bool&                       aModelCheckBox,
              bool                        aSelected   = false,
-             bool                        aChecked    = false,
              bool                        aVisible    = true,
              bool                        aSelectable = true);
 
@@ -36,5 +35,4 @@ public:
 private:
     bool& mModelCheckBox;
     bool  mSelected;
-    bool  mChecked;
 };
