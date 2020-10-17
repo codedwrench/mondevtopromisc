@@ -14,12 +14,12 @@ public:
     WindowModel mWindowModel{};
 };
 
-// Tests whether MacToInt can successfully convert a well formed MAC address string.
+// Tests whether Window model data can be saved successfully
 TEST_F(WindowModelTest, SaveModel)
 {
     ASSERT_TRUE(mWindowModel.SaveToFile("../Tests/Output/config.txt"));
-    std::ifstream lOutputFile{};
-    std::ifstream lExpectedFile{};
+    std::ifstream lOutputFile;
+    std::ifstream lExpectedFile;
 
     lOutputFile.open("../Tests/Output/config.txt");
     lExpectedFile.open("../Tests/Input/config_expected.txt");
@@ -29,7 +29,7 @@ TEST_F(WindowModelTest, SaveModel)
     std::string lOutputLine{};
     std::string lExpectedLine{};
     while ((!lOutputFile.eof()) || (!lExpectedFile.eof())) {
-        getline(lOutputFile, lExpectedLine);
+        getline(lOutputFile, lOutputLine);
         ASSERT_FALSE(lOutputFile.bad());
         // If failbit is set, eof bit should not be set, otherwise there is a real failure
         ASSERT_FALSE((!lOutputFile.eof()) && lOutputFile.fail());

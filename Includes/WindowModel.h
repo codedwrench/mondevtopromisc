@@ -7,6 +7,17 @@
 
 namespace WindowModel_Constants
 {
+    const std::string_view cSaveFilePath{"config.txt"};
+
+    const std::string_view cSaveLogLevel{"LogLevel"};
+    const std::string_view cSaveAutoDiscoverPSPVita{"AutoDiscoverPSPVita"};
+    const std::string_view cSaveAutoDiscoverXLinkKai{"AutoDiscoverXLinkKai"};
+    const std::string_view cSaveUseXLinkKaiHints{"UseXLinkKaiHints"};
+    const std::string_view cSaveWifiAdapter{"WifiAdapter"};
+    const std::string_view cSaveChannel{"Channel"};
+    const std::string_view cSaveXLinkIp{"XLinkIp"};
+    const std::string_view cSaveXLinkPort{"XLinkPort"};
+
     enum class EngineStatus
     {
         Idle = 0,
@@ -55,7 +66,7 @@ public:
      * @param aPath - Path to save it in.
      * @return true if successful.
      */
-    bool SaveToFile(std::string_view aPath);
+    bool SaveToFile(std::string_view aPath) const;
 
     /**
      * Loads the config in a file to a WindowModel.
