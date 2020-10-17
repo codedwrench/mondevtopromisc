@@ -1,5 +1,7 @@
 #include "../Includes/Logger.h"
 
+#include "../Includes/WindowModel.h"
+
 /* Copyright (c) 2020 [Rick de Bondt] - Logger.cpp */
 
 #include <chrono>
@@ -41,14 +43,13 @@ void Logger::SetLogLevel(Level aLevel)
     mLogLevel = aLevel;
 }
 
-bool Logger::SetLogLevelViaString(std::string_view aLevel)
+Logger::Level Logger::ConvertLogLevelStringToLevel(std::string_view aLevel)
 {
-    bool lReturn{false};
+    Level lReturn{WindowModel_Constants::cDefaultLogLevel};
 
     for (std::size_t lCount = 0; lCount < cLevelTexts.size(); lCount++) {
         if (cLevelTexts.at(lCount).find(aLevel) != std::string::npos) {
-            mLogLevel = static_cast<Level>(lCount);
-            lReturn   = true;
+            lReturn = static_cast<Level>(lCount);
         }
     }
 

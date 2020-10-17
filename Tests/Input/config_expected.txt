@@ -1,4 +1,4 @@
-LogLevel: "Trace"
+LogLevel: "Error"
 AutoDiscoverPSPVita: false
 AutoDiscoverXLinkKai: false
 UseXLinkKaiHints: false

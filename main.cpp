@@ -79,6 +79,9 @@ int main(int argc, char* argv[])
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             switch (mWindowModel.mCommand) {
                 case WindowModel_Constants::Command::StartEngine:
+                    if (mWindowModel.mLogLevel != Logger::GetInstance().GetLogLevel()) {
+                        Logger::GetInstance().SetLogLevel(mWindowModel.mLogLevel);
+                    }
 
                     // If we are auto discovering PSP/VITA networks add those to the filter list
                     if (mWindowModel.mAutoDiscoverPSPVitaNetworks) {

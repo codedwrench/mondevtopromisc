@@ -18,10 +18,10 @@ namespace WindowModel_Constants
     static constexpr std::string_view cSaveXLinkIp{"XLinkIp"};
     static constexpr std::string_view cSaveXLinkPort{"XLinkPort"};
 
-    static constexpr Logger::Level cDefaultLogLevel{Logger::Level::TRACE};
-    static constexpr bool cDefaultAutoDiscoverPSPVita{false};
-    static constexpr bool cDefaultAutoDiscoverXLinkKai{false};
-    static constexpr bool cDefaultUseXLinkKaiHints{false};
+    static constexpr Logger::Level    cDefaultLogLevel{Logger::Level::ERROR};
+    static constexpr bool             cDefaultAutoDiscoverPSPVita{false};
+    static constexpr bool             cDefaultAutoDiscoverXLinkKai{false};
+    static constexpr bool             cDefaultUseXLinkKaiHints{false};
     static constexpr std::string_view cDefaultChannel{"1"};
     static constexpr std::string_view cDefaultWifiAdapter{""};
     static constexpr std::string_view cDefaultXLinkIp{"127.0.0.1"};

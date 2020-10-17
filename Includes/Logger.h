@@ -96,12 +96,11 @@ public:
     void SetLogLevel(Level aLevel);
 
     /**
-     * Sets the loglevel to debug, warning or error, based upon this variable certain logmessages will be shown or not
-     * shown.
-     * @param aLevel - The level to set.
-     * @return true if string recognized.
+     * Converts the loglevel string to actual loglevel.
+     * @param aLevel - The level to convert.
+     * @return Level containing the loglevel. Default loglevel if string not recognized.
      */
-    bool SetLogLevelViaString(std::string_view aLevel);
+    static Level ConvertLogLevelStringToLevel(std::string_view aLevel);
 
     /**
      * Sets the filename to log to when logging to disk is enabled.
