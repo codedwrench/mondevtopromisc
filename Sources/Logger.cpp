@@ -31,9 +31,28 @@ Logger::Level Logger::GetLogLevel()
     return mLogLevel;
 }
 
+std::string Logger::ConvertLogLevelToString(Logger::Level aLogLevel)
+{
+    return std::string(cLevelTexts.at(static_cast<unsigned long>(aLogLevel)));
+}
+
 void Logger::SetLogLevel(Level aLevel)
 {
     mLogLevel = aLevel;
+}
+
+bool Logger::SetLogLevelViaString(std::string_view aLevel)
+{
+    bool lReturn{false};
+
+    for (std::size_t lCount = 0; lCount < cLevelTexts.size(); lCount++) {
+        if (cLevelTexts.at(lCount).find(aLevel) != std::string::npos) {
+            mLogLevel = static_cast<Level>(lCount);
+            lReturn   = true;
+        }
+    }
+
+    return lReturn;
 }
 
 void Logger::SetLogToDisk(bool aLoggingToDiskEnabled)
@@ -70,7 +89,7 @@ void Logger::Log(const std::string& aText, Level aLevel)
 
 #if defined(__GNUC__) || defined(__GNUG__)
         lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') << std::setw(3)
-                  << lTimeMs.count() << ": " << mLogLevelTexts.at(static_cast<unsigned long>(aLevel)) << ": "
+                  << lTimeMs.count() << ": " << cLevelTexts.at(static_cast<unsigned long>(aLevel)) << ": "
                   << aLocation.file_name() << ":" << aLocation.line() << ":" << aText;
 #else
         lLogEntry << std::put_time(std::gmtime(&lTimeAsTimeT), "%H:%M:%S:") << std::setfill('0') << std::setw(3)

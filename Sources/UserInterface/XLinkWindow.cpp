@@ -173,7 +173,8 @@ void XLinkWindow::Draw()
     // Status field
     GetObjects().at(6)->SetName(
         std::string(cStatusPrefix) +
-        WindowModel_Constants::cEngineStatusTexts.at(static_cast<unsigned long>(GetModel().mEngineStatus)) + " ");
+        WindowModel_Constants::cEngineStatusTexts.at(static_cast<unsigned long>(GetModel().mEngineStatus)).data() +
+        " ");
     GetObjects().at(6)->Scale();
 
     // TODO: Don't have 2 overlapping buttons, instead update name of button and make button action lambda settable.

@@ -15,14 +15,13 @@
 
 namespace
 {
-    static constexpr Logger::Level    cLogLevel{Logger::Level::TRACE};
-    static constexpr std::string_view cLogFileName{"log.txt"};
-    static constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
-    static constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
-    static constexpr bool             cLogToDisk{true};
+    constexpr std::string_view cLogFileName{"log.txt"};
+    constexpr std::string_view cPSPSSIDFilterName{"PSP_"};
+    constexpr std::string_view cVitaSSIDFilterName{"SCE_"};
+    constexpr bool             cLogToDisk{true};
 
     // Indicates if the program should be running or not, used to gracefully exit the program.
-    static bool gRunning{true};
+    bool gRunning{true};
 }  // namespace
 
 
@@ -54,14 +53,14 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    Logger::GetInstance().Init(cLogLevel, cLogToDisk, lProgramPath + cLogFileName.data());
-
     // Handle quit signals gracefully.
     boost::asio::io_service lSignalIoService{};
     boost::asio::signal_set lSignals(lSignalIoService, SIGINT, SIGTERM);
     lSignals.async_wait(&SignalHandler);
     boost::thread lThread{[lIoService = &lSignalIoService] { lIoService->run(); }};
     WindowModel   mWindowModel{};
+
+    Logger::GetInstance().Init(mWindowModel.mLogLevel, cLogToDisk, lProgramPath + cLogFileName.data());
 
     std::vector<std::string> lSSIDFilters{};
     WindowController         lWindowController(mWindowModel);

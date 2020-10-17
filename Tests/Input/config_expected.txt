@@ -1,0 +1,8 @@
+LogLevel: "Trace"
+AutoDiscoverPSPVita: false
+AutoDiscoverXLinkKai: false
+UseXLinkKaiHints: false
+WifiAdapter: ""
+Channel: "1"
+XLinkIp: "127.0.0.1"
+XLinkPort: "34523"

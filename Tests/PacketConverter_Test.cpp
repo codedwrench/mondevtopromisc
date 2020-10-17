@@ -1,7 +1,6 @@
 /* Copyright (c) 2020 [Rick de Bondt] - PacketConverter_Test.cpp
  * This file contains tests for the PacketConverter class.
- *
- * */
+ **/
 
 #include "../Includes/PacketConverter.h"
 
@@ -10,7 +9,7 @@
 
 #include "../Includes/PCapReader.h"
 
-class ISendReceiveDevice_Mock : public ISendReceiveDevice
+class ISendReceiveDeviceMock : public ISendReceiveDevice
 {
 public:
     MOCK_METHOD(void, Close, ());
@@ -128,7 +127,7 @@ using ::testing::Return;
 using ::testing::SaveArg;
 TEST_F(PacketConverterTest, CopyBeaconInformation)
 {
-    std::shared_ptr<ISendReceiveDevice> lSendReceiveDeviceMock{std::make_shared<ISendReceiveDevice_Mock>()};
+    std::shared_ptr<ISendReceiveDevice> lSendReceiveDeviceMock{std::make_shared<ISendReceiveDeviceMock>()};
     PCapReader                          lPCapReader{};
     PCapReader                          lPCapExpectedReader{};
     pcap_t*                             lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
@@ -143,7 +142,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
 
     std::string lSendBuffer{};
 
-    EXPECT_CALL(*std::dynamic_pointer_cast<ISendReceiveDevice_Mock>(lSendReceiveDeviceMock), Send(_))
+    EXPECT_CALL(*std::dynamic_pointer_cast<ISendReceiveDeviceMock>(lSendReceiveDeviceMock), Send(_))
         .WillRepeatedly(DoAll(SaveArg<0>(&lSendBuffer), Return(true)));
     while (lPCapReader.ReadNextData()) {
         // Convert the packet and "Send" it so we get the converted information

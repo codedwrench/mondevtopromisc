@@ -79,6 +79,7 @@ add_executable(mondevtopromisc main.cpp
         Sources/Logger.cpp
         Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
+        Sources/WindowModel.cpp
         Sources/WirelessMonitorDevice.cpp
         Sources/XLinkKaiConnection.cpp
         Sources/UserInterface/Button.cpp
@@ -123,10 +124,12 @@ if (ENABLE_TESTS)
     include(GoogleTest)
     enable_testing()
     add_executable(tests Tests/PacketConverter_Test.cpp
+            Tests/WindowModel_Test.cpp
             Sources/Logger.cpp
             Sources/PacketConverter.cpp
             Sources/PCapReader.cpp
             Sources/RadioTapReader.cpp
+            Sources/WindowModel.cpp
             Sources/XLinkKaiConnection.cpp)
     target_include_directories(tests PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
     target_link_libraries(tests gtest gmock gtest_main ${PCAP_LIBRARY} ${Boost_LIBRARIES})

@@ -43,6 +43,8 @@ public:
         ERROR      /**< Lowest level */
     };
 
+    static constexpr std::array<std::string_view, 5> cLevelTexts{"Trace", "Debug", "Info", "Warning", "Error"};
+
     /**
      * Gets the Logger singleton.
      * @return The Logger object.
@@ -80,11 +82,26 @@ public:
     Level GetLogLevel();
 
     /**
+     * Converts the loglevel to string.
+     * @param aLogLevel - Log level to convert.
+     * @return string with log level.
+     */
+    static std::string ConvertLogLevelToString(Logger::Level aLogLevel);
+
+    /**
      * Sets the loglevel to debug, warning or error, based upon this variable certain logmessages will be shown or not
      * shown.
      * @param aLevel - The level to set.
      */
     void SetLogLevel(Level aLevel);
+
+    /**
+     * Sets the loglevel to debug, warning or error, based upon this variable certain logmessages will be shown or not
+     * shown.
+     * @param aLevel - The level to set.
+     * @return true if string recognized.
+     */
+    bool SetLogLevelViaString(std::string_view aLevel);
 
     /**
      * Sets the filename to log to when logging to disk is enabled.
@@ -108,10 +125,9 @@ private:
     Logger() = default;
     ~Logger();
 
-    std::string                mFileName{"log.txt"};
-    Level                      mLogLevel{Logger::Level::ERROR};
-    std::array<std::string, 5> mLogLevelTexts{"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
-    std::ofstream              mLogOutputStream{};
-    bool                       mLogToDisk{false};
-    bool                       mLogToScreen{false};
+    std::string   mFileName{"log.txt"};
+    Level         mLogLevel{Logger::Level::ERROR};
+    std::ofstream mLogOutputStream{};
+    bool          mLogToDisk{false};
+    bool          mLogToScreen{false};
 };
