@@ -35,6 +35,8 @@ bool WindowModel::SaveToFile(std::string_view aPath) const
         lFile << cSaveChannel << ": \"" << mChannel << "\"" << std::endl;
         lFile << cSaveXLinkIp << ": \"" << mXLinkIp << "\"" << std::endl;
         lFile << cSaveXLinkPort << ": \"" << mXLinkPort << "\"" << std::endl;
+        lFile << cSaveAcknowledgeDataFrames << ": \"" << BoolToString(mAcknowledgeDataFrames) << "\"" << std::endl;
+        lFile << cSaveOnlyAcceptFromMac << ": \"" << mOnlyAcceptFromMac << "\"" << std::endl;
         lFile.close();
 
         if (lFile.good()) {
@@ -86,6 +88,10 @@ bool WindowModel::LoadFromFile(std::string_view aPath)
                             mXLinkIp = lResult.substr(1, lResult.size() - 2);
                         } else if (lOption == cSaveXLinkPort) {
                             mXLinkPort = lResult.substr(1, lResult.size() - 2);
+                        } else if (lOption == cSaveAcknowledgeDataFrames) {
+                            mAcknowledgeDataFrames = StringToBool(lResult);
+                        } else if (lOption == cSaveOnlyAcceptFromMac) {
+                            mOnlyAcceptFromMac = lResult.substr(1, lResult.size() - 2);
                         } else {
                             Logger::GetInstance().Log(std::string("Option:") + lOption + " unknown",
                                                       Logger::Level::DEBUG);

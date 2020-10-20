@@ -17,6 +17,8 @@ namespace WindowModel_Constants
     static constexpr std::string_view cSaveChannel{"Channel"};
     static constexpr std::string_view cSaveXLinkIp{"XLinkIp"};
     static constexpr std::string_view cSaveXLinkPort{"XLinkPort"};
+    static constexpr std::string_view cSaveAcknowledgeDataFrames{"AckDataFrames"};
+    static constexpr std::string_view cSaveOnlyAcceptFromMac{"OnlyAcceptFromMac"};
 
     static constexpr Logger::Level    cDefaultLogLevel{Logger::Level::ERROR};
     static constexpr bool             cDefaultAutoDiscoverPSPVita{false};
@@ -26,6 +28,8 @@ namespace WindowModel_Constants
     static constexpr std::string_view cDefaultWifiAdapter{""};
     static constexpr std::string_view cDefaultXLinkIp{"127.0.0.1"};
     static constexpr std::string_view cDefaultXLinkPort{"34523"};
+    static constexpr std::string_view cDefaultAcknowledgeDataFrames{"AckDataFrames"};
+    static constexpr std::string_view cDefaultOnlyAcceptFromMac{"OnlyAcceptFromMac"};
 
     enum class EngineStatus
     {
@@ -56,6 +60,8 @@ public:
     bool          mAutoDiscoverXLinkKaiInstance{WindowModel_Constants::cDefaultAutoDiscoverXLinkKai};
     bool          mXLinkKaiHints{WindowModel_Constants::cDefaultUseXLinkKaiHints};
     std::string   mWifiAdapter{WindowModel_Constants::cDefaultWifiAdapter};
+    bool          mAcknowledgeDataFrames{false};
+    std::string   mOnlyAcceptFromMac{};
 
     // Channel as a string because of the textfield this is bound to.
     std::string mChannel{WindowModel_Constants::cDefaultChannel};

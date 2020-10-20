@@ -73,7 +73,7 @@ public:
 private:
     uint16_t mLength{0};
     uint32_t mPresentFlags{RadioTap_Constants::cSendPresentFlags};
-    uint8_t  mFlags{RadioTap_Constants::cFlags};
+    uint8_t  mFlags{0x00};
     uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
     uint16_t mFrequency{RadioTap_Constants::cChannel};
     uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};

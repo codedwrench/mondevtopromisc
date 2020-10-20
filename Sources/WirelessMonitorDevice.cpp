@@ -15,10 +15,9 @@
 
 using namespace std::chrono;
 
-bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
-{
+bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string> &aSSIDFilter, uint16_t aFrequency) {
     bool lReturn{true};
-    mSSIDFilter                = std::move(aSSIDFilter);
+    mSSIDFilter = std::move(aSSIDFilter);
     mWifiInformation.Frequency = aFrequency;
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
@@ -39,8 +38,7 @@ bool WirelessMonitorDevice::Open(std::string_view aName, std::vector<std::string
     return lReturn;
 }
 
-void WirelessMonitorDevice::Close()
-{
+void WirelessMonitorDevice::Close() {
     mConnected = false;
 
     if (mHandler != nullptr) {
@@ -55,17 +53,16 @@ void WirelessMonitorDevice::Close()
         pcap_close(mHandler);
     }
 
-    mHandler              = nullptr;
-    mData                 = nullptr;
-    mHeader               = nullptr;
-    mReceiverThread       = nullptr;
+    mHandler = nullptr;
+    mData = nullptr;
+    mHeader = nullptr;
+    mReceiverThread = nullptr;
     mWifiInformation.SSID = "";
 }
 
-bool WirelessMonitorDevice::ReadNextData()
-{
+bool WirelessMonitorDevice::ReadNextData() {
     bool lReturn{false};
-    int  lSuccess{pcap_next_ex(mHandler, const_cast<pcap_pkthdr**>(&mHeader), &mData)};
+    int lSuccess{pcap_next_ex(mHandler, const_cast<pcap_pkthdr **>(&mHeader), &mData)};
 
     if (lSuccess == 1) {
         lReturn = ReadCallback(mData, mHeader);
@@ -81,8 +78,7 @@ bool WirelessMonitorDevice::ReadNextData()
     return lReturn;
 }
 
-bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader)
-{
+bool WirelessMonitorDevice::ReadCallback(const unsigned char *aData, const pcap_pkthdr *aHeader) {
     bool lReturn{false};
 
     std::string lData = DataToString(aData, aHeader);
@@ -94,7 +90,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         // Try to match SSID to filter list
         std::string lSSID = mPacketConverter.GetBeaconSSID(lData);
 
-        for (auto& lFilter : mSSIDFilter) {
+        for (auto &lFilter : mSSIDFilter) {
             if (lSSID.find(lFilter) != std::string::npos) {
                 if (lSSID != mWifiInformation.SSID) {
                     mPacketConverter.FillWiFiInformation(lData, mWifiInformation);
@@ -114,33 +110,32 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
 
             // Show Epoch Time
             Logger::GetInstance().Log(
-                "Epoch time: " + std::to_string(aHeader->ts.tv_sec) + ":" + std::to_string(aHeader->ts.tv_usec),
-                Logger::Level::TRACE);
+                    "Epoch time: " + std::to_string(aHeader->ts.tv_sec) + ":" + std::to_string(aHeader->ts.tv_usec),
+                    Logger::Level::TRACE);
 
             // Show a warning if the length captured is different
             if (aHeader->len != aHeader->caplen) {
                 Logger::GetInstance().Log(
-                    "Capture size different than packet size:" + std::to_string(aHeader->len) + " bytes",
-                    Logger::Level::TRACE);
+                        "Capture size different than packet size:" + std::to_string(aHeader->len) + " bytes",
+                        Logger::Level::TRACE);
             }
         }
 
         // Data is good so save as member
-        mData   = aData;
+        mData = aData;
         mHeader = aHeader;
 
 
-        // TODO: Fix
         // If it's not a broadcast frame, acknowledge the packet.
-        //        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
-        //            uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
-        //            std::array<uint8_t, 6> lSourceMac{};
-        //            memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
-        //
-        //            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
-        //                lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
-        //            Send(lAcknowledgementFrame, mWifiInformation, false);
-        //        }
+        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
+            uint64_t lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
+            std::array<uint8_t, 6> lSourceMac{};
+            memcpy(reinterpret_cast<char *>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+
+            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
+                    lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
+            Send(lAcknowledgementFrame, mWifiInformation, false);
+        }
 
         if (mSendReceivedData && (mSendReceiveDevice != nullptr)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
@@ -155,18 +150,15 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
     return lReturn;
 }
 
-const unsigned char* WirelessMonitorDevice::GetData()
-{
+const unsigned char *WirelessMonitorDevice::GetData() {
     return mData;
 }
 
-const pcap_pkthdr* WirelessMonitorDevice::GetHeader()
-{
+const pcap_pkthdr *WirelessMonitorDevice::GetHeader() {
     return mHeader;
 }
 
-std::string WirelessMonitorDevice::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)
-{
+std::string WirelessMonitorDevice::DataToString(const unsigned char *aData, const pcap_pkthdr *aHeader) {
     // Convert from char* to string
     std::string lData{};
 
@@ -180,32 +172,28 @@ std::string WirelessMonitorDevice::DataToString(const unsigned char* aData, cons
     return lData;
 }
 
-std::string WirelessMonitorDevice::LastDataToString()
-{
+std::string WirelessMonitorDevice::LastDataToString() {
     return DataToString(mData, mHeader);
 }
 
-void WirelessMonitorDevice::SetBSSID(uint64_t aBSSID)
-{
+void WirelessMonitorDevice::SetBSSID(uint64_t aBSSID) {
     mWifiInformation.BSSID = aBSSID;
 }
 
-void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
-{
+void WirelessMonitorDevice::SetSSID(std::string_view aSSID) {
     mWifiInformation.SSID = aSSID;
 }
 
-bool WirelessMonitorDevice::Send(std::string_view                              aData,
-                                 IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation,
-                                 bool                                          aConvertData)
-{
+bool WirelessMonitorDevice::Send(std::string_view aData,
+                                 IPCapDevice_Constants::WiFiBeaconInformation &aWiFiInformation,
+                                 bool aConvertData) {
     bool lReturn{false};
     if (mHandler != nullptr) {
         std::string lData{};
 
         if (aConvertData) {
             lData = mPacketConverter.ConvertPacketTo80211(
-                aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
+                    aData, aWiFiInformation.BSSID, aWiFiInformation.Frequency, aWiFiInformation.MaxRate);
         } else {
             lData = aData;
         }
@@ -213,7 +201,7 @@ bool WirelessMonitorDevice::Send(std::string_view                              a
         if (!lData.empty()) {
             Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
 
-            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
+            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char *>(lData.c_str()), lData.size()) == 0) {
                 lReturn = true;
             } else {
                 Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)),
@@ -228,23 +216,20 @@ bool WirelessMonitorDevice::Send(std::string_view                              a
     return lReturn;
 }
 
-bool WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation)
-{
+bool
+WirelessMonitorDevice::Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation &aWiFiInformation) {
     return Send(aData, mWifiInformation, true);
 }
 
-bool WirelessMonitorDevice::Send(std::string_view aData)
-{
+bool WirelessMonitorDevice::Send(std::string_view aData) {
     return Send(aData, mWifiInformation);
 }
 
-void WirelessMonitorDevice::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
-{
+void WirelessMonitorDevice::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) {
     mSendReceiveDevice = aDevice;
 }
 
-bool WirelessMonitorDevice::StartReceiverThread()
-{
+bool WirelessMonitorDevice::StartReceiverThread() {
     bool lReturn{true};
     if (mHandler != nullptr) {
         // Run
@@ -252,21 +237,21 @@ bool WirelessMonitorDevice::StartReceiverThread()
             mReceiverThread = std::make_shared<boost::thread>([&] {
                 // If we're receiving data from the receiver thread, send it off as well.
                 bool lSendReceivedDataOld = mSendReceivedData;
-                mSendReceivedData         = true;
+                mSendReceivedData = true;
 
                 auto lCallbackFunction =
-                    [](unsigned char* aThis, const pcap_pkthdr* aHeader, const unsigned char* aPacket) {
-                        auto* lThis = reinterpret_cast<WirelessMonitorDevice*>(aThis);
-                        lThis->ReadCallback(aPacket, aHeader);
-                    };
+                        [](unsigned char *aThis, const pcap_pkthdr *aHeader, const unsigned char *aPacket) {
+                            auto *lThis = reinterpret_cast<WirelessMonitorDevice *>(aThis);
+                            lThis->ReadCallback(aPacket, aHeader);
+                        };
 
                 while (mConnected && (mHandler != nullptr)) {
                     // Use pcap_dispatch instead of pcap_next_ex so that as many packets as possible will be processed
                     // in a single cycle.
-                    if (pcap_dispatch(mHandler, -1, lCallbackFunction, reinterpret_cast<u_char*>(this)) == -1) {
+                    if (pcap_dispatch(mHandler, -1, lCallbackFunction, reinterpret_cast<u_char *>(this)) == -1) {
                         Logger::GetInstance().Log(
-                            "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
-                            Logger::Level::DEBUG);
+                                "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
+                                Logger::Level::DEBUG);
                     }
                     // No sleep here should be okay
                 }

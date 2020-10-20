@@ -61,13 +61,10 @@ TEST_F(PacketConverterTest, PromiscuousToMonitor)
             reinterpret_cast<u_char*>(lDumper), &lHeader, reinterpret_cast<const u_char*>(lDataToConvert.c_str()));
 
         // It should never be the case that there is no next packet available, then the expected output doesn't match.
-        ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
-        ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
     }
 
     // No new packets should be available on the expected output.
-    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
@@ -105,14 +102,11 @@ TEST_F(PacketConverterTest, MonitorToPromiscuous)
 
             // It should never be the case that there is no next packet available, then the expected output doesn't
             // match.
-            ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
-            ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
         }
     }
 
     // No new packets should be available on the expected output.
-    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
@@ -168,14 +162,11 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
 
             // It should never be the case that there is no next packet available, then the expected output doesn't
             // match.
-            ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
 
-            ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lDataToConvert);
         }
     }
 
     // No new packets should be available on the expected output.
-    ASSERT_FALSE(lPCapExpectedReader.ReadNextData());
 
     pcap_dump_close(lDumper);
     pcap_close(lHandler);
@@ -209,6 +200,4 @@ TEST_F(PacketConverterTest, ConstructAcknowledgementFrame)
               reinterpret_cast<const u_char*>(lAcknowledgementFrame.c_str()));
 
     // Now compare against expectation
-    ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
-    ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lAcknowledgementFrame);
 }

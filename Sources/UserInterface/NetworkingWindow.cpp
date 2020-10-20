@@ -23,9 +23,20 @@ Dimensions ScaleSearchPSPNetworks(const int& /*aMaxHeight*/, const int& /*aMaxWi
     return {4, 2, 0, 0};
 }
 
-Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+Dimensions ScaleAcknowledgeDataFrames(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
 {
     return {5, 2, 0, 0};
+}
+
+Dimensions ScaleOnlyAcceptFromMac(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {6, 2, 0, 0};
+}
+
+
+Dimensions ScaleSearchTakeHintsXLinkKai(const int& /*aMaxHeight*/, const int& /*aMaxWidth*/)
+{
+    return {7, 2, 0, 0};
 }
 
 
@@ -66,6 +77,23 @@ void NetworkingWindow::SetUp()
         cScanWifiNetworksPSP,
         [&] { return ScaleSearchPSPNetworks(GetHeightReference(), GetWidthReference()); },
         GetModel().mAutoDiscoverPSPVitaNetworks));
+
+    AddObject(std::make_shared<CheckBox>(
+            *this,
+            cEnableAcknowledgeDataFrames,
+            [&] { return ScaleAcknowledgeDataFrames(GetHeightReference(), GetWidthReference()); },
+            GetModel().mAcknowledgeDataFrames));
+
+
+    AddObject(std::make_shared<TextField>(
+            *this,
+            cChannel,
+            [&] { return ScaleOnlyAcceptFromMac(GetHeightReference(), GetWidthReference()); },
+            GetModel().mOnlyAcceptFromMac,
+            17,
+            true,
+            true,
+            std::vector<char>{':'}));
 
     // TODO: Add when XLink Kai adds it
     //    AddObject(std::make_shared<CheckBox>(
