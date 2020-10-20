@@ -79,21 +79,21 @@ void NetworkingWindow::SetUp()
         GetModel().mAutoDiscoverPSPVitaNetworks));
 
     AddObject(std::make_shared<CheckBox>(
-            *this,
-            cEnableAcknowledgeDataFrames,
-            [&] { return ScaleAcknowledgeDataFrames(GetHeightReference(), GetWidthReference()); },
-            GetModel().mAcknowledgeDataFrames));
+        *this,
+        cEnableAcknowledgeDataFrames,
+        [&] { return ScaleAcknowledgeDataFrames(GetHeightReference(), GetWidthReference()); },
+        GetModel().mAcknowledgeDataFrames));
 
 
     AddObject(std::make_shared<TextField>(
-            *this,
-            cChannel,
-            [&] { return ScaleOnlyAcceptFromMac(GetHeightReference(), GetWidthReference()); },
-            GetModel().mOnlyAcceptFromMac,
-            17,
-            true,
-            true,
-            std::vector<char>{':'}));
+        *this,
+        cChannel,
+        [&] { return ScaleOnlyAcceptFromMac(GetHeightReference(), GetWidthReference()); },
+        GetModel().mOnlyAcceptFromMac,
+        17,
+        true,
+        true,
+        std::vector<char>{':'}));
 
     // TODO: Add when XLink Kai adds it
     //    AddObject(std::make_shared<CheckBox>(

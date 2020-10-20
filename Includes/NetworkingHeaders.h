@@ -164,10 +164,8 @@ namespace RadioTap_Constants
     static constexpr uint16_t cTXFlags{0x0008};
 
     // RadioTapHeader length with all the optional options:
-    constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) +
-                                       sizeof(RadioTap_Constants::cChannel) +
-                                       sizeof(RadioTap_Constants::cChannelFlags) +
-                                       sizeof(RadioTap_Constants::cTXFlags);
+    constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cChannel) +
+                                       sizeof(RadioTap_Constants::cChannelFlags) + sizeof(RadioTap_Constants::cTXFlags);
 
 
 }  // namespace RadioTap_Constants

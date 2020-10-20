@@ -18,9 +18,9 @@ public:
 TEST_F(WindowModelTest, SaveModel)
 {
     // Change some defaults
-    mWindowModel.mLogLevel = Logger::Level::TRACE;
+    mWindowModel.mLogLevel                     = Logger::Level::TRACE;
     mWindowModel.mAutoDiscoverXLinkKaiInstance = true;
-    mWindowModel.mChannel = "6";
+    mWindowModel.mChannel                      = "6";
 
     ASSERT_TRUE(mWindowModel.SaveToFile("../Tests/Output/config.txt"));
     std::ifstream lOutputFile;
