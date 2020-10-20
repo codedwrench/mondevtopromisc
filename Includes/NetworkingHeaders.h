@@ -148,11 +148,9 @@ namespace RadioTap_Constants
     // an alignment, make the variable a step bigger. Also do not forget to add the variable to cRadioTapSize and to
     // InsertRadioTapHeader in PacketConverter.cpp
 
-    // Enable: Flags, Rate, Channel and TX Flags
-    static constexpr uint32_t cSendPresentFlags{0x0000800e};
+    // Enable: Channel and TX Flags
+    constexpr uint32_t cSendPresentFlags{0x00008004};
 
-    // Short preamble
-    static constexpr uint8_t cFlags{0x02};
     static constexpr uint8_t cFCSAvailableFlag{0x10};
 
     // Channel 1 (2412hz)
@@ -166,10 +164,10 @@ namespace RadioTap_Constants
     static constexpr uint16_t cTXFlags{0x0008};
 
     // RadioTapHeader length with all the optional options:
-    static constexpr uint16_t cRadioTapSize =
-        sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) + sizeof(RadioTap_Constants::cChannel) +
-        sizeof(RadioTap_Constants::cChannelFlags) + sizeof(RadioTap_Constants::cRateFlags) +
-        sizeof(RadioTap_Constants::cTXFlags);
+    constexpr uint16_t cRadioTapSize = sizeof(RadioTapHeader) + sizeof(RadioTap_Constants::cFlags) +
+                                       sizeof(RadioTap_Constants::cChannel) +
+                                       sizeof(RadioTap_Constants::cChannelFlags) +
+                                       sizeof(RadioTap_Constants::cTXFlags);
 
 
 }  // namespace RadioTap_Constants
