@@ -150,7 +150,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
             }
         }
 
-        if (mSendReceivedData && (mSendReceiveDevice != nullptr) && !mPacketConverter.Is80211QOSRetry(lData)) {
+        if (mSendReceivedData && (mSendReceiveDevice != nullptr) /*&& !mPacketConverter.Is80211QOSRetry(lData)*/) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
             if (!lConvertedData.empty()) {
                 mSendReceiveDevice->Send(lConvertedData);
