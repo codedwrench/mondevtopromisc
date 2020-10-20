@@ -55,11 +55,14 @@ void WirelessMonitorDevice::Close()
         pcap_close(mHandler);
     }
 
-    mHandler              = nullptr;
-    mData                 = nullptr;
-    mHeader               = nullptr;
-    mReceiverThread       = nullptr;
-    mWifiInformation.SSID = "";
+    mHandler               = nullptr;
+    mData                  = nullptr;
+    mHeader                = nullptr;
+    mReceiverThread        = nullptr;
+    mWifiInformation.SSID  = "";
+    mWifiInformation.BSSID = 0;
+    mSourceMACToFilter     = 0;
+    mAcknowledgePackets    = false;
 }
 
 bool WirelessMonitorDevice::ReadNextData()
@@ -102,7 +105,8 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
                 }
             }
         }
-    } else if (mPacketConverter.Is80211Data(lData) && mPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID)) {
+    } else if (mPacketConverter.Is80211Data(lData) && mPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID) &&
+               (mSourceMACToFilter == 0 || mPacketConverter.IsFromMac(lData, mSourceMACToFilter))) {
         ++mPacketCount;
 
         // Don't even bother setting up these strings if loglevel is not trace.
@@ -130,23 +134,29 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         mHeader = aHeader;
 
 
-        // If it's not a broadcast frame, acknowledge the packet.
-        if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
-            uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
-            std::array<uint8_t, 6> lSourceMac{};
-            memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+        if (mAcknowledgePackets) {
+            // If it's not a broadcast frame, acknowledge the packet.
+            if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
+                uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
+                // Big- to Little endian
+                lUnconvertedSourceMac = mPacketConverter.SwapMacEndian(lUnconvertedSourceMac);
 
-            std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
-                lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
-            Send(lAcknowledgementFrame, mWifiInformation, false);
+                std::array<uint8_t, 6> lSourceMac{};
+                memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+
+                std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
+                    lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
+                Send(lAcknowledgementFrame, mWifiInformation, false);
+            }
         }
 
-        if (mSendReceivedData && (mSendReceiveDevice != nullptr)) {
+        if (mSendReceivedData && (mSendReceiveDevice != nullptr) && !mPacketConverter.Is80211QOSRetry(lData)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
             if (!lConvertedData.empty()) {
                 mSendReceiveDevice->Send(lConvertedData);
             }
         }
+
 
         lReturn = true;
     }
@@ -182,11 +192,6 @@ std::string WirelessMonitorDevice::DataToString(const unsigned char* aData, cons
 std::string WirelessMonitorDevice::LastDataToString()
 {
     return DataToString(mData, mHeader);
-}
-
-void WirelessMonitorDevice::SetBSSID(uint64_t aBSSID)
-{
-    mWifiInformation.BSSID = aBSSID;
 }
 
 void WirelessMonitorDevice::SetSSID(std::string_view aSSID)
@@ -279,4 +284,14 @@ bool WirelessMonitorDevice::StartReceiverThread()
     }
 
     return lReturn;
+}
+
+void WirelessMonitorDevice::SetSourceMACToFilter(uint64_t aMac)
+{
+    mSourceMACToFilter = aMac;
+}
+
+void WirelessMonitorDevice::SetAcknowledgePackets(bool aAcknowledge)
+{
+    mAcknowledgePackets = aAcknowledge;
 }

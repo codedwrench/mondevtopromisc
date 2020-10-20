@@ -41,6 +41,13 @@ public:
     static uint64_t MacToInt(std::string_view aMac);
 
     /**
+     * Swaps endianness of Mac.
+     * @param aMac - Mac to swap.
+     * @return swapped mac.
+     */
+    static uint64_t SwapMacEndian(uint64_t aMac);
+
+    /**
      * Check if the provided data is part of a beacon packet.
      * Only works on packets containing a 802.11 header.
      * @param aData - The data to check.
@@ -98,6 +105,16 @@ public:
      * @return true if packet is a quality of service packet.
      */
     bool Is80211QOS(std::string_view aData);
+
+
+    /**
+     * Check if this packet is a retry packet so it can be skipped.
+     * Only works on a 802.11 QOS packet.
+     * @param aData - The data to check.
+     * @return true if retry packet.
+     */
+    bool Is80211QOSRetry(std::string_view aData);
+
 
     /**
      * Checks if the provided data is part of a null function packet.
@@ -157,9 +174,17 @@ public:
                                               uint16_t               aFrequency,
                                               uint8_t                aMaxRate);
 
+    /**
+     * Checks if Source Mac is the same as the given MAC.
+     * @param aData - The packet.
+     * @param aMac - The Mac to check for.
+     * @return true if match.
+     */
+    bool IsFromMac(std::string_view aData, uint64_t aMac);
+
+
 private:
     void InsertRadioTapHeader(char* aPacket, uint16_t aFrequency, uint8_t aMaxRate) const;
-    bool UpdateIndexAfterRadioTap(std::string_view aData);
     int  FillSSID(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo, uint64_t aIndex);
 
     RadioTapReader mRadioTapReader{};

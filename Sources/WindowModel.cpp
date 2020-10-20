@@ -35,7 +35,7 @@ bool WindowModel::SaveToFile(std::string_view aPath) const
         lFile << cSaveChannel << ": \"" << mChannel << "\"" << std::endl;
         lFile << cSaveXLinkIp << ": \"" << mXLinkIp << "\"" << std::endl;
         lFile << cSaveXLinkPort << ": \"" << mXLinkPort << "\"" << std::endl;
-        lFile << cSaveAcknowledgeDataFrames << ": \"" << BoolToString(mAcknowledgeDataFrames) << "\"" << std::endl;
+        lFile << cSaveAcknowledgeDataFrames << ": " << BoolToString(mAcknowledgeDataFrames) << std::endl;
         lFile << cSaveOnlyAcceptFromMac << ": \"" << mOnlyAcceptFromMac << "\"" << std::endl;
         lFile.close();
 

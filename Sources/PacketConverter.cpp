@@ -47,13 +47,16 @@ void PacketConverter::Update(std::string_view aData)
 // Skip use of ether_aton because that could hinder Windows support
 uint64_t PacketConverter::MacToInt(std::string_view aMac)
 {
-    std::istringstream lStringStream(aMac.data());
-    uint64_t           lNibble{0};
-    uint64_t           lResult{0};
-    lStringStream >> std::hex;
-    while (lStringStream >> lNibble) {
-        lResult = (lResult << 8) + lNibble;
-        lStringStream.get();
+    uint64_t lResult{0};
+
+    if (!aMac.empty()) {
+        std::istringstream lStringStream(aMac.data());
+        uint64_t           lNibble{0};
+        lStringStream >> std::hex;
+        while (lStringStream >> lNibble) {
+            lResult = (lResult << 8) + lNibble;
+            lStringStream.get();
+        }
     }
 
     return lResult;
@@ -102,8 +105,7 @@ uint64_t PacketConverter::GetBSSID(std::string_view aData)
     lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
     // Big- to Little endian
-    lBSSID = bswap_64(lBSSID);
-    lBSSID = lBSSID >> 16U;
+    lBSSID = SwapMacEndian(lBSSID);
 
     return lBSSID;
 }
@@ -199,6 +201,11 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
     return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) == Net_80211_Constants::cDataQOSType;
 }
 
+bool PacketConverter::Is80211QOSRetry(std::string_view aData)
+{
+    return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) + 1 == Net_80211_Constants::cDataQOSRetryFlag;
+}
+
 bool PacketConverter::Is80211NullFunc(std::string_view aData)
 {
     return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) == Net_80211_Constants::cDataNullFuncType;
@@ -207,6 +214,11 @@ bool PacketConverter::Is80211NullFunc(std::string_view aData)
 bool PacketConverter::IsForBSSID(std::string_view aData, uint64_t aBSSID)
 {
     return aBSSID == GetBSSID(aData);
+}
+
+bool PacketConverter::IsFromMac(std::string_view aData, uint64_t aMac)
+{
+    return aMac == GetSourceMac(aData);
 }
 
 uint64_t PacketConverter::GetSourceMac(std::string_view aData)
@@ -446,4 +458,10 @@ std::string PacketConverter::ConstructAcknowledgementFrame(std::array<uint8_t, 6
 void PacketConverter::SetRadioTap(bool aRadioTap)
 {
     mRadioTap = aRadioTap;
+}
+
+uint64_t PacketConverter::SwapMacEndian(uint64_t aMac) {
+    // Little- to Big endian
+    aMac = bswap_64(aMac);
+    return aMac >> 16U;
 }

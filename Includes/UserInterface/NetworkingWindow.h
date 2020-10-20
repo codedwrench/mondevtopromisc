@@ -14,7 +14,8 @@ namespace
     static constexpr std::string_view cChannel{"WiFi channel to listen to"};
     static constexpr std::string_view cScanWifiNetworksPSP{"Automatically connect to PSP/Vita networks"};
     static constexpr std::string_view cEnableAcknowledgeDataFrames{"EXPERIMENTAL: Acknowledge data frames"};
-    static constexpr std::string_view cTakeHintsFromXlinkKai{"Take hints from XLink Kai."};
+    static constexpr std::string_view cOnlyAcceptMac{"Only accept data from the following MAC"};
+    static constexpr std::string_view cTakeHintsFromXlinkKai{"Take hints from XLink Kai"};
 }  // namespace
 
 /**

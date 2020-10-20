@@ -81,6 +81,7 @@ namespace Net_80211_Constants
     static constexpr uint16_t cBeaconType{0x80};
     static constexpr uint8_t  cDataType{0x08};
     static constexpr uint8_t  cDataQOSType{0x88};
+    static constexpr uint8_t  cDataQOSRetryFlag{0x08};
     static constexpr uint8_t  cDataNullFuncType{0x48};
     static constexpr uint8_t  cAcknowledgementType{0xd4};
 

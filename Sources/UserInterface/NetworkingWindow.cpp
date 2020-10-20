@@ -87,7 +87,7 @@ void NetworkingWindow::SetUp()
 
     AddObject(std::make_shared<TextField>(
         *this,
-        cChannel,
+        cOnlyAcceptMac,
         [&] { return ScaleOnlyAcceptFromMac(GetHeightReference(), GetWidthReference()); },
         GetModel().mOnlyAcceptFromMac,
         17,

@@ -62,12 +62,6 @@ public:
     virtual const pcap_pkthdr* GetHeader() = 0;
 
     /**
-     * Set BSSID to specified BSSID, this is used for sending packets and filtering.
-     * @return true on success.
-     */
-    virtual void SetBSSID(uint64_t aBSSID) = 0;
-
-    /**
      * Sends data over device/file if supported.
      * @param aData - Data to send.
      * @param aWirelessInformation - Information needed to send monitor mode information.

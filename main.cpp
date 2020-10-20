@@ -104,6 +104,9 @@ int main(int argc, char* argv[])
                                 mWindowModel.mWifiAdapter,
                                 lSSIDFilters,
                                 PacketConverter::ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
+                            lMonitorDevice->SetSourceMACToFilter(
+                                PacketConverter::MacToInt(mWindowModel.mOnlyAcceptFromMac));
+                            lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                             if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
                             } else {

@@ -38,7 +38,9 @@ public:
     std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     std::string LastDataToString() override;
 
-    void SetBSSID(uint64_t aBSSID) override;
+    void SetAcknowledgePackets(bool aAcknowledge);
+
+    void SetSourceMACToFilter(uint64_t aMac);
 
     void SetSSID(std::string_view aSSID);
 
@@ -65,7 +67,9 @@ private:
     bool                                         ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
     bool                                         mSendReceivedData{false};
     bool                                         mConnected{false};
+    bool                                         mAcknowledgePackets{false};
     PacketConverter                              mPacketConverter{true};
+    uint64_t                                     mSourceMACToFilter{0};
     const unsigned char*                         mData{nullptr};
     std::vector<std::string>                     mSSIDFilter;
     pcap_t*                                      mHandler{nullptr};
