@@ -17,6 +17,11 @@ public:
 // Tests whether Window model data can be saved successfully
 TEST_F(WindowModelTest, SaveModel)
 {
+    // Change some defaults
+    mWindowModel.mLogLevel = Logger::Level::TRACE;
+    mWindowModel.mAutoDiscoverXLinkKaiInstance = true;
+    mWindowModel.mChannel = "6";
+
     ASSERT_TRUE(mWindowModel.SaveToFile("../Tests/Output/config.txt"));
     std::ifstream lOutputFile;
     std::ifstream lExpectedFile;
@@ -50,12 +55,12 @@ TEST_F(WindowModelTest, LoadModel)
 {
     ASSERT_TRUE(mWindowModel.LoadFromFile("../Tests/Input/config_expected.txt"));
 
-    // Check if those match
-    EXPECT_EQ(mWindowModel.mLogLevel, WindowModel_Constants::cDefaultLogLevel);
+    // Check if those match, some defaults were changed in the expected file
+    EXPECT_EQ(mWindowModel.mLogLevel, Logger::Level::TRACE);
     EXPECT_EQ(mWindowModel.mAutoDiscoverPSPVitaNetworks, WindowModel_Constants::cDefaultAutoDiscoverPSPVita);
-    EXPECT_EQ(mWindowModel.mAutoDiscoverXLinkKaiInstance, WindowModel_Constants::cDefaultAutoDiscoverXLinkKai);
+    EXPECT_EQ(mWindowModel.mAutoDiscoverXLinkKaiInstance, true);
     EXPECT_EQ(mWindowModel.mXLinkKaiHints, WindowModel_Constants::cDefaultUseXLinkKaiHints);
-    EXPECT_EQ(mWindowModel.mChannel, WindowModel_Constants::cDefaultChannel);
+    EXPECT_EQ(mWindowModel.mChannel, "6");
     EXPECT_EQ(mWindowModel.mWifiAdapter, WindowModel_Constants::cDefaultWifiAdapter);
     EXPECT_EQ(mWindowModel.mXLinkIp, WindowModel_Constants::cDefaultXLinkIp);
     EXPECT_EQ(mWindowModel.mXLinkPort, WindowModel_Constants::cDefaultXLinkPort);
