@@ -13,7 +13,7 @@ void RadioTapReader::Reset()
 {
     mLength       = 0;
     mPresentFlags = RadioTap_Constants::cSendPresentFlags;
-    mFlags        = 0x00;
+    mFlags        = RadioTap_Constants::cFlags;
     mDataRate     = RadioTap_Constants::cRateFlags;
     mFrequency    = RadioTap_Constants::cChannel;
     mChannelFlags = RadioTap_Constants::cChannelFlags;
