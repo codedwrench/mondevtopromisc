@@ -71,7 +71,7 @@ bool WindowModel::LoadFromFile(std::string_view aPath)
                 try {
                     if (!lResult.empty()) {
                         if (lOption == cSaveLogLevel) {
-                            mLogLevel = Logger::ConvertLogLevelStringToLevel(lResult.substr(1, lResult.size() - 1));
+                            mLogLevel = Logger::ConvertLogLevelStringToLevel(lResult.substr(1, lResult.size() - 2));
                         } else if (lOption == cSaveAutoDiscoverPSPVita) {
                             mAutoDiscoverPSPVitaNetworks = StringToBool(lResult);
                         } else if (lOption == cSaveAutoDiscoverXLinkKai) {
