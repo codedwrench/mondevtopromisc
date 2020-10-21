@@ -1,7 +1,5 @@
 #include "../Includes/RadioTapReader.h"
 
-#include <iostream>
-
 /* Copyright (c) 2020 [Rick de Bondt] - RadioTapReader.cpp */
 
 
@@ -19,6 +17,8 @@ void RadioTapReader::Reset()
     mDataRate     = RadioTap_Constants::cRateFlags;
     mFrequency    = RadioTap_Constants::cChannel;
     mChannelFlags = RadioTap_Constants::cChannelFlags;
+    mMCSFlags     = 0;
+    mKnownMCSInfo = 0;
     mMCSInfo      = 0;
 }
 
