@@ -126,7 +126,7 @@ std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* 
             for (auto& lFilter : mSSIDFilter) {
                 if (lSSID.find(lFilter) != std::string::npos) {
                     if (lSSID != mWifiInformation.SSID) {
-                        aPacketConverter.FillWiFiInformation(lData, mWifiInformation);
+                        aPacketConverter.Fill80211WiFiInformation(lData, mWifiInformation);
                         Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
                     }
                 }

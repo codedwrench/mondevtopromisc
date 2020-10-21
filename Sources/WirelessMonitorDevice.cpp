@@ -100,7 +100,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         for (auto& lFilter : mSSIDFilter) {
             if (lSSID.find(lFilter) != std::string::npos) {
                 if (lSSID != mWifiInformation.SSID) {
-                    mPacketConverter.FillWiFiInformation(lData, mWifiInformation);
+                    mPacketConverter.Fill80211WiFiInformation(lData, mWifiInformation);
                     Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
                 }
             }

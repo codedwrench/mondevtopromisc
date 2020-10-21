@@ -146,8 +146,8 @@ int FillChannelInfo(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInf
     return 1;
 }
 
-bool PacketConverter::FillWiFiInformation(std::string_view                              aData,
-                                          IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo)
+bool PacketConverter::Fill80211WiFiInformation(std::string_view                              aData,
+                                               IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo)
 {
     bool lReturn{false};
 

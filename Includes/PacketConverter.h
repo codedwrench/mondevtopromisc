@@ -88,7 +88,7 @@ public:
      * @param aWifiInfo - Wireless information to fill.
      * @return true if successful.
      */
-    bool FillWiFiInformation(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo);
+    bool Fill80211WiFiInformation(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWifiInfo);
 
     /**
      * Checks if the provided data is part of a data packet.
