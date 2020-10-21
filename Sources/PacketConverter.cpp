@@ -203,7 +203,7 @@ bool PacketConverter::Is80211QOS(std::string_view aData)
 
 bool PacketConverter::Is80211QOSRetry(std::string_view aData)
 {
-    return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength()) + 1 == Net_80211_Constants::cDataQOSRetryFlag;
+    return GetRawData<uint8_t>(aData, mRadioTapReader.GetLength() + 1) == Net_80211_Constants::cDataQOSRetryFlag;
 }
 
 bool PacketConverter::Is80211NullFunc(std::string_view aData)
