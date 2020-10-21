@@ -9,9 +9,11 @@ As of right now it is a working proof of concept where you can receive and send 
 - Intel Centrino Wireless-N 1000 (iwlwifi)
 - Intel Centrino Advanced-N 6205 (iwlwifi)
 - WTXUP Ralink RT3070 (rt2800usb)
+- TP-Link TL-WN727N v1 (Ralink rt3070 (rt2800usb))
 - TP-Link TL-WN823N V2 (Realtek rtl8192eu (kimocoder/rtl8192eu))
 - Dell Wireless 1390 (Broadcom BCM4311 (b43)) with the following patch: https://gist.github.com/codedwrench/8d7916d63993574e1dd089a62dd523a9
 - Hercules Guillemot HWGUm-54 (rtl8192su (codedwrench/rtl8192su))
+- NetGear, Inc. WNA1100 Wireless-N 150 (Atheros 9271 (ath9k_htc))
 
 ## How to compile
 
@@ -88,7 +90,7 @@ sudo ./mondevtopromisc
 ## Known issues
 - Packet injection on Windows does not work.
 - Resizing the window in Windows causes the window to corrupt due to Windows not providing the right size hints.
-- Packet injection fails when the packet is at an MTU of 1500 (max size), might be able to work around that by setting a higher MTU in the WiFi card. So far this made Freedom Wars and PSP Gamesharing fail to work.
+- Packet injection fails when the packet is at an MTU of 1500 (max size), solved by setting a higher MTU in the WiFi card.
 
 ## Contributing
 See [Contributing](CONTRIBUTING.md)
