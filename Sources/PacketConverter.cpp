@@ -470,7 +470,8 @@ void PacketConverter::SetRadioTap(bool aRadioTap)
     mRadioTap = aRadioTap;
 }
 
-uint64_t PacketConverter::SwapMacEndian(uint64_t aMac) {
+uint64_t PacketConverter::SwapMacEndian(uint64_t aMac)
+{
     // Little- to Big endian
     aMac = bswap_64(aMac);
     return aMac >> 16U;

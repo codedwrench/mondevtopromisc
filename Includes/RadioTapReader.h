@@ -70,6 +70,27 @@ public:
      */
     [[nodiscard]] uint16_t GetChannelFlags() const;
 
+    /**
+     * Gets MCS flags in radiotap header.
+     * @note Has to be called after running FillRadioTapParameters.
+     * @return the MCS flags in the radiotap header.
+     */
+    [[nodiscard]] uint8_t GetMCSFlags() const;
+
+    /**
+     * Gets known MCS info in radiotap header.
+     * @note Has to be called after running FillRadioTapParameters.
+     * @return the known MCS info in the radiotap header.
+     */
+    [[nodiscard]] uint8_t GetKnownMCSInfo() const;
+
+    /**
+     * Gets MCS info in radiotap header.
+     * @note Has to be called after running FillRadioTapParameters.
+     * @return the MCS info in the radiotap header.
+     */
+    [[nodiscard]] uint8_t GetMCSInfo() const;
+
 private:
     uint16_t mLength{0};
     uint32_t mPresentFlags{RadioTap_Constants::cSendPresentFlags};
@@ -77,4 +98,7 @@ private:
     uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
     uint16_t mFrequency{RadioTap_Constants::cChannel};
     uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
+    uint8_t  mKnownMCSInfo;
+    uint8_t  mMCSFlags;
+    uint8_t  mMCSInfo;
 };

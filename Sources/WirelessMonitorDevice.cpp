@@ -137,7 +137,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
         if (mAcknowledgePackets) {
             // If it's not a broadcast frame, acknowledge the packet.
             if (mPacketConverter.GetDestinationMac(lData) != 0xFFFFFFFFFFFF) {
-                uint64_t               lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
+                uint64_t lUnconvertedSourceMac{mPacketConverter.GetSourceMac(lData)};
                 // Big- to Little endian
                 lUnconvertedSourceMac = mPacketConverter.SwapMacEndian(lUnconvertedSourceMac);
 
