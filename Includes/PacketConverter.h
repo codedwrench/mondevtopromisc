@@ -145,6 +145,8 @@ public:
      * 802.11 header and removing the 802.3 header.
      * @param aData - The packet data to convert.
      * @param aBSSID - The BSSID to use when constructing the packet.
+     * @param aFrequency - The frequency to put in.
+     * @param aMaxRate - The data rate to put in.
      * @return converted packet data, empty string if failed.
      */
     std::string ConvertPacketTo80211(std::string_view aData, uint64_t aBSSID, uint16_t aFrequency, uint8_t aMaxRate);

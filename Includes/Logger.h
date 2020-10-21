@@ -43,6 +43,9 @@ public:
         ERROR      /**< Lowest level */
     };
 
+    /**
+     * Contains log levels as strings, to be used for conversion.
+     */
     static constexpr std::array<std::string_view, 5> cLevelTexts{"Trace", "Debug", "Info", "Warning", "Error"};
 
     /**
