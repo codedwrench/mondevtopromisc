@@ -150,7 +150,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
             }
         }
 
-        if (mSendReceivedData && (mSendReceiveDevice != nullptr) /*&& !mPacketConverter.Is80211QOSRetry(lData)*/) {
+        if (mSendReceivedData && (mSendReceiveDevice != nullptr) && !mPacketConverter.Is80211QOSRetry(lData)) {
             std::string lConvertedData = mPacketConverter.ConvertPacketTo8023(lData);
             if (!lConvertedData.empty()) {
                 mSendReceiveDevice->Send(lConvertedData);
@@ -272,7 +272,7 @@ bool WirelessMonitorDevice::StartReceiverThread()
                             "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
                             Logger::Level::DEBUG);
                     }
-                    // No sleep here should be okay
+                    std::this_thread::sleep_for(std::chrono::microseconds(1));
                 }
 
                 mSendReceivedData = lSendReceivedDataOld;
