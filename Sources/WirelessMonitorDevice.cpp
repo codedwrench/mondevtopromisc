@@ -99,7 +99,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
 
         for (auto& lFilter : mSSIDFilter) {
             if (lSSID.find(lFilter) != std::string::npos) {
-                if (lSSID != mWifiInformation.SSID) {
+                if ((lSSID != mWifiInformation.SSID) || (mWifiInformation.BSSID != mPacketConverter.GetBSSID(lData))) {
                     mPacketConverter.Fill80211WiFiInformation(lData, mWifiInformation);
                     Logger::GetInstance().Log("SSID switched:" + lSSID, Logger::Level::DEBUG);
                 }
@@ -146,6 +146,7 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
 
                 std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(
                     lSourceMac, mWifiInformation.Frequency, mWifiInformation.MaxRate)};
+
                 Send(lAcknowledgementFrame, mWifiInformation, false);
             }
         }
@@ -156,7 +157,6 @@ bool WirelessMonitorDevice::ReadCallback(const unsigned char* aData, const pcap_
                 mSendReceiveDevice->Send(lConvertedData);
             }
         }
-
 
         lReturn = true;
     }
