@@ -6,12 +6,12 @@
  *
  **/
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <pcap/pcap.h>
 
-#include "ISendReceiveDevice.h"
 #include "NetworkingHeaders.h"
 
 namespace IPCapDevice_Constants
@@ -25,13 +25,19 @@ namespace IPCapDevice_Constants
     };
 }  // namespace IPCapDevice_Constants
 
+class IConnector;
 
 /**
  * Interface for pcap devices, either file based or device based.
  */
-class IPCapDevice : public ISendReceiveDevice
+class IPCapDevice
 {
 public:
+    /**
+     * Closes the PCAP device.
+     */
+    virtual void Close() = 0;
+
     /**
      * Opens the PCAP device so it can be used for capture.
      * @param aName - Name of the interface or file to use.
@@ -64,8 +70,19 @@ public:
     /**
      * Sends data over device/file if supported.
      * @param aData - Data to send.
-     * @param aWirelessInformation - Information needed to send monitor mode information.
      * @return true if successful, false on failure or unsupported.
      */
-    virtual bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWirelessInformation) = 0;
+    virtual bool Send(std::string_view aData) = 0;
+
+    /**
+     * Sets outgoing connection.
+     * @param aDevice - Device to use as the outgoing connection.
+     */
+    virtual void SetConnector(std::shared_ptr<IConnector> aDevice) = 0;
+
+    /**
+     * Starts receiving on device.
+     * @return true if successful (for a file based device this will start replaying the capture).
+     */
+    virtual bool StartReceiverThread() = 0;
 };

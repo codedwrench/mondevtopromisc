@@ -80,7 +80,7 @@ add_executable(mondevtopromisc main.cpp
         Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
         Sources/WindowModel.cpp
-        Sources/WirelessMonitorDevice.cpp
+        Sources/MonitorDevice.cpp
         Sources/XLinkKaiConnection.cpp
         Sources/UserInterface/Button.cpp
         Sources/UserInterface/CheckBox.cpp
@@ -93,13 +93,12 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/WindowController.cpp
         Sources/UserInterface/XLinkWindow.cpp
         Includes/IPCapDevice.h
-        Includes/ISendReceiveDevice.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h
         Includes/PacketConverter.h
         Includes/PCapReader.h
         Includes/RadioTapReader.h
-        Includes/WirelessMonitorDevice.h
+        Includes/MonitorDevice.h
         Includes/XLinkKaiConnection.h
         Includes/UserInterface/Button.h
         Includes/UserInterface/CheckBox.h
@@ -114,7 +113,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/WindowController.h
 	    Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h
-        ${EXTRA_INCLUDES})
+        ${EXTRA_INCLUDES} Includes/IConnector.h Sources/Handler80211.cpp Includes/Handler80211.h Includes/NetConversionFunctions.h)
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
 target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})

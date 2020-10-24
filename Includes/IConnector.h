@@ -1,30 +1,26 @@
 #pragma once
 
-/* Copyright (c) 2020 [Rick de Bondt] - ISendReceiveDevice.h
+/* Copyright (c) 2020 [Rick de Bondt] - IConnector.h
  *
- * This file contains an interface for devices that can receive or send data.
+ * This file contains an interface for outside connections, either file based or device based.
  *
  **/
 
 #include <memory>
 #include <string>
 
+class IPCapDevice;
+
 /**
- * Interface for devices that can receive or send data.
+ * Interface for outside connections.
  */
-class ISendReceiveDevice
+class IConnector
 {
 public:
     /**
      * Closes the device/file.
      */
     virtual void Close() = 0;
-
-    /**
-     * Returns last received data as string.
-     * @return a string containing the data.
-     */
-    virtual std::string LastDataToString() = 0;
 
     /**
      * Reads the next data from the device or file.
@@ -40,8 +36,14 @@ public:
     virtual bool Send(std::string_view aData) = 0;
 
     /**
-     * Allows sending or receiving over different device.
+     * Allows sending over different device.
      * @param aDevice - Device to use.
      */
-    virtual void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) = 0;
+    virtual void SetIncomingConnection(std::shared_ptr<IPCapDevice> aDevice) = 0;
+
+    /**
+     * Starts receiving network messages from Connector.
+     * @return True if successful.
+     */
+    virtual bool StartReceiverThread() = 0;
 };

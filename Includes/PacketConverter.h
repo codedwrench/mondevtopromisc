@@ -6,8 +6,10 @@
  *
  **/
 
+#include <array>
 #include <string>
 
+#include "../Includes/NetConversionFunctions.h"
 #include "../Includes/RadioTapReader.h"
 #include "IPCapDevice.h"
 #include "NetworkingHeaders.h"
@@ -31,21 +33,6 @@ public:
      * @param aData - Packet to dissect.
      */
     void Update(std::string_view aData);
-
-    /**
-     * Converts a mac address string in format (xx:xx:xx:xx:xx:xx) to an int, has no safety build in for invalid
-     * strings!
-     * @param aMac - The mac address string to convert to an int.
-     * @return int with the converted mac address.
-     */
-    static uint64_t MacToInt(std::string_view aMac);
-
-    /**
-     * Swaps endianness of Mac.
-     * @param aMac - Mac to swap.
-     * @return swapped mac.
-     */
-    static uint64_t SwapMacEndian(uint64_t aMac);
 
     /**
      * Check if the provided data is part of a beacon packet.
@@ -157,13 +144,6 @@ public:
      * radiotap header
      */
     void SetRadioTap(bool aRadioTap);
-
-    /**
-     * Converts a channel into a frequency.
-     * @param aChannel - Channel to convert.
-     * @return frequency as int or -1 if invalid.
-     */
-    static int ConvertChannelToFrequency(int aChannel);
 
     /**
      * Creaetes an acknowledgement frame based on MAC-address.

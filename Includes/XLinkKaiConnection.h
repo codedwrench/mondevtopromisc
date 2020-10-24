@@ -11,6 +11,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include "IConnector.h"
 #include "IPCapDevice.h"
 
 namespace XLinkKai_Constants
@@ -52,7 +53,7 @@ using namespace XLinkKai_Constants;
 /**
  * Class that connects to XLink Kai and sends and receives data from and to XLink Kai.
  */
-class XLinkKaiConnection : public ISendReceiveDevice
+class XLinkKaiConnection : public IConnector
 {
 public:
     XLinkKaiConnection() = default;
@@ -86,13 +87,7 @@ public:
      */
     bool ReadNextData() override;
 
-    std::string LastDataToString() override;
-
-    /**
-     * Starts receiving network messages from XLink Kai.
-     * @return True if successful.
-     */
-    bool StartReceiverThread();
+    bool StartReceiverThread() override;
 
     /**
      * Sends a message to Xlink Kai.
@@ -112,7 +107,7 @@ public:
      */
     void SetPort(unsigned int aPort);
 
-    void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
+    void SetIncomingConnection(std::shared_ptr<IPCapDevice> aDevice) override;
 
 private:
     /**
@@ -132,12 +127,12 @@ private:
 
     std::array<char, cMaxLength> mData{};
     // Raw ethernet data received from XLink Kai
-    std::string                         mEthernetData{};
-    std::string                         mIp{cIp};
-    unsigned int                        mPort{cPort};
-    boost::asio::io_service             mIoService{};
-    boost::asio::ip::udp::socket        mSocket{mIoService};
-    boost::asio::ip::udp::endpoint      mRemote{};
-    std::shared_ptr<boost::thread>      mReceiverThread{nullptr};
-    std::shared_ptr<ISendReceiveDevice> mSendReceiveDevice{nullptr};
+    std::string                    mEthernetData{};
+    std::string                    mIp{cIp};
+    unsigned int                   mPort{cPort};
+    boost::asio::io_service        mIoService{};
+    boost::asio::ip::udp::socket   mSocket{mIoService};
+    boost::asio::ip::udp::endpoint mRemote{};
+    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
+    std::shared_ptr<IPCapDevice>   mIncomingConnection{nullptr};
 };

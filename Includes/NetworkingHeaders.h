@@ -16,6 +16,16 @@
 #define PACK(__Declaration__) __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
 #endif
 
+/**
+ * This is the Acknowledgement header.
+ **/
+PACK(struct AcknowledgementHeader {
+    uint16_t /*__le16*/ frame_control;   /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
+    uint16_t /*__le16*/ duration_id;     /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
+    uint8_t             recv_address[6]; /**< Receiver address. */
+    // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
+});
+
 // Defined in include/linux/ieee80211.h
 /**
  * This is the IEEE80211 header.
@@ -30,16 +40,87 @@ PACK(struct ieee80211_hdr {
     // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
 });
 
+/**
+ * Enum containing the main 80211 packet types: Control, Data, Management
+ */
+enum class Main80211PacketType
+{
+    Control = 0, /**< Packet is a Control Frame. */
+    Data,        /**< Packet is Data Frame. */
+    Management,  /**< Packet is a Management Frame. */
+    None         /**< Type is unknown. */
+};
 
 /**
- * This is the Acknowledgement header.
- **/
-PACK(struct AcknowledgementHeader {
-    uint16_t /*__le16*/ frame_control;   /**< see https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control. */
-    uint16_t /*__le16*/ duration_id;     /**< Duration or ID, depending on frametype, see 802.11-2016 standard. */
-    uint8_t             recv_address[6]; /**< Receiver address. */
-    // uint8_t addr4[6]; /**< Usually not used. Depends on framecontrol. */
-});
+ * Enum containing the 80211 Control types.
+ */
+enum class Control80211PacketType
+{
+    ACK = 0,         /**< Packet contains an ACK. */
+    BlockAck,        /**< Packet contains a BlockAck. */
+    BlockAckRequest, /**< Packet contains a BlockAckRequest. */
+    CTS,             /**< Packet contains a CTS. */
+    PSPoll,          /**< Packet contains a PSPoll. */
+    RTS,             /**< Packet contains an RTS. */
+    TACK,            /**< Packet contains a TACK. */
+    Trigger,         /**< Packet contains a Trigger. */
+    None,            /**< Packet unknown. */
+};
+
+/**
+ * Enum containing the 80211 Control types.
+ */
+enum class Data80211PacketType
+{
+    CFACK = 0,          /**< Packet contains a CFACK. */
+    CFACKCFPoll,        /**< Packet contains a CFACKCFPoll. */
+    CFPoll,             /**< Packet contains a CFPoll. */
+    Data,               /**< Packet contains a Data. */
+    DataCFACK,          /**< Packet contains a DataCFACK. */
+    DataCFACKCFPoll,    /**< Packet contains a DataCFACKCFPoll. */
+    DataCFPoll,         /**< Packet contains a DataCFPoll. */
+    Null,               /**< Packet contains a Null. */
+    QoSCFACKCFPoll,     /**< Packet QoSCFACKCFPoll. */
+    QoSCFPoll,          /**< Packet QoSCFPoll. */
+    QoSData,            /**< Packet QoSData. */
+    QoSDataCFACK,       /**< Packet QoSDataCFACK. */
+    QoSDataCFACKCFPoll, /**< Packet QoSDataCFACKCFPoll. */
+    QoSDataCFPoll,      /**< Packet QoSDataCFPoll. */
+    QoSNull,            /**< Packet QoSNull. */
+    None,               /**< Packet unknown. */
+};
+
+/**
+ * Enum containing the 80211 Management types.
+ */
+enum class Management80211PacketType
+{
+    Action = 0,            /**< Packet contains an Action. */
+    ActionNoAck,           /**< Packet contains an ActionNoAck. */
+    Authentication,        /**< Packet contains an Authentication. */
+    AssociationRequest,    /**< Packet contains an AssociationRequest. */
+    AssociationResponse,   /**< Packet contains an AssociationResponse. */
+    Beacon,                /**< Packet contains a beacon frame. */
+    Deauthentication,      /**< Packet contains an Deauthentication. */
+    Disassociation,        /**< Packet contains an Disassociation. */
+    ReassociationRequest,  /**< Packet contains an ReassociationRequest. */
+    ReassociationResponse, /**< Packet contains an ReassociationResponse. */
+    ProbeRequest,          /**< Packet contains an ProbeRequest. */
+    ProbeResponse,         /**< Packet contains an ProbeResponse. */
+    None,                  /**< Packet unknown. */
+};
+
+/**
+ * Enum containing PhysicalDeviceHeaderType, like RadioTap.
+ * @note Only RadioTap supported as of now.
+ */
+enum class PhysicalDeviceHeaderType
+{
+    RadioTap = 0, /**< RadioTap type. */
+    Prism,        /**< Old PRISM type. */
+    AVS,          /**< Even older AVS type. */
+    None          /**< No Physical device header at all. */
+};
 
 /**
  * The Radiotap header needed to construct a WiFi packet.
@@ -74,6 +155,18 @@ PACK(struct RadioTapHeader {
     // Timestamp
     uint32_t present_flags; /**< Which parts of the RadioTap header are present. See source code for more info. */
 });
+
+namespace Net_8023_Constants
+{
+    static constexpr uint8_t cDestinationAddressIndex{0};
+    static constexpr uint8_t cDestinationAddressLength{6};
+    static constexpr uint8_t cSourceAddressIndex{6};
+    static constexpr uint8_t cSourceAddressLength{6};
+    static constexpr uint8_t cEtherTypeIndex{12};
+    static constexpr uint8_t cEtherTypeLength{2};
+    static constexpr uint8_t cDataIndex{14};
+    static constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
+}  // namespace Net_8023_Constants
 
 namespace Net_80211_Constants
 {
@@ -124,18 +217,6 @@ namespace Net_80211_Constants
     static constexpr uint8_t cFCSLength{4};
     static constexpr uint8_t cDataHeaderLength{c80211DataHeaderLength + cLLCLength};
 }  // namespace Net_80211_Constants
-
-namespace Net_8023_Constants
-{
-    static constexpr uint8_t cDestinationAddressIndex{0};
-    static constexpr uint8_t cDestinationAddressLength{6};
-    static constexpr uint8_t cSourceAddressIndex{6};
-    static constexpr uint8_t cSourceAddressLength{6};
-    static constexpr uint8_t cEtherTypeIndex{12};
-    static constexpr uint8_t cEtherTypeLength{2};
-    static constexpr uint8_t cDataIndex{14};
-    static constexpr uint8_t cHeaderLength{cDestinationAddressLength + cSourceAddressLength + cEtherTypeLength};
-}  // namespace Net_8023_Constants
 
 namespace RadioTap_Constants
 {

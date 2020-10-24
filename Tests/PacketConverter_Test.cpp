@@ -9,14 +9,14 @@
 
 #include "../Includes/PCapReader.h"
 
-class ISendReceiveDeviceMock : public ISendReceiveDevice
+class IConnectorMock : public IConnector
 {
 public:
     MOCK_METHOD(void, Close, ());
     MOCK_METHOD(std::string, LastDataToString, ());
     MOCK_METHOD(bool, ReadNextData, ());
     MOCK_METHOD(bool, Send, (std::string_view aData));
-    MOCK_METHOD(void, SetSendReceiveDevice, (std::shared_ptr<ISendReceiveDevice> aDevice));
+    MOCK_METHOD(void, SetSendReceiveDevice, (std::shared_ptr<IConnector> aDevice));
 };
 class PacketConverterTest : public ::testing::Test
 {
@@ -127,12 +127,12 @@ using ::testing::Return;
 using ::testing::SaveArg;
 TEST_F(PacketConverterTest, CopyBeaconInformation)
 {
-    std::shared_ptr<ISendReceiveDevice> lSendReceiveDeviceMock{std::make_shared<ISendReceiveDeviceMock>()};
-    PCapReader                          lPCapReader{};
-    PCapReader                          lPCapExpectedReader{};
-    pcap_t*                             lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
-    const std::string                   lOutputFileName = "../Tests/Output/MonitorBeaconChange.pcap";
-    pcap_dumper_t*                      lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+    std::shared_ptr<IConnector> lSendReceiveDeviceMock{std::make_shared<IConnectorMock>()};
+    PCapReader                  lPCapReader{};
+    PCapReader                  lPCapExpectedReader{};
+    pcap_t*                     lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
+    const std::string           lOutputFileName = "../Tests/Output/MonitorBeaconChange.pcap";
+    pcap_dumper_t*              lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
 
     std::vector<std::string> lSSIDFilter{"T#STNET"};
     lPCapReader.Open("../Tests/Input/MonitorHelloWorld.pcapng", lSSIDFilter, 2412);
@@ -142,7 +142,7 @@ TEST_F(PacketConverterTest, CopyBeaconInformation)
 
     std::string lSendBuffer{};
 
-    EXPECT_CALL(*std::dynamic_pointer_cast<ISendReceiveDeviceMock>(lSendReceiveDeviceMock), Send(_))
+    EXPECT_CALL(*std::dynamic_pointer_cast<IConnectorMock>(lSendReceiveDeviceMock), Send(_))
         .WillRepeatedly(DoAll(SaveArg<0>(&lSendBuffer), Return(true)));
     while (lPCapReader.ReadNextData()) {
         // Convert the packet and "Send" it so we get the converted information

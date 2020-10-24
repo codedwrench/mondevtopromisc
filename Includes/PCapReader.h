@@ -23,7 +23,7 @@ public:
 
     bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) override;
 
-    bool ReadNextData() override;
+    bool ReadNextData();
 
     const unsigned char* GetData() override;
 
@@ -33,11 +33,11 @@ public:
 
     std::string DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
 
-    std::string LastDataToString() override;
+    std::string LastDataToString();
 
-    bool Send(std::string_view aData) override;
+    bool Send(std::string_view aData);
 
-    bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation) override;
+    bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation);
 
     /**
      * Replays packets from file to injection device / XLink Kai.
@@ -49,7 +49,7 @@ public:
      */
     std::pair<bool, unsigned int> ReplayPackets(bool aMonitorCapture = false, bool aHasRadioTap = false);
 
-    void SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice) override;
+    void SetConnector(std::shared_ptr<IConnector> aDevice) override;
 
     /**
      * Constructs and replays a packet to given interface.
@@ -70,6 +70,6 @@ private:
     pcap_pkthdr*                                 mHeader{nullptr};
     std::vector<std::string>                     mSSIDFilter{};
     unsigned int                                 mPacketCount{0};
-    std::shared_ptr<ISendReceiveDevice>          mSendReceiveDevice{nullptr};
+    std::shared_ptr<IConnector>                  mSendReceiveDevice{nullptr};
     IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
 };

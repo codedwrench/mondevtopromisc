@@ -151,12 +151,12 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                 // is e;e;
                 lCommand = lData.substr(0, cEthernetDataString.size());
                 if (lCommand == cEthernetDataString) {
-                    if (mSendReceiveDevice != nullptr) {
+                    if (mIncomingConnection != nullptr) {
                         // Strip e;e;
                         lData =
                             lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
                         mEthernetData = lData;
-                        mSendReceiveDevice->Send(lData);
+                        mIncomingConnection->Send(lData);
                     }
                 }
             } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {
@@ -236,22 +236,12 @@ void XLinkKaiConnection::Close()
     }
 }
 
-std::string XLinkKaiConnection::LastDataToString()
-{
-    std::string lData{mEthernetData};
-
-    // After receiving data clear string so you can't get data twice.
-    mEthernetData.clear();
-
-    return lData;
-}
-
 void XLinkKaiConnection::SetPort(unsigned int aPort)
 {
     mPort = aPort;
 }
 
-void XLinkKaiConnection::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
+void XLinkKaiConnection::SetIncomingConnection(std::shared_ptr<IPCapDevice> aDevice)
 {
-    mSendReceiveDevice = aDevice;
+    mIncomingConnection = aDevice;
 }

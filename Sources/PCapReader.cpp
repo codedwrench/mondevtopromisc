@@ -205,7 +205,7 @@ bool PCapReader::Send(std::string_view /*aData*/)
     return false;
 }
 
-void PCapReader::SetSendReceiveDevice(std::shared_ptr<ISendReceiveDevice> aDevice)
+void PCapReader::SetConnector(std::shared_ptr<IConnector> aDevice)
 {
     mSendReceiveDevice = aDevice;
 }

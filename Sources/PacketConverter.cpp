@@ -2,17 +2,6 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - PacketConverter.cpp */
 
-#if defined(_MSC_VER) or defined(__MINGW32__)
-#include <stdlib.h>
-#define bswap_16(x) _byteswap_ushort(x)
-#define bswap_32(x) _byteswap_ulong(x)
-#define bswap_64(x) _byteswap_uint64(x)
-#else
-
-#include <byteswap.h>  // bswap_16 bswap_32 bswap_64
-
-#endif
-
 #include <iostream>
 #include <numeric>
 #include <regex>
@@ -20,18 +9,6 @@
 
 #include "../Includes/Logger.h"
 #include "../Includes/NetworkingHeaders.h"
-
-// Helper function to get raw data more easily
-template<typename Type> Type GetRawData(std::string_view aData, unsigned int aIndex)
-{
-    return (*reinterpret_cast<const Type*>(aData.data() + aIndex));
-}
-
-std::string GetRawString(std::string_view aData, unsigned int aIndex, unsigned int aLength)
-{
-    const char* lData{reinterpret_cast<const char*>(aData.data() + aIndex)};
-    return std::string(lData, aLength);
-}
 
 void PacketConverter::Update(std::string_view aData)
 {
@@ -42,36 +19,6 @@ void PacketConverter::Update(std::string_view aData)
         // If no radiotap present, reset parameters to default
         mRadioTapReader.Reset();
     }
-}
-
-// Skip use of ether_aton because that could hinder Windows support
-uint64_t PacketConverter::MacToInt(std::string_view aMac)
-{
-    uint64_t lResult{0};
-
-    if (!aMac.empty()) {
-        std::istringstream lStringStream(aMac.data());
-        uint64_t           lNibble{0};
-        lStringStream >> std::hex;
-        while (lStringStream >> lNibble) {
-            lResult = (lResult << 8) + lNibble;
-            lStringStream.get();
-        }
-    }
-
-    return lResult;
-}
-
-int PacketConverter::ConvertChannelToFrequency(int aChannel)
-{
-    int lReturn{-1};
-
-    // 2.4GHz, steps of 5hz.
-    if (aChannel >= 1 && aChannel <= 13) {
-        lReturn = 2412 + ((aChannel - 1) * 5);
-    }
-
-    return lReturn;
 }
 
 PacketConverter::PacketConverter(bool aRadioTap)
@@ -141,7 +88,7 @@ int FillChannelInfo(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInf
     // Don't need to know the size for channel, so just grab the channel immediately
     auto lChannel = GetRawData<uint8_t>(aData, aIndex + 1);
 
-    aWifiInfo.Frequency = PacketConverter::ConvertChannelToFrequency(lChannel);
+    aWifiInfo.Frequency = ConvertChannelToFrequency(lChannel);
 
     return 1;
 }
@@ -468,11 +415,4 @@ std::string PacketConverter::ConstructAcknowledgementFrame(std::array<uint8_t, 6
 void PacketConverter::SetRadioTap(bool aRadioTap)
 {
     mRadioTap = aRadioTap;
-}
-
-uint64_t PacketConverter::SwapMacEndian(uint64_t aMac)
-{
-    // Little- to Big endian
-    aMac = bswap_64(aMac);
-    return aMac >> 16U;
 }

@@ -9,8 +9,9 @@
 #undef timeout
 
 #include "Includes/Logger.h"
+#include "Includes/MonitorDevice.h"
+#include "Includes/NetConversionFunctions.h"
 #include "Includes/UserInterface/WindowController.h"
-#include "Includes/WirelessMonitorDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 
 namespace
@@ -68,11 +69,11 @@ int main(int argc, char* argv[])
     WindowController         lWindowController(mWindowModel);
     lWindowController.SetUp();
 
-    std::shared_ptr<WirelessMonitorDevice> lMonitorDevice{std::make_shared<WirelessMonitorDevice>()};
-    std::shared_ptr<XLinkKaiConnection>    lXLinkKaiConnection{std::make_shared<XLinkKaiConnection>()};
+    std::shared_ptr<MonitorDevice>      lMonitorDevice{std::make_shared<MonitorDevice>()};
+    std::shared_ptr<XLinkKaiConnection> lXLinkKaiConnection{std::make_shared<XLinkKaiConnection>()};
 
-    lMonitorDevice->SetSendReceiveDevice(lXLinkKaiConnection);
-    lXLinkKaiConnection->SetSendReceiveDevice(lMonitorDevice);
+    lMonitorDevice->SetConnector(lXLinkKaiConnection);
+    lXLinkKaiConnection->SetIncomingConnection(lMonitorDevice);
 
     bool lSuccess{false};
 
@@ -100,12 +101,10 @@ int main(int argc, char* argv[])
 
                     // Now set up the wifi interface
                     if (lSuccess) {
-                        if (lMonitorDevice->Open(
-                                mWindowModel.mWifiAdapter,
-                                lSSIDFilters,
-                                PacketConverter::ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
-                            lMonitorDevice->SetSourceMACToFilter(
-                                PacketConverter::MacToInt(mWindowModel.mOnlyAcceptFromMac));
+                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter,
+                                                 lSSIDFilters,
+                                                 ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
+                            lMonitorDevice->SetSourceMACToFilter(MacToInt(mWindowModel.mOnlyAcceptFromMac));
                             lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                             if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
