@@ -45,10 +45,10 @@ PACK(struct ieee80211_hdr {
  */
 enum class Main80211PacketType
 {
-    Control = 0, /**< Packet is a Control Frame. */
-    Data,        /**< Packet is Data Frame. */
-    Management,  /**< Packet is a Management Frame. */
-    None         /**< Type is unknown. */
+    Control = 0,
+    Data,
+    Management,
+    None
 };
 
 /**
@@ -56,15 +56,15 @@ enum class Main80211PacketType
  */
 enum class Control80211PacketType
 {
-    ACK = 0,         /**< Packet contains an ACK. */
-    BlockAck,        /**< Packet contains a BlockAck. */
-    BlockAckRequest, /**< Packet contains a BlockAckRequest. */
-    CTS,             /**< Packet contains a CTS. */
-    PSPoll,          /**< Packet contains a PSPoll. */
-    RTS,             /**< Packet contains an RTS. */
-    TACK,            /**< Packet contains a TACK. */
-    Trigger,         /**< Packet contains a Trigger. */
-    None,            /**< Packet unknown. */
+    ACK = 0,
+    BlockAck,
+    BlockAckRequest,
+    CTS,
+    PSPoll,
+    RTS,
+    TACK,
+    Trigger,
+    None
 };
 
 /**
@@ -72,22 +72,22 @@ enum class Control80211PacketType
  */
 enum class Data80211PacketType
 {
-    CFACK = 0,          /**< Packet contains a CFACK. */
-    CFACKCFPoll,        /**< Packet contains a CFACKCFPoll. */
-    CFPoll,             /**< Packet contains a CFPoll. */
-    Data,               /**< Packet contains a Data. */
-    DataCFACK,          /**< Packet contains a DataCFACK. */
-    DataCFACKCFPoll,    /**< Packet contains a DataCFACKCFPoll. */
-    DataCFPoll,         /**< Packet contains a DataCFPoll. */
-    Null,               /**< Packet contains a Null. */
-    QoSCFACKCFPoll,     /**< Packet QoSCFACKCFPoll. */
-    QoSCFPoll,          /**< Packet QoSCFPoll. */
-    QoSData,            /**< Packet QoSData. */
-    QoSDataCFACK,       /**< Packet QoSDataCFACK. */
-    QoSDataCFACKCFPoll, /**< Packet QoSDataCFACKCFPoll. */
-    QoSDataCFPoll,      /**< Packet QoSDataCFPoll. */
-    QoSNull,            /**< Packet QoSNull. */
-    None,               /**< Packet unknown. */
+    CFACK = 0,
+    CFACKCFPoll,
+    CFPoll,
+    Data,
+    DataCFACK,
+    DataCFACKCFPoll,
+    DataCFPoll,
+    Null,
+    QoSCFACKCFPoll,
+    QoSCFPoll,
+    QoSData,
+    QoSDataCFACK,
+    QoSDataCFACKCFPoll,
+    QoSDataCFPoll,
+    QoSNull,
+    None
 };
 
 /**
@@ -95,19 +95,19 @@ enum class Data80211PacketType
  */
 enum class Management80211PacketType
 {
-    Action = 0,            /**< Packet contains an Action. */
-    ActionNoAck,           /**< Packet contains an ActionNoAck. */
-    Authentication,        /**< Packet contains an Authentication. */
-    AssociationRequest,    /**< Packet contains an AssociationRequest. */
-    AssociationResponse,   /**< Packet contains an AssociationResponse. */
-    Beacon,                /**< Packet contains a beacon frame. */
-    Deauthentication,      /**< Packet contains an Deauthentication. */
-    Disassociation,        /**< Packet contains an Disassociation. */
-    ReassociationRequest,  /**< Packet contains an ReassociationRequest. */
-    ReassociationResponse, /**< Packet contains an ReassociationResponse. */
-    ProbeRequest,          /**< Packet contains an ProbeRequest. */
-    ProbeResponse,         /**< Packet contains an ProbeResponse. */
-    None,                  /**< Packet unknown. */
+    Action = 0,
+    ActionNoAck,
+    Authentication,
+    AssociationRequest,
+    AssociationResponse,
+    Beacon,
+    Deauthentication,
+    Disassociation,
+    ReassociationRequest,
+    ReassociationResponse,
+    ProbeRequest,
+    ProbeResponse,
+    None
 };
 
 /**

@@ -28,6 +28,16 @@ public:
     explicit Handler80211(PhysicalDeviceHeaderType aType);
 
     /**
+     * Add the source MAC address to blacklist.
+     */
+    void AddToMACBlackList(std::vector<uint64_t> aBlackList);
+
+    /**
+     * Add the source MAC address to whitelist.
+     */
+    void AddToMACWhiteList(std::vector<uint64_t> aWhiteList);
+
+    /**
      * Clears blacklist.
      */
     void ClearMACBlackList();
@@ -38,49 +48,45 @@ public:
     void ClearMACWhiteList();
 
     /**
-     * Gets main packet type: Control/Data/Management.
-     * @return packet type.
-     */
-    Main80211PacketType GetMainPacketType();
-
-    /**
-     * Returns the type of control frame.
-     * @return control frame type.
-     */
-    Control80211PacketType GetControlPacketType();
-
-    /**
-     * Gets data frame type.
-     * @return data frame type.
-     */
-    Data80211PacketType GetDataPacketType();
-
-    /**
-     * Gets management frame type.
-     * @return management frame type.
-     */
-    Management80211PacketType GetManagementPacketType();
-
-    /**
      * Gets packet saved in this class.
      * @return string_view with data.
      */
     std::string_view GetPacket();
 
     /**
-     * Sets the source MAC addresses to blacklist.
+     * Gets the last found SSID.
+     * @note Only use with beacon frames.
      */
-    void SetMACBlackList(std::vector<uint64_t> aBlackList);
+    std::string GetSSID();
 
     /**
-     * Sets the source MAC addresses to whitelist.
+     * Checks if this MAC is not blacklisted / whitelisted.
+     * @param aMAC - MAC to check
+     * @return true if MAC address is allowed.
      */
-    void SetMACWhiteList(std::vector<uint64_t> aWhiteList);
+    bool IsMACAllowed(uint64_t aMAC);
+
+    /**
+     * Checks if this SSID is whitelisted.
+     * @param aSSID - SSID to check
+     * @return true if SSID is whitelisted.
+     */
+    bool IsSSIDAllowed(std::string_view aSSID);
+
+    /**
+     * Sets the source MAC addresses blacklist.
+     */
+    void SetMACBlackList(const std::vector<uint64_t>& aBlackList);
+
+    /**
+     * Sets the source MAC addresses whitelist.
+     */
+    void SetMACWhiteList(const std::vector<uint64_t>& aWhiteList);
 
     /**
      * Sets the SSID to filter on.
      */
-    void SetSSIDFilter(std::string_view aSSID);
+    void SetSSIDFilterList(const std::vector<std::string>& aSSIDList);
 
     /**
      * Preload data about this packet into this class.
@@ -88,17 +94,51 @@ public:
      */
     void Update(std::string_view aPacket);
 
+    /**
+     * Update used BSSID.
+     */
+    void UpdateBSSID();
+
+    /**
+     * Updates main packet type: Control/Data/Management.
+     */
+    void UpdateMainPacketType();
+
+    /**
+     * Returns the type of control frame.
+     */
+    void UpdateControlPacketType();
+
+    /**
+     * Updates data frame type.
+     */
+    void UpdateDataPacketType();
+
+    /**
+     * Updates management frame type.
+     */
+    void UpdateManagementPacketType();
+
+    /**
+     * Updates the source MAC address.
+     */
+    void UpdateSourceMac();
+
 private:
     // Save last data in this class
     std::string mLastReceivedData{};
 
-    std::vector<uint64_t> aBlackList;
-    std::vector<uint64_t> aWhiteList;
+    std::vector<uint64_t>    mBlackList{};
+    std::vector<std::string> mSSIDList{};
+    std::vector<uint64_t>    mWhiteList{};
 
     Main80211PacketType       mMainPacketType{Main80211PacketType::None};
     Control80211PacketType    mControlPacketType{Control80211PacketType::None};
     Data80211PacketType       mDataPacketType{Data80211PacketType::None};
     Management80211PacketType mManagementPacketType{Management80211PacketType::None};
+
+    uint64_t mBSSID{};
+    uint64_t mSourceMac{};
 
     std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader;
 };
