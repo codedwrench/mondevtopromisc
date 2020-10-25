@@ -12,7 +12,27 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
     }
 }
 
-std::string Handler80211::ConvertPacketTo8023()
+void Handler80211::AddToMACBlackList(uint64_t aMAC)
+{
+    mBlackList.push_back(aMAC);
+}
+
+void Handler80211::AddToMACWhiteList(uint64_t aMAC)
+{
+    mWhiteList.push_back(aMAC);
+}
+
+void Handler80211::ClearMACBlackList()
+{
+    mBlackList.clear();
+}
+
+void Handler80211::ClearMACWhiteList()
+{
+    mWhiteList.clear();
+}
+
+std::string Handler80211::ConvertPacket()
 {
     std::string lConvertedPacket{};
 
@@ -37,6 +57,8 @@ std::string Handler80211::ConvertPacketTo8023()
             case Data80211PacketType::QoSNull:
                 lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
                 lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+                break;
+            default:
                 break;
         }
 
@@ -85,6 +107,36 @@ std::string_view Handler80211::GetPacket()
     return mLastReceivedData;
 }
 
+bool Handler80211::IsBSSIDAllowed(uint64_t aBSSID) const
+{
+    return mBSSID == aBSSID;
+}
+
+bool Handler80211::IsConvertiblePacket()
+{
+    bool lReturn{false};
+
+    // Block all retries
+    if (!mQOSRetry) {
+        switch (mDataPacketType) {
+            case Data80211PacketType::Data:
+            case Data80211PacketType::DataCFACK:
+            case Data80211PacketType::DataCFACKCFPoll:
+            case Data80211PacketType::DataCFPoll:
+            case Data80211PacketType::QoSData:
+            case Data80211PacketType::QoSDataCFACK:
+            case Data80211PacketType::QoSDataCFACKCFPoll:
+            case Data80211PacketType::QoSDataCFPoll:
+                lReturn = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    return lReturn;
+}
+
 bool Handler80211::IsMACAllowed(uint64_t aMAC)
 {
     bool lReturn{false};
@@ -102,6 +154,25 @@ bool Handler80211::IsMACAllowed(uint64_t aMAC)
     return lReturn;
 }
 
+void Handler80211::UpdateQOSRetry()
+{
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        switch (mDataPacketType) {
+            case Data80211PacketType::QoSCFACKCFPoll:
+            case Data80211PacketType::QoSCFPoll:
+            case Data80211PacketType::QoSData:
+            case Data80211PacketType::QoSDataCFACK:
+            case Data80211PacketType::QoSDataCFACKCFPoll:
+            case Data80211PacketType::QoSDataCFPoll:
+            case Data80211PacketType::QoSNull:
+                mQOSRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
+                            Net_80211_Constants::cDataQOSRetryFlag;
+            default:
+                break;
+        }
+    }
+}
+
 bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
 {
     bool lReturn{false};
@@ -111,6 +182,11 @@ bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
     }
 
     return lReturn;
+}
+
+void Handler80211::SetSSIDFilterList(std::vector<std::string>& aSSIDList)
+{
+    mSSIDList = std::move(aSSIDList);
 }
 
 void Handler80211::Update(std::string_view aData)
@@ -129,11 +205,32 @@ void Handler80211::Update(std::string_view aData)
 
         switch (mMainPacketType) {
             case Main80211PacketType::Control:
-                // We don't really do anything with control frames yet, so determining the type is a waste of cycles
-                // UpdateControlPacketType();
+                UpdateControlPacketType();
+
+                if (mControlPacketType == Control80211PacketType::ACK) {
+                    SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
+                }
+
                 break;
             case Main80211PacketType::Data:
-                UpdateDataPacketType();
+                // Only do something with the data frame if we care about this network
+                if (IsBSSIDAllowed(mLockedBSSID)) {
+                    UpdateDataPacketType();
+                    UpdateQOSRetry();
+
+                    // Only save parameters on normal data types.
+                    if (!mQOSRetry) {
+                        switch (mDataPacketType) {
+                            case Data80211PacketType::Data:
+                            case Data80211PacketType::DataCFACK:
+                            case Data80211PacketType::DataCFACKCFPoll:
+                            case Data80211PacketType::DataCFPoll:
+                                SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
+                            default:
+                                break;
+                        }
+                    }
+                }
                 break;
             case Main80211PacketType::Management:
                 UpdateManagementPacketType();
@@ -141,9 +238,9 @@ void Handler80211::Update(std::string_view aData)
                 if (mManagementPacketType == Management80211PacketType::Beacon) {
                     mParameter80211Reader.Update(mLastReceivedData);
                     if (IsSSIDAllowed(mParameter80211Reader.GetSSID())) {
-                        uint64_t lBSSID = mBSSID;
                         UpdateBSSID();
-                        if (lBSSID != mBSSID) {
+                        if (mBSSID != mLockedBSSID) {
+                            mLockedBSSID = mBSSID;
                             Logger::GetInstance().Log(std::string("SSID switched:") +
                                                           mParameter80211Reader.GetSSID().data() +
                                                           " , BSSID: " + std::to_string(mBSSID),
@@ -327,5 +424,12 @@ void Handler80211::UpdateSourceMac()
         // Big- to Little endian
         lSourceMac = bswap_64(lSourceMac);
         mSourceMac = lSourceMac >> 16U;
+    }
+}
+
+void Handler80211::SavePhysicalDeviceParameters(RadioTapReader::PhysicalDeviceParameters& aParameters)
+{
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        aParameters = mPhysicalDeviceHeaderReader->ExportRadioTapParameters();
     }
 }

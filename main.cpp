@@ -101,9 +101,7 @@ int main(int argc, char* argv[])
 
                     // Now set up the wifi interface
                     if (lSuccess) {
-                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter,
-                                                 lSSIDFilters,
-                                                 ConvertChannelToFrequency(std::stoi(mWindowModel.mChannel)))) {
+                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter, lSSIDFilters)) {
                             lMonitorDevice->SetSourceMACToFilter(MacToInt(mWindowModel.mOnlyAcceptFromMac));
                             lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                             if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {

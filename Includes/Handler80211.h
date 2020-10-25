@@ -30,13 +30,15 @@ public:
 
     /**
      * Add the source MAC address to blacklist.
+     * @param aMac - MAC address to blacklist.
      */
-    void AddToMACBlackList(std::vector<uint64_t> aBlackList);
+    void AddToMACBlackList(uint64_t aMAC);
 
     /**
-     * Add the source MAC address to whitelist.
+     * Add the source MAC address to whitelist. Whitelist takes prevalence over the blacklist.
+     * @param aMac - MAC address to whitelist.
      */
-    void AddToMACWhiteList(std::vector<uint64_t> aWhiteList);
+    void AddToMACWhiteList(uint64_t aMAC);
 
     /**
      * Clears blacklist.
@@ -54,13 +56,26 @@ public:
      * @param aData - The packet data to convert.
      * @return converted packet data, empty string if failed.
      */
-    std::string ConvertPacketTo8023();
+    std::string ConvertPacket();
 
     /**
      * Gets packet saved in this class.
      * @return string_view with data.
      */
     std::string_view GetPacket();
+
+    /**
+     * Checks if this BSSID is locked onto.
+     * @param aBSSID - BSSID to check
+     * @return true if BSSID is locked onto.
+     */
+    [[nodiscard]] bool IsBSSIDAllowed(uint64_t aBSSID) const;
+
+    /**
+     * Checks if last received packet is convertible to 802.3.
+     * @return true if can be converted.
+     */
+    bool IsConvertiblePacket();
 
     /**
      * Checks if this MAC is not blacklisted / whitelisted.
@@ -70,11 +85,23 @@ public:
     bool IsMACAllowed(uint64_t aMAC);
 
     /**
+     * Checks if this QOS packet is a retry packet.
+     * @return true if it is a retry packet.
+     */
+    void UpdateQOSRetry();
+
+    /**
      * Checks if this SSID is whitelisted.
      * @param aSSID - SSID to check
      * @return true if SSID is whitelisted.
      */
     bool IsSSIDAllowed(std::string_view aSSID);
+
+    /**
+     *  Saves PhysicalDeviceParameters struct to reference.
+     *  @param aParameters - reference to struct containing those parameters.
+     */
+    void SavePhysicalDeviceParameters(RadioTapReader::PhysicalDeviceParameters& aParameters);
 
     /**
      * Sets the source MAC addresses blacklist.
@@ -89,7 +116,7 @@ public:
     /**
      * Sets the SSID to filter on.
      */
-    void SetSSIDFilterList(const std::vector<std::string>& aSSIDList);
+    void SetSSIDFilterList(std::vector<std::string>& aSSIDList);
 
     /**
      * Preload data about this packet into this class.
@@ -140,9 +167,14 @@ private:
     Data80211PacketType       mDataPacketType{Data80211PacketType::None};
     Management80211PacketType mManagementPacketType{Management80211PacketType::None};
 
-    uint64_t mBSSID{};
-    uint64_t mSourceMac{};
+    uint64_t mBSSID{0};
+    uint64_t mLockedBSSID{0};
+    bool     mQOSRetry{false};
+    uint64_t mSourceMac{0};
 
     Parameter80211Reader            mParameter80211Reader;
     std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader;
+
+    RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersControl{};
+    RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersData{};
 };

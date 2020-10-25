@@ -10,9 +10,9 @@
 
 #include <boost/thread.hpp>
 
+#include "Handler80211.h"
 #include "IConnector.h"
 #include "IPCapDevice.h"
-#include "PacketConverter.h"
 
 
 namespace WirelessMonitorDevice_Constants
@@ -29,36 +29,29 @@ using namespace WirelessMonitorDevice_Constants;
 class MonitorDevice : public IPCapDevice
 {
 public:
-    void Close() override;
-    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) override;
+    void                 Close() override;
+    std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     const unsigned char* GetData() override;
     const pcap_pkthdr*   GetHeader() override;
-    std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
+    bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
+    bool                 Send(std::string_view aData) override;
     void                 SetAcknowledgePackets(bool aAcknowledge);
+    void                 SetConnector(std::shared_ptr<IConnector> aDevice) override;
     void                 SetSourceMACToFilter(uint64_t aMac);
-    // Only use if you're planning to use the internal wifi information
-    bool Send(std::string_view aData);
-    bool Send(std::string_view aData, IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation);
-    // Extra function which will make it possible to send without converting to 802.11 specifically.
-    bool Send(std::string_view                              aData,
-              IPCapDevice_Constants::WiFiBeaconInformation& aWiFiInformation,
-              bool                                          aConvertData);
-    void SetConnector(std::shared_ptr<IConnector> aDevice) override;
-    bool StartReceiverThread() override;
+    bool                 StartReceiverThread() override;
 
 private:
-    bool                                         ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
-    bool                                         mSendReceivedData{false};
-    bool                                         mConnected{false};
-    bool                                         mAcknowledgePackets{false};
-    PacketConverter                              mPacketConverter{true};
-    uint64_t                                     mSourceMACToFilter{0};
-    const unsigned char*                         mData{nullptr};
-    std::vector<std::string>                     mSSIDFilter;
-    pcap_t*                                      mHandler{nullptr};
-    const pcap_pkthdr*                           mHeader{nullptr};
-    unsigned int                                 mPacketCount{0};
-    std::shared_ptr<IConnector>                  mConnector{nullptr};
-    std::shared_ptr<boost::thread>               mReceiverThread{nullptr};
-    IPCapDevice_Constants::WiFiBeaconInformation mWifiInformation{};
+    bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
+    void ShowPacketStatistics(const unsigned char* aData, const pcap_pkthdr* aHeader);
+
+    bool                           mAcknowledgePackets{false};
+    bool                           mConnected{false};
+    std::shared_ptr<IConnector>    mConnector{nullptr};
+    const unsigned char*           mData{nullptr};
+    pcap_t*                        mHandler{nullptr};
+    const pcap_pkthdr*             mHeader{nullptr};
+    unsigned int                   mPacketCount{0};
+    Handler80211                   mPacketHandler{PhysicalDeviceHeaderType::RadioTap};
+    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
+    bool                           mSendReceivedData{false};
 };

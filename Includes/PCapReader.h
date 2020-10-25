@@ -21,7 +21,7 @@ public:
     // For promiscuous mode
     bool Open(std::string_view aName, uint16_t aFrequency);
 
-    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) override;
+    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency);
 
     bool ReadNextData();
 

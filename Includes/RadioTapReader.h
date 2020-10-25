@@ -17,9 +17,30 @@ class RadioTapReader
 {
 public:
     /**
+     * Saves parameters in this object to this struct for easy exporting.
+     */
+    struct PhysicalDeviceParameters
+    {
+        uint16_t mLength{0};
+        uint32_t mPresentFlags{RadioTap_Constants::cSendPresentFlags};
+        uint8_t  mFlags{RadioTap_Constants::cFlags};
+        uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
+        uint16_t mFrequency{RadioTap_Constants::cChannel};
+        uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
+        uint8_t  mKnownMCSInfo{0};
+        uint8_t  mMCSFlags{0};
+        uint8_t  mMCSInfo{0};
+    };
+
+    /**
      * Resets all the member variables to default.
      */
     void Reset();
+
+    /**
+     * Returns a copy of the parameters for later use.
+     */
+    PhysicalDeviceParameters ExportRadioTapParameters();
 
     /**
      * Fills this object with information about the RadioTap header, run once per packet received where the radiotap
@@ -92,13 +113,5 @@ public:
     [[nodiscard]] uint8_t GetMCSInfo() const;
 
 private:
-    uint16_t mLength{0};
-    uint32_t mPresentFlags{RadioTap_Constants::cSendPresentFlags};
-    uint8_t  mFlags{RadioTap_Constants::cFlags};
-    uint8_t  mDataRate{RadioTap_Constants::cRateFlags};
-    uint16_t mFrequency{RadioTap_Constants::cChannel};
-    uint16_t mChannelFlags{RadioTap_Constants::cChannelFlags};
-    uint8_t  mKnownMCSInfo;
-    uint8_t  mMCSFlags;
-    uint8_t  mMCSInfo;
+    PhysicalDeviceParameters mParameters;
 };

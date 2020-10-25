@@ -42,10 +42,9 @@ public:
      * Opens the PCAP device so it can be used for capture.
      * @param aName - Name of the interface or file to use.
      * @param aSSIDFilter - The SSIDS to listen to.
-     * @param aFrequency - The frequency to listen to initially.
      * @return true if successful.
      */
-    virtual bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency) = 0;
+    virtual bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) = 0;
 
     /**
      * Returns data as string.
