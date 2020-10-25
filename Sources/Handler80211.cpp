@@ -12,6 +12,74 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
     }
 }
 
+std::string Handler80211::ConvertPacketTo8023()
+{
+    std::string lConvertedPacket{};
+
+    // Only important if Data type
+    if ((mPhysicalDeviceHeaderReader != nullptr) && (mMainPacketType == Main80211PacketType::Data)) {
+        unsigned int lFCSLength =
+            ((mPhysicalDeviceHeaderReader->GetFlags() & RadioTap_Constants::cFCSAvailableFlag) != 0) ? 4 : 0;
+
+        unsigned int lSourceAddressIndex =
+            Net_80211_Constants::cSourceAddressIndex + mPhysicalDeviceHeaderReader->GetLength();
+        unsigned int lDestinationAddressIndex =
+            Net_80211_Constants::cDestinationAddressIndex + mPhysicalDeviceHeaderReader->GetLength();
+        unsigned int lTypeIndex = Net_80211_Constants::cEtherTypeIndex + mPhysicalDeviceHeaderReader->GetLength();
+        unsigned int lDataIndex = Net_80211_Constants::cDataIndex + mPhysicalDeviceHeaderReader->GetLength();
+
+        // If there is QOS data added to the 80211 header, we need to skip past that as well
+        switch (mDataPacketType) {
+            case Data80211PacketType::QoSData:
+            case Data80211PacketType::QoSDataCFACK:
+            case Data80211PacketType::QoSDataCFACKCFPoll:
+            case Data80211PacketType::QoSDataCFPoll:
+            case Data80211PacketType::QoSNull:
+                lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+                lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
+                break;
+        }
+
+        switch (mDataPacketType) {
+            // These packet types can't be handled yet, or at all
+            case Data80211PacketType::CFACK:
+            case Data80211PacketType::CFACKCFPoll:
+            case Data80211PacketType::CFPoll:
+            case Data80211PacketType::QoSCFACKCFPoll:
+            case Data80211PacketType::QoSCFPoll:
+            case Data80211PacketType::QoSNull:
+            case Data80211PacketType::Null:
+                break;
+            default:
+                // The header should have it's complete size for the packet to be valid.
+                if (mLastReceivedData.size() >
+                    Net_80211_Constants::cDataHeaderLength + mPhysicalDeviceHeaderReader->GetLength()) {
+                    // Strip framecheck sequence as well.
+                    lConvertedPacket.reserve(mLastReceivedData.size() - Net_80211_Constants::cDataIndex -
+                                             mPhysicalDeviceHeaderReader->GetLength() - lFCSLength);
+
+                    lConvertedPacket.append(mLastReceivedData.substr(lDestinationAddressIndex,
+                                                                     Net_80211_Constants::cDestinationAddressLength));
+
+                    lConvertedPacket.append(
+                        mLastReceivedData.substr(lSourceAddressIndex, Net_80211_Constants::cSourceAddressLength));
+
+                    lConvertedPacket.append(
+                        mLastReceivedData.substr(lTypeIndex, Net_80211_Constants::cEtherTypeLength));
+
+                    lConvertedPacket.append(
+                        mLastReceivedData.substr(lDataIndex, mLastReceivedData.size() - lDataIndex - lFCSLength));
+                } else {
+                    Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
+                                              Logger::Level::WARNING);
+                }
+        }
+    }
+
+    // [ Destination MAC | Source MAC | EtherType ] [ Payload ]
+    return lConvertedPacket;
+}
+
 std::string_view Handler80211::GetPacket()
 {
     return mLastReceivedData;

@@ -49,6 +49,14 @@ public:
     void ClearMACWhiteList();
 
     /**
+     * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
+     * 802.11 header and adding an 802.3 header. Only converts data packets!
+     * @param aData - The packet data to convert.
+     * @return converted packet data, empty string if failed.
+     */
+    std::string ConvertPacketTo8023();
+
+    /**
      * Gets packet saved in this class.
      * @return string_view with data.
      */

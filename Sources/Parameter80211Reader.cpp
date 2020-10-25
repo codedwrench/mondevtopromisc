@@ -25,18 +25,18 @@ void Parameter80211Reader::Update(std::string_view aData)
 {
     mLastReceivedPacket = aData;
 
-    if(mPhysicalDeviceHeaderReader != nullptr) {
+    if (mPhysicalDeviceHeaderReader != nullptr) {
         // Re-obtain this
         mMaxRate = 0;
 
         // If there is an FCS remove 4 bytes from total length
         unsigned int lFCSLength =
-                ((mPhysicalDeviceHeaderReader->GetFlags() & RadioTap_Constants::cFCSAvailableFlag) != 0) ? 4 : 0;
+            ((mPhysicalDeviceHeaderReader->GetFlags() & RadioTap_Constants::cFCSAvailableFlag) != 0) ? 4 : 0;
 
         // First parameter is always SSID
         unsigned long lIndex{static_cast<unsigned long>(mPhysicalDeviceHeaderReader->GetLength() +
                                                         Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1)};
-        uint8_t lParameterLength{UpdateSSID()};
+        uint8_t       lParameterLength{UpdateSSID()};
 
         if (lParameterLength > 0) {
             // Then go fill out all the others, always adding +1 to skip past the type info
