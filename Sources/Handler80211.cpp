@@ -17,23 +17,6 @@ std::string_view Handler80211::GetPacket()
     return mLastReceivedData;
 }
 
-std::string Handler80211::GetSSID()
-{
-    std::string lReturn{};
-
-    if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lSSIDLength{GetRawData<uint8_t>(
-            mLastReceivedData,
-            mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1)};
-        lReturn = GetRawString(
-            mLastReceivedData,
-            mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2,
-            lSSIDLength);
-    }
-
-    return lReturn;
-}
-
 bool Handler80211::IsMACAllowed(uint64_t aMAC)
 {
     bool lReturn{false};
@@ -66,6 +49,7 @@ void Handler80211::Update(std::string_view aData)
 {
     // Save data in object and fill RadioTap parameters.
     mLastReceivedData = aData;
+
     if (mPhysicalDeviceHeaderReader != nullptr) {
         mPhysicalDeviceHeaderReader->FillRadioTapParameters(aData);
     }
@@ -87,13 +71,15 @@ void Handler80211::Update(std::string_view aData)
                 UpdateManagementPacketType();
 
                 if (mManagementPacketType == Management80211PacketType::Beacon) {
-                    if (IsSSIDAllowed(GetSSID())) {
+                    mParameter80211Reader.Update(mLastReceivedData);
+                    if (IsSSIDAllowed(mParameter80211Reader.GetSSID())) {
                         uint64_t lBSSID = mBSSID;
                         UpdateBSSID();
-                        if(lBSSID != mBSSID) {
-                            Logger::GetInstance().Log(
-                                    "SSID switched:" + GetSSID() + " , BSSID: " + std::to_string(mBSSID),
-                                    Logger::Level::DEBUG);
+                        if (lBSSID != mBSSID) {
+                            Logger::GetInstance().Log(std::string("SSID switched:") +
+                                                          mParameter80211Reader.GetSSID().data() +
+                                                          " , BSSID: " + std::to_string(mBSSID),
+                                                      Logger::Level::DEBUG);
                         }
                     }
                 }

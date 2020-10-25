@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "NetworkingHeaders.h"
+#include "Parameter80211Reader.h"
 #include "RadioTapReader.h"
 
 /**
@@ -52,12 +53,6 @@ public:
      * @return string_view with data.
      */
     std::string_view GetPacket();
-
-    /**
-     * Gets the last found SSID.
-     * @note Only use with beacon frames.
-     */
-    std::string GetSSID();
 
     /**
      * Checks if this MAC is not blacklisted / whitelisted.
@@ -140,5 +135,6 @@ private:
     uint64_t mBSSID{};
     uint64_t mSourceMac{};
 
+    Parameter80211Reader            mParameter80211Reader;
     std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader;
 };

@@ -76,11 +76,13 @@ endif ()
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(mondevtopromisc main.cpp
+        Sources/Handler80211.cpp
         Sources/Logger.cpp
         Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
         Sources/WindowModel.cpp
         Sources/MonitorDevice.cpp
+        Sources/Parameter80211Reader.cpp
         Sources/XLinkKaiConnection.cpp
         Sources/UserInterface/Button.cpp
         Sources/UserInterface/CheckBox.cpp
@@ -92,10 +94,13 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/Window.cpp
         Sources/UserInterface/WindowController.cpp
         Sources/UserInterface/XLinkWindow.cpp
+        Includes/Handler80211.h
+        Includes/IConnector.h
         Includes/IPCapDevice.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h
         Includes/PacketConverter.h
+        Includes/Parameter80211Reader.h
         Includes/PCapReader.h
         Includes/RadioTapReader.h
         Includes/MonitorDevice.h
@@ -105,6 +110,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/IUIObject.h
         Includes/UserInterface/IWindow.h
         Includes/UserInterface/NCursesKeys.h
+        Includes/NetConversionFunctions.h
         Includes/UserInterface/NetworkingWindow.h
         Includes/UserInterface/String.h
         Includes/UserInterface/TextField.h
@@ -113,7 +119,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/UserInterface/WindowController.h
 	    Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h
-        ${EXTRA_INCLUDES} Includes/IConnector.h Sources/Handler80211.cpp Includes/Handler80211.h Includes/NetConversionFunctions.h)
+        ${EXTRA_INCLUDES})
 
 target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
 target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
