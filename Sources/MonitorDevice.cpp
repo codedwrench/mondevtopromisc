@@ -42,6 +42,11 @@ bool MonitorDevice::Open(std::string_view aName, std::vector<std::string>& aSSID
     return lReturn;
 }
 
+void MonitorDevice::BlackList(uint64_t aMAC)
+{
+    mPacketHandler.AddToMACBlackList(aMAC);
+}
+
 void MonitorDevice::Close()
 {
     mConnected = false;
@@ -120,9 +125,19 @@ const unsigned char* MonitorDevice::GetData()
     return mData;
 }
 
+const RadioTapReader::PhysicalDeviceParameters& MonitorDevice::GetDataPacketParameters()
+{
+    return mPacketHandler.GetDataPacketParameters();
+}
+
 const pcap_pkthdr* MonitorDevice::GetHeader()
 {
     return mHeader;
+}
+
+uint64_t MonitorDevice::GetLockedBSSID()
+{
+    return mPacketHandler.GetLockedBSSID();
 }
 
 std::string MonitorDevice::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)

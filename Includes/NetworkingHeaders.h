@@ -228,7 +228,7 @@ namespace RadioTap_Constants
 
     // Note padding for these options is embedded in the different variables, so if adding a variable that's requiring
     // an alignment, make the variable a step bigger. Also do not forget to add the variable to cRadioTapSize and to
-    // InsertRadioTapHeader in PacketConverter.cpp
+    // InsertRadioTapHeader in NetConversionFunctions.h
 
     // Enable: Flags, Rate, Channel and TX Flags
     static constexpr uint32_t cSendPresentFlags{0x0000800e};

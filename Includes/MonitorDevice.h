@@ -29,10 +29,28 @@ using namespace WirelessMonitorDevice_Constants;
 class MonitorDevice : public IPCapDevice
 {
 public:
+    /**
+     * Adds a MAC address to the blacklist.
+     * @param aMAC - MAC address to blacklist.
+     */
+    void                 BlackList(uint64_t aMAC);
     void                 Close() override;
     std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     const unsigned char* GetData() override;
     const pcap_pkthdr*   GetHeader() override;
+
+    /**
+     * Gets parameters for a data packet type, for example used for conversion to an 80211 packet.
+     * @return a reference to PhysicalDeviceParameters object with the needed parameters.
+     */
+    const RadioTapReader::PhysicalDeviceParameters& GetDataPacketParameters();
+
+    /**
+     * Gets locked onto BSSID, this is the BSSID found when searching for beacon frames with the filtered SSID.
+     * @return Locked onto BSSID/
+     */
+    uint64_t GetLockedBSSID();
+
     bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
     bool                 Send(std::string_view aData) override;
     void                 SetAcknowledgePackets(bool aAcknowledge);

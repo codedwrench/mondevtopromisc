@@ -1,6 +1,6 @@
 #pragma once
 
-/* Copyright (c) 2020 [Rick de Bondt] - Logger.h
+/* Copyright (c) 2020 [Rick de Bondt] - Handler80211.h
  *
  * This file reads packets from a monitor format and converts to a promiscuous format.
  *
@@ -77,6 +77,12 @@ public:
     uint64_t GetDestinationMAC();
 
     /**
+     * Gets locked onto BSSID.
+     * @return the locked onto BSSID.
+     */
+    uint64_t GetLockedBSSID();
+
+    /**
      * Gets packet saved in this class.
      * @return string_view with data.
      */
@@ -149,53 +155,17 @@ public:
      */
     void Update(std::string_view aPacket);
 
-    /**
-     * Update used BSSID.
-     */
+private:
     void UpdateBSSID();
-
-    /**
-     * Returns the type of control frame.
-     */
     void UpdateControlPacketType();
-
-    /**
-     * Updates data frame type.
-     */
     void UpdateDataPacketType();
-
-    /**
-     * Updates main packet type: Control/Data/Management.
-     */
     void UpdateMainPacketType();
-
-    /**
-     * Updates management frame type.
-     */
     void UpdateManagementPacketType();
-
-    /**
-     * Updates whether the packet is ackable or not.
-     */
     void UpdateAckable();
-
-    /**
-     * Checks if this QOS packet is a retry packet.
-     * @return true if it is a retry packet.
-     */
     void UpdateQOSRetry();
-
-    /**
-     * Updates the destination MAC address.
-     */
     void UpdateDestinationMac();
-
-    /**
-     * Updates the source MAC address.
-     */
     void UpdateSourceMac();
 
-private:
     // Save last data in this class
     std::string mLastReceivedData{};
 

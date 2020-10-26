@@ -2,7 +2,6 @@
  * This file contains tests for the PacketConverter class.
  **/
 
-#include "../Includes/PacketConverter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

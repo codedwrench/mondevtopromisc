@@ -18,13 +18,13 @@ public:
      * Gets the last obtained frequency.
      * @return frequency of last updated packet, 0 if unsuccessful.
      */
-    [[nodiscard]] uint8_t GetFrequency();
+    [[nodiscard]] uint8_t GetFrequency() const;
 
     /**
      * Gets the last obtained max data rate.
      * @return max data rate of last updated packet, 0 if unsuccessful.
      */
-    [[nodiscard]] uint8_t GetMaxRate();
+    [[nodiscard]] uint8_t GetMaxRate() const;
 
     /**
      * Gets the last obtained SSID.

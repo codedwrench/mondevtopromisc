@@ -76,9 +76,9 @@ endif ()
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(mondevtopromisc main.cpp
+        Sources/Handler8023.cpp
         Sources/Handler80211.cpp
         Sources/Logger.cpp
-        Sources/PacketConverter.cpp
         Sources/PCapReader.cpp
         Sources/WindowModel.cpp
         Sources/MonitorDevice.cpp
@@ -94,12 +94,12 @@ add_executable(mondevtopromisc main.cpp
         Sources/UserInterface/Window.cpp
         Sources/UserInterface/WindowController.cpp
         Sources/UserInterface/XLinkWindow.cpp
+        Includes/Handler8023.h
         Includes/Handler80211.h
         Includes/IConnector.h
         Includes/IPCapDevice.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h
-        Includes/PacketConverter.h
         Includes/Parameter80211Reader.h
         Includes/PCapReader.h
         Includes/RadioTapReader.h
@@ -131,7 +131,6 @@ if (ENABLE_TESTS)
     add_executable(tests Tests/PacketConverter_Test.cpp
             Tests/WindowModel_Test.cpp
             Sources/Logger.cpp
-            Sources/PacketConverter.cpp
             Sources/PCapReader.cpp
             Sources/RadioTapReader.cpp
             Sources/WindowModel.cpp

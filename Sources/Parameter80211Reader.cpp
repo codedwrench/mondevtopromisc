@@ -6,12 +6,12 @@
 #include "../Includes/NetworkingHeaders.h"
 
 
-uint8_t Parameter80211Reader::GetFrequency()
+uint8_t Parameter80211Reader::GetFrequency() const
 {
     return mFrequency;
 }
 
-uint8_t Parameter80211Reader::GetMaxRate()
+uint8_t Parameter80211Reader::GetMaxRate() const
 {
     return mMaxRate;
 }

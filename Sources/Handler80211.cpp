@@ -14,7 +14,9 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
 
 void Handler80211::AddToMACBlackList(uint64_t aMAC)
 {
-    mBlackList.push_back(aMAC);
+    if(!IsMACBlackListed(aMAC)) {
+        mBlackList.push_back(aMAC);
+    }
 }
 
 void Handler80211::AddToMACWhiteList(uint64_t aMAC)
@@ -120,6 +122,11 @@ std::string_view Handler80211::GetPacket()
 uint64_t Handler80211::GetDestinationMAC()
 {
     return mDestinationMac;
+}
+
+uint64_t Handler80211::GetLockedBSSID()
+{
+    return mLockedBSSID;
 }
 
 bool Handler80211::IsAckable() const

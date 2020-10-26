@@ -11,6 +11,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include "Handler8023.h"
 #include "IConnector.h"
 #include "IPCapDevice.h"
 
@@ -128,11 +129,12 @@ private:
     std::array<char, cMaxLength> mData{};
     // Raw ethernet data received from XLink Kai
     std::string                    mEthernetData{};
-    std::string                    mIp{cIp};
-    unsigned int                   mPort{cPort};
-    boost::asio::io_service        mIoService{};
-    boost::asio::ip::udp::socket   mSocket{mIoService};
-    boost::asio::ip::udp::endpoint mRemote{};
-    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
     std::shared_ptr<IPCapDevice>   mIncomingConnection{nullptr};
+    std::string                    mIp{cIp};
+    boost::asio::io_service        mIoService{};
+    Handler8023                    mPacketHandler{};
+    unsigned int                   mPort{cPort};
+    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
+    boost::asio::ip::udp::endpoint mRemote{};
+    boost::asio::ip::udp::socket   mSocket{mIoService};
 };

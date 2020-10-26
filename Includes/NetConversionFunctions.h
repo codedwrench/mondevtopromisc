@@ -59,6 +59,56 @@ static std::string GetRawString(std::string_view aPacket, unsigned int aIndex, u
 }
 
 /**
+ * Swaps endianness of Mac.
+ * @param aMac - Mac to swap.
+ * @return swapped mac.
+ */
+static uint64_t SwapMacEndian(uint64_t aMac)
+{
+    // Little- to Big endian
+    aMac = bswap_64(aMac);
+    return aMac >> 16U;
+}
+
+/**
+ * Helper function for ConvertPacket, adds the IEEE80211 Header.
+ * This one is based on Ad-Hoc traffic.
+ * @param aData - Data to insert the Header to
+ * @param aBSSID - BSSID to insert.
+ * @param aIndex - Index to insert the header at.
+ */
+static void InsertIEEE80211Header(char* aPacket, uint64_t aBSSID, uint8_t aIndex)
+{
+    ieee80211_hdr lIeee80211Header{};
+    memset(&lIeee80211Header, 0, sizeof(lIeee80211Header));
+
+    lIeee80211Header.frame_control = Net_80211_Constants::cWlanFCTypeData;
+    lIeee80211Header.duration_id   = 0xffff;  // Just an arbitrarily high number.
+
+    // For Ad-Hoc
+    //  | Address 1   | Address 2   | Address 3   | Address 4 |
+    //  +-------------+-------------+-------------+-----------+
+    //  | Destination | Source      | BSSID       | N/A       |
+
+    memcpy(&lIeee80211Header.addr1[0],
+           reinterpret_cast<const char*>(aPacket[Net_8023_Constants::cDestinationAddressIndex]),
+           Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
+
+    memcpy(&lIeee80211Header.addr2[0],
+           reinterpret_cast<const char*>(aPacket[Net_8023_Constants::cSourceAddressIndex]),
+           Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
+
+    uint64_t lBSSID = aBSSID;
+
+    // Little- to Big endian
+    lBSSID = SwapMacEndian(lBSSID);
+    memcpy(&lIeee80211Header.addr3[0], &lBSSID, Net_80211_Constants::cBSSIDLength * sizeof(uint8_t));
+
+    memcpy(aPacket + aIndex, &lIeee80211Header, sizeof(lIeee80211Header));
+}
+
+
+/**
  * Helper function that inserts a radiotap header into a packet.
  * @param aPacket - Packet to insert radiotap header into.
  * @param aParameters - Parameters to use when inserting the parameters.
@@ -140,19 +190,7 @@ static uint64_t MacToInt(std::string_view aMac)
 }
 
 /**
- * Swaps endianness of Mac.
- * @param aMac - Mac to swap.
- * @return swapped mac.
- */
-static uint64_t SwapMacEndian(uint64_t aMac)
-{
-    // Little- to Big endian
-    aMac = bswap_64(aMac);
-    return aMac >> 16U;
-}
-
-/**
- * Creaetes an acknowledgement frame based on MAC-address.
+ * Creates an acknowledgement frame based on MAC-address.
  * @param aReceiverMac - MAC address to fill in.
  * @param aParameters - Parameters to use.
  * @return A string with the full packet.
