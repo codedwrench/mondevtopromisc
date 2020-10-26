@@ -59,10 +59,34 @@ public:
     std::string ConvertPacket();
 
     /**
+     * Gets parameters for a control packet type, for example used for constructing acknowledgement frames.
+     * @return a reference to PhysicalDeviceParameters object with the needed parameters.
+     */
+    const RadioTapReader::PhysicalDeviceParameters& GetControlPacketParameters();
+
+    /**
+     * Gets parameters for a data packet type, for example used for conversion to an 80211 packet.
+     * @return a reference to PhysicalDeviceParameters object with the needed parameters.
+     */
+    const RadioTapReader::PhysicalDeviceParameters& GetDataPacketParameters();
+
+    /**
+     * Gets destination MAC address of packet.
+     * @return the destination MAC address.
+     */
+    uint64_t GetDestinationMAC();
+
+    /**
      * Gets packet saved in this class.
      * @return string_view with data.
      */
     std::string_view GetPacket();
+
+    /**
+     * Checks if a packet is ackable.
+     * @return true is packet is ackable.
+     */
+    bool IsAckable() const;
 
     /**
      * Checks if this BSSID is locked onto.
@@ -70,6 +94,13 @@ public:
      * @return true if BSSID is locked onto.
      */
     [[nodiscard]] bool IsBSSIDAllowed(uint64_t aBSSID) const;
+
+    /**
+     * Checks if MAC is in receiver blacklist.
+     * @param aMAC - MAC to check
+     * @return true if MAC is blacklisted.
+     */
+    [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const;
 
     /**
      * Checks if last received packet is convertible to 802.3.
@@ -83,12 +114,6 @@ public:
      * @return true if MAC address is allowed.
      */
     bool IsMACAllowed(uint64_t aMAC);
-
-    /**
-     * Checks if this QOS packet is a retry packet.
-     * @return true if it is a retry packet.
-     */
-    void UpdateQOSRetry();
 
     /**
      * Checks if this SSID is whitelisted.
@@ -106,12 +131,12 @@ public:
     /**
      * Sets the source MAC addresses blacklist.
      */
-    void SetMACBlackList(const std::vector<uint64_t>& aBlackList);
+    void SetMACBlackList(std::vector<uint64_t>& aBlackList);
 
     /**
      * Sets the source MAC addresses whitelist.
      */
-    void SetMACWhiteList(const std::vector<uint64_t>& aWhiteList);
+    void SetMACWhiteList(std::vector<uint64_t>& aWhiteList);
 
     /**
      * Sets the SSID to filter on.
@@ -130,11 +155,6 @@ public:
     void UpdateBSSID();
 
     /**
-     * Updates main packet type: Control/Data/Management.
-     */
-    void UpdateMainPacketType();
-
-    /**
      * Returns the type of control frame.
      */
     void UpdateControlPacketType();
@@ -145,9 +165,30 @@ public:
     void UpdateDataPacketType();
 
     /**
+     * Updates main packet type: Control/Data/Management.
+     */
+    void UpdateMainPacketType();
+
+    /**
      * Updates management frame type.
      */
     void UpdateManagementPacketType();
+
+    /**
+     * Updates whether the packet is ackable or not.
+     */
+    void UpdateAckable();
+
+    /**
+     * Checks if this QOS packet is a retry packet.
+     * @return true if it is a retry packet.
+     */
+    void UpdateQOSRetry();
+
+    /**
+     * Updates the destination MAC address.
+     */
+    void UpdateDestinationMac();
 
     /**
      * Updates the source MAC address.
@@ -167,7 +208,9 @@ private:
     Data80211PacketType       mDataPacketType{Data80211PacketType::None};
     Management80211PacketType mManagementPacketType{Management80211PacketType::None};
 
+    bool     mAckable{false};
     uint64_t mBSSID{0};
+    uint64_t mDestinationMac{0};
     uint64_t mLockedBSSID{0};
     bool     mQOSRetry{false};
     uint64_t mSourceMac{0};

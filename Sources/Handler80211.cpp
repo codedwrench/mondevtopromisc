@@ -102,9 +102,29 @@ std::string Handler80211::ConvertPacket()
     return lConvertedPacket;
 }
 
+const RadioTapReader::PhysicalDeviceParameters& Handler80211::GetControlPacketParameters()
+{
+    return mPhysicalDeviceParametersControl;
+}
+
+const RadioTapReader::PhysicalDeviceParameters& Handler80211::GetDataPacketParameters()
+{
+    return mPhysicalDeviceParametersData;
+}
+
 std::string_view Handler80211::GetPacket()
 {
     return mLastReceivedData;
+}
+
+uint64_t Handler80211::GetDestinationMAC()
+{
+    return mDestinationMac;
+}
+
+bool Handler80211::IsAckable() const
+{
+    return mAckable;
 }
 
 bool Handler80211::IsBSSIDAllowed(uint64_t aBSSID) const
@@ -154,23 +174,15 @@ bool Handler80211::IsMACAllowed(uint64_t aMAC)
     return lReturn;
 }
 
-void Handler80211::UpdateQOSRetry()
+bool Handler80211::IsMACBlackListed(uint64_t aMAC) const
 {
-    if (mPhysicalDeviceHeaderReader != nullptr) {
-        switch (mDataPacketType) {
-            case Data80211PacketType::QoSCFACKCFPoll:
-            case Data80211PacketType::QoSCFPoll:
-            case Data80211PacketType::QoSData:
-            case Data80211PacketType::QoSDataCFACK:
-            case Data80211PacketType::QoSDataCFACKCFPoll:
-            case Data80211PacketType::QoSDataCFPoll:
-            case Data80211PacketType::QoSNull:
-                mQOSRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
-                            Net_80211_Constants::cDataQOSRetryFlag;
-            default:
-                break;
-        }
+    bool lReturn{false};
+
+    if (std::find(mBlackList.begin(), mBlackList.end(), aMAC) != mBlackList.end()) {
+        lReturn = true;
     }
+
+    return lReturn;
 }
 
 bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
@@ -184,6 +196,23 @@ bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
     return lReturn;
 }
 
+void Handler80211::SavePhysicalDeviceParameters(RadioTapReader::PhysicalDeviceParameters& aParameters)
+{
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        aParameters = mPhysicalDeviceHeaderReader->ExportRadioTapParameters();
+    }
+}
+
+void Handler80211::SetMACBlackList(std::vector<uint64_t>& aBlackList)
+{
+    mBlackList = std::move(aBlackList);
+}
+
+void Handler80211::SetMACWhiteList(std::vector<uint64_t>& aWhiteList)
+{
+    mWhiteList = std::move(aWhiteList);
+}
+
 void Handler80211::SetSSIDFilterList(std::vector<std::string>& aSSIDList)
 {
     mSSIDList = std::move(aSSIDList);
@@ -194,45 +223,54 @@ void Handler80211::Update(std::string_view aData)
     // Save data in object and fill RadioTap parameters.
     mLastReceivedData = aData;
 
+    mAckable = false;
+
     if (mPhysicalDeviceHeaderReader != nullptr) {
         mPhysicalDeviceHeaderReader->FillRadioTapParameters(aData);
     }
 
-    UpdateSourceMac();
+    UpdateMainPacketType();
 
-    if (IsMACAllowed(mSourceMac)) {
-        UpdateMainPacketType();
+    switch (mMainPacketType) {
+        case Main80211PacketType::Control:
+            UpdateDestinationMac();
 
-        switch (mMainPacketType) {
-            case Main80211PacketType::Control:
+            // Blacklisted MACs will have a destination MAC in XLink Kai, so only copy info about these packets
+            if (IsMACBlackListed(mDestinationMac)) {
                 UpdateControlPacketType();
 
                 if (mControlPacketType == Control80211PacketType::ACK) {
                     SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
                 }
+            }
+            break;
+        case Main80211PacketType::Data:
+            // Only do something with the data frame if we care about this network
+            UpdateSourceMac();
+            if (IsMACAllowed(mSourceMac) && IsBSSIDAllowed(mLockedBSSID)) {
+                UpdateAckable();
+                UpdateDataPacketType();
+                UpdateDestinationMac();
+                UpdateQOSRetry();
 
-                break;
-            case Main80211PacketType::Data:
-                // Only do something with the data frame if we care about this network
-                if (IsBSSIDAllowed(mLockedBSSID)) {
-                    UpdateDataPacketType();
-                    UpdateQOSRetry();
-
-                    // Only save parameters on normal data types.
-                    if (!mQOSRetry) {
-                        switch (mDataPacketType) {
-                            case Data80211PacketType::Data:
-                            case Data80211PacketType::DataCFACK:
-                            case Data80211PacketType::DataCFACKCFPoll:
-                            case Data80211PacketType::DataCFPoll:
-                                SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
-                            default:
-                                break;
-                        }
+                // Only save parameters on normal data types.
+                if (!mQOSRetry) {
+                    switch (mDataPacketType) {
+                        case Data80211PacketType::Data:
+                        case Data80211PacketType::DataCFACK:
+                        case Data80211PacketType::DataCFACKCFPoll:
+                        case Data80211PacketType::DataCFPoll:
+                            SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
+                        default:
+                            break;
                     }
                 }
-                break;
-            case Main80211PacketType::Management:
+            }
+            break;
+        case Main80211PacketType::Management:
+            UpdateSourceMac();
+
+            if (IsMACAllowed(mSourceMac)) {
                 UpdateManagementPacketType();
 
                 if (mManagementPacketType == Management80211PacketType::Beacon) {
@@ -248,10 +286,19 @@ void Handler80211::Update(std::string_view aData)
                         }
                     }
                 }
-                break;
-            default:
-                Logger::GetInstance().Log("Could not determine main packet type", Logger::Level::DEBUG);
-        }
+            }
+            break;
+        default:
+            Logger::GetInstance().Log("Could not determine main packet type", Logger::Level::DEBUG);
+    }
+}
+
+void Handler80211::UpdateAckable()
+{
+    // TODO: Filter multicast
+    // Not a broadcast
+    if (mDestinationMac != 0xFFFFFFFFFFFFU) {
+        mAckable = true;
     }
 }
 
@@ -266,27 +313,6 @@ void Handler80211::UpdateBSSID()
         // Big- to Little endian
         mBSSID = SwapMacEndian(lBSSID);
     }
-}
-
-void Handler80211::UpdateMainPacketType()
-{
-    Main80211PacketType lResult{Main80211PacketType::None};
-
-    // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
-    if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lMainType{static_cast<uint8_t>(
-            GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 2U)};
-        if ((lMainType & ~0b00U) == 0b00U) {
-            lResult = Main80211PacketType::Management;
-        } else if ((lMainType & 0b01U) == 0b01U) {
-            lResult = Main80211PacketType::Control;
-        } else if ((lMainType & 0b10U) == 0b10U) {
-            lResult = Main80211PacketType::Data;
-        }
-        // Ignore extensions
-    }
-
-    mMainPacketType = lResult;
 }
 
 void Handler80211::UpdateControlPacketType()
@@ -371,6 +397,27 @@ void Handler80211::UpdateDataPacketType()
     mDataPacketType = lResult;
 }
 
+void Handler80211::UpdateMainPacketType()
+{
+    Main80211PacketType lResult{Main80211PacketType::None};
+
+    // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        uint8_t lMainType{static_cast<uint8_t>(
+            GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 2U)};
+        if ((lMainType & ~0b00U) == 0b00U) {
+            lResult = Main80211PacketType::Management;
+        } else if ((lMainType & 0b01U) == 0b01U) {
+            lResult = Main80211PacketType::Control;
+        } else if ((lMainType & 0b10U) == 0b10U) {
+            lResult = Main80211PacketType::Data;
+        }
+        // Ignore extensions
+    }
+
+    mMainPacketType = lResult;
+}
+
 void Handler80211::UpdateManagementPacketType()
 {
     Management80211PacketType lResult{Control80211PacketType::None};
@@ -414,6 +461,38 @@ void Handler80211::UpdateManagementPacketType()
     mManagementPacketType = lResult;
 }
 
+void Handler80211::UpdateQOSRetry()
+{
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        switch (mDataPacketType) {
+            case Data80211PacketType::QoSCFACKCFPoll:
+            case Data80211PacketType::QoSCFPoll:
+            case Data80211PacketType::QoSData:
+            case Data80211PacketType::QoSDataCFACK:
+            case Data80211PacketType::QoSDataCFACKCFPoll:
+            case Data80211PacketType::QoSDataCFPoll:
+            case Data80211PacketType::QoSNull:
+                mQOSRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
+                            Net_80211_Constants::cDataQOSRetryFlag;
+            default:
+                break;
+        }
+    }
+}
+
+void Handler80211::UpdateDestinationMac()
+{
+    if (mPhysicalDeviceHeaderReader != nullptr) {
+        uint64_t lSourceMac{GetRawData<uint64_t>(
+            mLastReceivedData,
+            mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cDestinationAddressIndex)};
+        lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
+
+        // Big- to Little endian
+        mDestinationMac = SwapMacEndian(lSourceMac);
+    }
+}
+
 void Handler80211::UpdateSourceMac()
 {
     if (mPhysicalDeviceHeaderReader != nullptr) {
@@ -422,14 +501,6 @@ void Handler80211::UpdateSourceMac()
         lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
         // Big- to Little endian
-        lSourceMac = bswap_64(lSourceMac);
-        mSourceMac = lSourceMac >> 16U;
-    }
-}
-
-void Handler80211::SavePhysicalDeviceParameters(RadioTapReader::PhysicalDeviceParameters& aParameters)
-{
-    if (mPhysicalDeviceHeaderReader != nullptr) {
-        aParameters = mPhysicalDeviceHeaderReader->ExportRadioTapParameters();
+        mSourceMac = SwapMacEndian(lSourceMac);
     }
 }

@@ -15,10 +15,13 @@
 #include <byteswap.h>  // bswap_16 bswap_32 bswap_64
 #endif
 
+#include <cstring>
 #include <ios>
 #include <sstream>
 #include <string>
+#include <vector>
 
+#include "RadioTapReader.h"
 
 /**
  * Converts a channel to frequency, only 2.4Ghz frequencies supported.
@@ -56,6 +59,64 @@ static std::string GetRawString(std::string_view aPacket, unsigned int aIndex, u
 }
 
 /**
+ * Helper function that inserts a radiotap header into a packet.
+ * @param aPacket - Packet to insert radiotap header into.
+ * @param aParameters - Parameters to use when inserting the parameters.
+ */
+static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDeviceParameters aParameters)
+{
+    unsigned int lIndex{sizeof(RadioTapHeader)};
+
+    // RadioTap Header
+    RadioTapHeader lRadioTapHeader{};
+    memset(&lRadioTapHeader, 0, sizeof(lRadioTapHeader));
+
+    // General header
+    lRadioTapHeader.present_flags   = RadioTap_Constants::cSendPresentFlags;
+    lRadioTapHeader.bytes_in_header = RadioTap_Constants::cRadioTapSize;
+
+    if (aParameters.mKnownMCSInfo != 0) {
+        // Set bit 19, MCS info
+        lRadioTapHeader.present_flags &= (1 << 19);
+        lRadioTapHeader.bytes_in_header += 3;
+    }
+    memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
+
+    // Optional header (Flags)
+    uint8_t lFlags{aParameters.mFlags};
+    memcpy(aPacket + lIndex, &lFlags, sizeof(lFlags));
+    lIndex += sizeof(lFlags);
+
+    // Optional header (Rate Flags)
+    uint8_t lRateFlags{aParameters.mDataRate};
+    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+    lIndex += sizeof(lRateFlags);
+
+    // Optional headers (Channel & Channel Flags)
+    uint16_t lChannel{aParameters.mFrequency};
+    memcpy(aPacket + lIndex, &lChannel, sizeof(lChannel));
+    lIndex += sizeof(lChannel);
+
+    uint16_t lChannelFlags{aParameters.mChannelFlags};
+    memcpy(aPacket + lIndex, &lChannelFlags, sizeof(lChannelFlags));
+    lIndex += sizeof(lChannelFlags);
+
+    // Optional header (TX Flags)
+    uint32_t lTXFlags{RadioTap_Constants::cTXFlags};
+    memcpy(aPacket + lIndex, &lTXFlags, sizeof(lTXFlags));
+    lIndex += sizeof(lTXFlags);
+
+    // Optional header (MCS), only add if found in parameter set (older wifi devices like the PSP don't use it)
+    if (aParameters.mKnownMCSInfo != 0) {
+        memcpy(aPacket + lIndex, &aParameters.mKnownMCSInfo, sizeof(aParameters.mKnownMCSInfo));
+        lIndex += sizeof(aParameters.mKnownMCSInfo);
+        memcpy(aPacket + lIndex, &aParameters.mMCSFlags, sizeof(aParameters.mMCSFlags));
+        lIndex += sizeof(aParameters.mMCSFlags);
+        memcpy(aPacket + lIndex, &aParameters.mMCSInfo, sizeof(aParameters.mMCSInfo));
+    }
+}
+
+/**
  * Converts a mac address string in format (xx:xx:xx:xx:xx:xx) to an int, has no safety build in for invalid
  * strings!
  * @param aMac - The mac address string to convert to an int.
@@ -88,4 +149,51 @@ static uint64_t SwapMacEndian(uint64_t aMac)
     // Little- to Big endian
     aMac = bswap_64(aMac);
     return aMac >> 16U;
+}
+
+/**
+ * Creaetes an acknowledgement frame based on MAC-address.
+ * @param aReceiverMac - MAC address to fill in.
+ * @param aParameters - Parameters to use.
+ * @return A string with the full packet.
+ */
+static std::string ConstructAcknowledgementFrame(uint64_t                                 aReceiverMac,
+                                                 RadioTapReader::PhysicalDeviceParameters aParameters)
+{
+    std::string lReturn;
+
+    // Big- to Little endian
+    uint64_t lUnconvertedSourceMac = SwapMacEndian(aReceiverMac);
+
+    std::array<uint8_t, 6> lSourceMac{};
+    memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);
+
+    unsigned int lReserveSize{sizeof(AcknowledgementHeader)};
+    lReserveSize += RadioTap_Constants::cRadioTapSize;
+
+    std::vector<char> lFullPacket;
+    lFullPacket.reserve(lReserveSize);
+    lFullPacket.resize(lReserveSize);
+
+    unsigned int lIndex{0};
+
+    // RadioTap Header
+    InsertRadioTapHeader(&lFullPacket[0], aParameters);
+    lIndex += RadioTap_Constants::cRadioTapSize;
+
+    // Acknowledgement frame
+    AcknowledgementHeader lAcknowledgementHeader{};
+    memset(&lAcknowledgementHeader, 0, sizeof(lAcknowledgementHeader));
+
+    lAcknowledgementHeader.frame_control = Net_80211_Constants::cAcknowledgementType;
+    lAcknowledgementHeader.duration_id   = 0xffff;  // Just an arbitrarily high number.
+
+    memcpy(&lAcknowledgementHeader.recv_address[0],
+           lSourceMac.data(),
+           Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
+
+    memcpy(&lFullPacket[0] + lIndex, &lAcknowledgementHeader, sizeof(lAcknowledgementHeader));
+
+    lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
+    return lReturn;
 }
