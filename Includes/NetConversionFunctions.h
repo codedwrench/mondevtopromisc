@@ -130,10 +130,10 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
 
     if (aParameters.mKnownMCSInfo != 0) {
         // Clear bit 2, DataRate
-        lRadioTapHeader.present_flags &= ~(1 << 2);
+        lRadioTapHeader.present_flags &= ~(1U << 2U);
 
         // Set bit 19, MCS info
-        lRadioTapHeader.present_flags &= (1 << 19);
+        lRadioTapHeader.present_flags &= (1U << 19U);
 
         // Add 2 to the radiotap size (-1 for the data rate + 3 for the MCS info)
         lRadioTapHeader.bytes_in_header += 2;
@@ -191,7 +191,7 @@ static uint64_t MacToInt(std::string_view aMac)
         uint64_t           lNibble{0};
         lStringStream >> std::hex;
         while (lStringStream >> lNibble) {
-            lResult = (lResult << 8) + lNibble;
+            lResult = (lResult << 8U) + lNibble;
             lStringStream.get();
         }
     }
