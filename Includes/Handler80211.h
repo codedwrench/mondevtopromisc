@@ -77,6 +77,12 @@ public:
     uint64_t GetDestinationMAC() const;
 
     /**
+     * Gets source MAC address of packet.
+     * @return the source MAC address.
+     */
+    uint64_t GetSourceMAC() const;
+
+    /**
      * Gets locked onto BSSID.
      * @return the locked onto BSSID.
      */

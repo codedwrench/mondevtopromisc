@@ -126,7 +126,6 @@ bool XLinkKaiConnection::ReadNextData()
 void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError, size_t aBytesReceived)
 {
     std::string lData{mData.begin(), mData.begin() + aBytesReceived};
-    mPacketHandler.Update(lData);
 
     // If we actually received anything useful, react.
     if (!lData.empty()) {
@@ -152,25 +151,27 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                 // For data XLink Kai uses e;e; which doesn't filter all that well, so if we find e; just check if this
                 // is e;e;
                 lCommand = lData.substr(0, cEthernetDataString.size());
+
                 if (lCommand == cEthernetDataString) {
                     if (mIncomingConnection != nullptr) {
                         // Strip e;e;
                         mEthernetData =
                             lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
-                        lData = mEthernetData;
+
+                        mPacketHandler.Update(mEthernetData);
 
                         std::shared_ptr<MonitorDevice> lMonitorDevice =
                             std::dynamic_pointer_cast<MonitorDevice>(mIncomingConnection);
 
                         // If it is actually a monitor device, do convert.
                         if (lMonitorDevice != nullptr) {
-                            lData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(),
+                            mEthernetData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(),
                                                                  lMonitorDevice->GetDataPacketParameters());
 
                             // Data from XLink Kai should never be caught in the receiver thread of the Monitor device.
                             lMonitorDevice->BlackList(mPacketHandler.GetSourceMAC());
                         }
-                        mIncomingConnection->Send(lData);
+                        mIncomingConnection->Send(mEthernetData);
                     }
                 }
             } else if (lCommand == std::string(cDisconnectedFormat) + cSeparator.data()) {

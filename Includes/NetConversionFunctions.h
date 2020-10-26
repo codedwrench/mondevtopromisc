@@ -94,11 +94,11 @@ static void InsertIEEE80211Header(
     //  | Destination | Source      | BSSID       | N/A       |
 
     memcpy(&lIeee80211Header.addr1[0],
-           reinterpret_cast<const char*>(aDestinationAddress),
+           reinterpret_cast<const char*>(&aDestinationAddress),
            Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
 
     memcpy(&lIeee80211Header.addr2[0],
-           reinterpret_cast<const char*>(aSourceAddress),
+           reinterpret_cast<const char*>(&aSourceAddress),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
     uint64_t lBSSID = aBSSID;
@@ -115,8 +115,9 @@ static void InsertIEEE80211Header(
  * Helper function that inserts a radiotap header into a packet.
  * @param aPacket - Packet to insert radiotap header into.
  * @param aParameters - Parameters to use when inserting the parameters.
+ * @return size of radiotap header.
  */
-static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDeviceParameters aParameters)
+static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDeviceParameters aParameters)
 {
     unsigned int lIndex{sizeof(RadioTapHeader)};
 
@@ -130,10 +131,10 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
 
     if (aParameters.mKnownMCSInfo != 0) {
         // Clear bit 2, DataRate
-        lRadioTapHeader.present_flags &= ~(1U << 2U);
+        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & ~uint32_t(1U << 2U);
 
         // Set bit 19, MCS info
-        lRadioTapHeader.present_flags &= (1U << 19U);
+        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & ~uint32_t(1U << 19U);
 
         // Add 2 to the radiotap size (-1 for the data rate + 3 for the MCS info)
         lRadioTapHeader.bytes_in_header += 2;
@@ -142,6 +143,10 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
 
     // Optional header (Flags)
     uint8_t lFlags{aParameters.mFlags};
+
+    // If FCS at end set, reset
+    lFlags = (lFlags & ~uint8_t(0x10U));
+
     memcpy(aPacket + lIndex, &lFlags, sizeof(lFlags));
     lIndex += sizeof(lFlags);
 
@@ -174,6 +179,8 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
         lIndex += sizeof(aParameters.mMCSFlags);
         memcpy(aPacket + lIndex, &aParameters.mMCSInfo, sizeof(aParameters.mMCSInfo));
     }
+
+    return lRadioTapHeader.bytes_in_header;
 }
 
 /**

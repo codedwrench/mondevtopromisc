@@ -15,7 +15,6 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
             static_cast<unsigned int>(mLastReceivedData.size() - (Net_8023_Constants::cHeaderLength * sizeof(char)))};
 
         unsigned int lReserveSize{lIeee80211HeaderSize + lLLCHeaderSize + lDataSize};
-        lReserveSize += RadioTap_Constants::cRadioTapSize;
 
         std::vector<char> lFullPacket;
         lFullPacket.reserve(lReserveSize);
@@ -24,18 +23,21 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
         unsigned int lIndex{0};
 
         // RadioTap Header
-        InsertRadioTapHeader(&lFullPacket[0], aParameters);
-        lIndex += RadioTap_Constants::cRadioTapSize;
+        int lRadioTapSize = InsertRadioTapHeader(&lFullPacket[0], aParameters);
+        lIndex += lRadioTapSize;
+
+        lFullPacket.reserve(lReserveSize + lRadioTapSize);
+        lFullPacket.resize(lReserveSize + lRadioTapSize);
 
         // IEEE80211 Header
-        InsertIEEE80211Header(&lFullPacket[0], mSourceMAC, mDestinationMAC, aBSSID, lIndex);
+        InsertIEEE80211Header(&lFullPacket[0], SwapMacEndian(mSourceMAC), SwapMacEndian(mDestinationMAC), aBSSID, lIndex);
         lIndex += lIeee80211HeaderSize;
 
         // Logical Link Control (LLC) header
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
 
         // Set EtherType from ethernet frame
-        uint64_t lEtherType = *reinterpret_cast<const uint16_t*>(lFullPacket.at(Net_8023_Constants::cEtherTypeIndex));
+        uint64_t lEtherType = *reinterpret_cast<const uint16_t*>(&mLastReceivedData.at(Net_8023_Constants::cEtherTypeIndex));
 
         lLLC |= lEtherType << 48LLU;
 
@@ -44,8 +46,8 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
 
         // Data, without header included
         memcpy(&lFullPacket[0] + lIndex,
-               lFullPacket.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
-               lFullPacket.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
+               mLastReceivedData.data() + (Net_8023_Constants::cHeaderLength * (sizeof(char))),
+               mLastReceivedData.size() - (Net_8023_Constants::cHeaderLength * (sizeof(char))));
 
         lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     } else {

@@ -17,6 +17,7 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
 void Handler80211::AddToMACBlackList(uint64_t aMAC)
 {
     if (!IsMACBlackListed(aMAC)) {
+        Logger::GetInstance().Log("Added: " + std::to_string(aMAC) + " to blacklist.", Logger::Level::TRACE);
         mBlackList.push_back(aMAC);
     }
 }
@@ -129,6 +130,11 @@ uint64_t Handler80211::GetDestinationMAC() const
 uint64_t Handler80211::GetLockedBSSID() const
 {
     return mLockedBSSID;
+}
+
+uint64_t Handler80211::GetSourceMAC() const
+{
+    return mSourceMac;
 }
 
 bool Handler80211::IsAckable() const

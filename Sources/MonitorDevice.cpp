@@ -79,7 +79,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     mPacketHandler.Update(lData);
 
     if (mAcknowledgePackets && mPacketHandler.IsAckable()) {
-        std::string lAcknowledgementFrame = ConstructAcknowledgementFrame(mPacketHandler.GetDestinationMAC(),
+        std::string lAcknowledgementFrame = ConstructAcknowledgementFrame(mPacketHandler.GetSourceMAC(),
                                                                           mPacketHandler.GetControlPacketParameters());
 
         Send(lAcknowledgementFrame);
@@ -159,12 +159,10 @@ bool MonitorDevice::Send(std::string_view aData)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
-        std::string lData{};
+        if (!aData.empty()) {
+            Logger::GetInstance().Log(std::string("Sent: ") + aData.data(), Logger::Level::TRACE);
 
-        if (!lData.empty()) {
-            Logger::GetInstance().Log("Sent: " + lData, Logger::Level::TRACE);
-
-            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.c_str()), lData.size()) == 0) {
+            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(aData.data()), aData.size()) == 0) {
                 lReturn = true;
             } else {
                 Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)),
