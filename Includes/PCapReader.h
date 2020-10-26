@@ -13,9 +13,9 @@
 ///**
 // * This class contains the necessary components to read a PCap file.
 // * */
-//class PCapReader : public IPCapDevice
+// class PCapReader : public IPCapDevice
 //{
-//public:
+// public:
 //    void Close() override;
 //
 //    // For promiscuous mode
@@ -64,7 +64,7 @@
 //                                                   PacketConverter      aPacketConverter,
 //                                                   bool                 aMonitorCapture);
 //
-//private:
+// private:
 //    const unsigned char*                         mData{nullptr};
 //    pcap_t*                                      mHandler{nullptr};
 //    pcap_pkthdr*                                 mHeader{nullptr};

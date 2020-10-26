@@ -42,7 +42,7 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
         lIndex += 4;
 
         if ((mParameters.mPresentFlags & 1U) == 1) {
-            if(lIndex % 8 != 0) {
+            if (lIndex % 8 != 0) {
                 lIndex += lIndex % 8;
             }
             // TSFT, don't care, skip over it
@@ -59,7 +59,7 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
             lIndex += sizeof(uint8_t);
         }
         if ((mParameters.mPresentFlags & (1U << 3U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // Channel and channel flags
@@ -69,7 +69,7 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
             lIndex += sizeof(uint16_t);
         }
         if ((mParameters.mPresentFlags & (1U << 4U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // FHSS, don't care skip over it
@@ -84,21 +84,21 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
             lIndex += sizeof(int8_t);
         }
         if ((mParameters.mPresentFlags & (1U << 7U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // Lock Quality, Don't care skip over it
             lIndex += sizeof(uint16_t);
         }
         if ((mParameters.mPresentFlags & (1U << 8U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // TX attenuation, Don't care skip over it
             lIndex += sizeof(uint16_t);
         }
         if ((mParameters.mPresentFlags & (1U << 9U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // dB TX attenuation, Don't care skip over it
@@ -121,14 +121,14 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
             lIndex += sizeof(uint8_t);
         }
         if ((mParameters.mPresentFlags & (1U << 14U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // RX Flags, Don't care skip over it
             lIndex += sizeof(uint16_t);
         }
         if ((mParameters.mPresentFlags & (1U << 15U)) != 0) {
-            if(lIndex % 2 != 0) {
+            if (lIndex % 2 != 0) {
                 lIndex += lIndex % 2;
             }
             // TX Flags, Don't care skip over it
@@ -143,7 +143,7 @@ void RadioTapReader::FillRadioTapParameters(std::string_view aData)
             lIndex += sizeof(uint8_t);
         }
         if ((mParameters.mPresentFlags & (1U << 18U)) != 0) {
-            if(lIndex % 8 != 0) {
+            if (lIndex % 8 != 0) {
                 lIndex += lIndex % 8;
             }
             // XChannel, Don't care skip over it

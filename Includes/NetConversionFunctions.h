@@ -79,7 +79,8 @@ static uint64_t SwapMacEndian(uint64_t aMac)
  * @param aBSSID - BSSID to insert.
  * @param aIndex - Index to insert the header at.
  */
-static void InsertIEEE80211Header(char* aPacket, uint64_t aSourceAddress, uint64_t aDestinationAddress, uint64_t aBSSID, uint8_t aIndex)
+static void InsertIEEE80211Header(
+    char* aPacket, uint64_t aSourceAddress, uint64_t aDestinationAddress, uint64_t aBSSID, uint8_t aIndex)
 {
     ieee80211_hdr lIeee80211Header{};
     memset(&lIeee80211Header, 0, sizeof(lIeee80211Header));
@@ -93,11 +94,11 @@ static void InsertIEEE80211Header(char* aPacket, uint64_t aSourceAddress, uint64
     //  | Destination | Source      | BSSID       | N/A       |
 
     memcpy(&lIeee80211Header.addr1[0],
-           reinterpret_cast<const char*>(aSourceAddress),
+           reinterpret_cast<const char*>(aDestinationAddress),
            Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
 
     memcpy(&lIeee80211Header.addr2[0],
-           reinterpret_cast<const char*>(aDestinationAddress),
+           reinterpret_cast<const char*>(aSourceAddress),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
     uint64_t lBSSID = aBSSID;

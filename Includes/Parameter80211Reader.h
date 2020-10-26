@@ -18,7 +18,7 @@ public:
      * Constructor for the Parameter80211Reader.
      * @param aPhysicalDeviceHeaderReader - Pointer to the device header reader, used for index after header.
      */
-     explicit Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader);
+    explicit Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader);
 
     /**
      * Gets the last obtained frequency.

@@ -51,12 +51,12 @@ public:
      */
     uint64_t GetLockedBSSID();
 
-    bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
-    bool                 Send(std::string_view aData) override;
-    void                 SetAcknowledgePackets(bool aAcknowledge);
-    void                 SetConnector(std::shared_ptr<IConnector> aDevice) override;
-    void                 SetSourceMACToFilter(uint64_t aMac);
-    bool                 StartReceiverThread() override;
+    bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
+    bool Send(std::string_view aData) override;
+    void SetAcknowledgePackets(bool aAcknowledge);
+    void SetConnector(std::shared_ptr<IConnector> aDevice) override;
+    void SetSourceMACToFilter(uint64_t aMac);
+    bool StartReceiverThread() override;
 
 private:
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);

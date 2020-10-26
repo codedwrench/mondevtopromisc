@@ -7,7 +7,8 @@
 #include "../Includes/NetConversionFunctions.h"
 #include "../Includes/NetworkingHeaders.h"
 
-Parameter80211Reader::Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader) {
+Parameter80211Reader::Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader)
+{
     mPhysicalDeviceHeaderReader = std::move(aPhysicalDeviceHeaderReader);
 }
 

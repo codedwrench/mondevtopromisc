@@ -16,7 +16,7 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
 
 void Handler80211::AddToMACBlackList(uint64_t aMAC)
 {
-    if(!IsMACBlackListed(aMAC)) {
+    if (!IsMACBlackListed(aMAC)) {
         mBlackList.push_back(aMAC);
     }
 }
@@ -181,10 +181,8 @@ bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
     if (mSSIDList.empty()) {
         lReturn = true;
     } else {
-        for(auto& lSSID : mSSIDList)
-        {
-            if(aSSID.find(lSSID) != std::string::npos)
-            {
+        for (auto& lSSID : mSSIDList) {
+            if (aSSID.find(lSSID) != std::string::npos) {
                 lReturn = true;
             }
         }
@@ -220,7 +218,7 @@ void Handler80211::Update(std::string_view aData)
     // Save data in object and fill RadioTap parameters.
     mLastReceivedData = aData;
 
-    mAckable = false;
+    mAckable    = false;
     mShouldSend = false;
 
     if (mPhysicalDeviceHeaderReader != nullptr) {
@@ -332,7 +330,8 @@ void Handler80211::UpdateControlPacketType()
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lControlType{static_cast<uint8_t>(GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
+        uint8_t lControlType{static_cast<uint8_t>(
+            GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
 
         if ((lControlType & 0b0010U) == 0b0010U) {
             lResult = Control80211PacketType::Trigger;
@@ -434,7 +433,8 @@ void Handler80211::UpdateManagementPacketType()
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lManagementType{static_cast<uint8_t>((GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength())) >> 4U)};
+        uint8_t lManagementType{static_cast<uint8_t>(
+            (GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength())) >> 4U)};
 
         if ((lManagementType & 0b1111U) == 0b0000U) {
             lResult = Management80211PacketType::AssociationRequest;

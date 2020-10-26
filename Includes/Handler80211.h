@@ -187,7 +187,7 @@ private:
     uint64_t mSourceMac{0};
 
     std::shared_ptr<Parameter80211Reader> mParameter80211Reader{nullptr};
-    std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader{nullptr};
+    std::shared_ptr<RadioTapReader>       mPhysicalDeviceHeaderReader{nullptr};
 
     RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersControl{};
     RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersData{};

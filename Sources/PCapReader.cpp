@@ -10,9 +10,9 @@
 //#include <string>
 //
 //#include "../Includes/Logger.h"
-//using namespace std::chrono;
+// using namespace std::chrono;
 //
-//bool PCapReader::Open(std::string_view aName, uint16_t aFrequency)
+// bool PCapReader::Open(std::string_view aName, uint16_t aFrequency)
 //{
 //    bool                               lReturn{true};
 //    std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
@@ -27,7 +27,7 @@
 //    return lReturn;
 //}
 //
-//bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
+// bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter, uint16_t aFrequency)
 //{
 //    bool lReturn = Open(aName, aFrequency);
 //    mSSIDFilter  = aSSIDFilter;
@@ -35,14 +35,14 @@
 //    return lReturn;
 //}
 //
-//void PCapReader::Close()
+// void PCapReader::Close()
 //{
 //    pcap_close(mHandler);
 //    mData   = nullptr;
 //    mHeader = nullptr;
 //}
 //
-//bool PCapReader::ReadNextData()
+// bool PCapReader::ReadNextData()
 //{
 //    bool lReturn = true;
 //
@@ -52,7 +52,8 @@
 //            Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 //
 //            // Show the size in bytes of the packet
-//            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes", Logger::Level::TRACE);
+//            Logger::GetInstance().Log("Packet size: " + std::to_string(mHeader->len) + " bytes",
+//            Logger::Level::TRACE);
 //
 //
 //            // Show a warning if the length captured is different
@@ -77,17 +78,17 @@
 //    return lReturn;
 //}
 //
-//const unsigned char* PCapReader::GetData()
+// const unsigned char* PCapReader::GetData()
 //{
 //    return mData;
 //}
 //
-//const pcap_pkthdr* PCapReader::GetHeader()
+// const pcap_pkthdr* PCapReader::GetHeader()
 //{
 //    return mHeader;
 //}
 //
-//std::string PCapReader::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)
+// std::string PCapReader::DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader)
 //{
 //    // Convert from char* to string
 //    std::string lData{};
@@ -102,12 +103,12 @@
 //    return lData;
 //}
 //
-//std::string PCapReader::LastDataToString()
+// std::string PCapReader::LastDataToString()
 //{
 //    return DataToString(mData, mHeader);
 //}
 //
-//std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* aData,
+// std::pair<bool, bool> PCapReader::ConstructAndReplayPacket(const unsigned char* aData,
 //                                                           const pcap_pkthdr*   aHeader,
 //                                                           PacketConverter      aPacketConverter,
 //                                                           bool                 aMonitorCapture)
@@ -132,7 +133,8 @@
 //                    }
 //                }
 //            }
-//        } else if (aPacketConverter.Is80211Data(lData) && aPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID)) {
+//        } else if (aPacketConverter.Is80211Data(lData) && aPacketConverter.IsForBSSID(lData, mWifiInformation.BSSID))
+//        {
 //            ++mPacketCount;
 //            lUsefulPacket = true;
 //        }
@@ -153,7 +155,7 @@
 //    return {lSuccesfulPacket, lUsefulPacket};
 //}
 //
-//std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bool aHasRadioTap)
+// std::pair<bool, unsigned int> PCapReader::ReplayPackets(bool aMonitorCapture, bool aHasRadioTap)
 //{
 //    bool         lSuccesfulPacket{false};
 //    unsigned int lPacketsSent{0};
@@ -195,23 +197,23 @@
 //    return std::pair{lSuccesfulPacket, lPacketsSent};
 //}
 //
-//bool PCapReader::Send(std::string_view /*aData*/, IPCapDevice_Constants::WiFiBeaconInformation& /*aWiFiInformation*/)
+// bool PCapReader::Send(std::string_view /*aData*/, IPCapDevice_Constants::WiFiBeaconInformation& /*aWiFiInformation*/)
 //{
 //    return false;
 //}
 //
-//bool PCapReader::Send(std::string_view /*aData*/)
+// bool PCapReader::Send(std::string_view /*aData*/)
 //{
 //    // Maybe make it possible to inject a packet into the capture file here, but not sure if that's beneficial.
 //    return false;
 //}
 //
-//void PCapReader::SetConnector(std::shared_ptr<IConnector> aDevice)
+// void PCapReader::SetConnector(std::shared_ptr<IConnector> aDevice)
 //{
 //    mSendReceiveDevice = aDevice;
 //}
 //
-//const IPCapDevice_Constants::WiFiBeaconInformation& PCapReader::GetWifiInformation()
+// const IPCapDevice_Constants::WiFiBeaconInformation& PCapReader::GetWifiInformation()
 //{
 //    return mWifiInformation;
 //}

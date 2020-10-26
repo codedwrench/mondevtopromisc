@@ -155,14 +155,17 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                 if (lCommand == cEthernetDataString) {
                     if (mIncomingConnection != nullptr) {
                         // Strip e;e;
-                        mEthernetData = lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
+                        mEthernetData =
+                            lData.substr(cEthernetDataString.length(), lData.length() - cEthernetDataString.length());
                         lData = mEthernetData;
 
-                        std::shared_ptr<MonitorDevice> lMonitorDevice = std::dynamic_pointer_cast<MonitorDevice>(mIncomingConnection);
+                        std::shared_ptr<MonitorDevice> lMonitorDevice =
+                            std::dynamic_pointer_cast<MonitorDevice>(mIncomingConnection);
 
                         // If it is actually a monitor device, do convert.
-                        if(lMonitorDevice != nullptr) {
-                            lData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(), lMonitorDevice->GetDataPacketParameters());
+                        if (lMonitorDevice != nullptr) {
+                            lData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(),
+                                                                 lMonitorDevice->GetDataPacketParameters());
 
                             // Data from XLink Kai should never be caught in the receiver thread of the Monitor device.
                             lMonitorDevice->BlackList(mPacketHandler.GetSourceMAC());

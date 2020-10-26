@@ -79,8 +79,8 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     mPacketHandler.Update(lData);
 
     if (mAcknowledgePackets && mPacketHandler.IsAckable()) {
-        std::string lAcknowledgementFrame = ConstructAcknowledgementFrame(
-            mPacketHandler.GetDestinationMAC(), mPacketHandler.GetControlPacketParameters());
+        std::string lAcknowledgementFrame = ConstructAcknowledgementFrame(mPacketHandler.GetDestinationMAC(),
+                                                                          mPacketHandler.GetControlPacketParameters());
 
         Send(lAcknowledgementFrame);
     }
@@ -95,7 +95,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
         mConnector->Send(lPacket);
     }
 
-    mData = aData;
+    mData   = aData;
     mHeader = aHeader;
 
     return lReturn;

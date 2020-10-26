@@ -35,8 +35,7 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
         uint64_t lLLC = Net_80211_Constants::cSnapLLC;
 
         // Set EtherType from ethernet frame
-        uint64_t lEtherType = *reinterpret_cast<const uint16_t*>(
-            lFullPacket.at(Net_8023_Constants::cEtherTypeIndex));
+        uint64_t lEtherType = *reinterpret_cast<const uint16_t*>(lFullPacket.at(Net_8023_Constants::cEtherTypeIndex));
 
         lLLC |= lEtherType << 48LLU;
 
