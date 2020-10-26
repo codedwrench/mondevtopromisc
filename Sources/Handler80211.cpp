@@ -10,6 +10,8 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
     if (aType == PhysicalDeviceHeaderType::RadioTap) {
         mPhysicalDeviceHeaderReader = std::make_shared<RadioTapReader>();
     }
+
+    mParameter80211Reader = std::make_shared<Parameter80211Reader>(mPhysicalDeviceHeaderReader);
 }
 
 void Handler80211::AddToMACBlackList(uint64_t aMAC)
@@ -119,12 +121,12 @@ std::string_view Handler80211::GetPacket()
     return mLastReceivedData;
 }
 
-uint64_t Handler80211::GetDestinationMAC()
+uint64_t Handler80211::GetDestinationMAC() const
 {
     return mDestinationMac;
 }
 
-uint64_t Handler80211::GetLockedBSSID()
+uint64_t Handler80211::GetLockedBSSID() const
 {
     return mLockedBSSID;
 }
@@ -139,29 +141,9 @@ bool Handler80211::IsBSSIDAllowed(uint64_t aBSSID) const
     return mBSSID == aBSSID;
 }
 
-bool Handler80211::IsConvertiblePacket()
+bool Handler80211::ShouldSend()
 {
-    bool lReturn{false};
-
-    // Block all retries
-    if (!mQOSRetry) {
-        switch (mDataPacketType) {
-            case Data80211PacketType::Data:
-            case Data80211PacketType::DataCFACK:
-            case Data80211PacketType::DataCFACKCFPoll:
-            case Data80211PacketType::DataCFPoll:
-            case Data80211PacketType::QoSData:
-            case Data80211PacketType::QoSDataCFACK:
-            case Data80211PacketType::QoSDataCFACKCFPoll:
-            case Data80211PacketType::QoSDataCFPoll:
-                lReturn = true;
-                break;
-            default:
-                break;
-        }
-    }
-
-    return lReturn;
+    return mShouldSend;
 }
 
 bool Handler80211::IsMACAllowed(uint64_t aMAC)
@@ -196,8 +178,16 @@ bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
 {
     bool lReturn{false};
 
-    if (mSSIDList.empty() || std::find(mSSIDList.begin(), mSSIDList.end(), aSSID) != mSSIDList.end()) {
+    if (mSSIDList.empty()) {
         lReturn = true;
+    } else {
+        for(auto& lSSID : mSSIDList)
+        {
+            if(aSSID.find(lSSID) != std::string::npos)
+            {
+                lReturn = true;
+            }
+        }
     }
 
     return lReturn;
@@ -231,6 +221,7 @@ void Handler80211::Update(std::string_view aData)
     mLastReceivedData = aData;
 
     mAckable = false;
+    mShouldSend = false;
 
     if (mPhysicalDeviceHeaderReader != nullptr) {
         mPhysicalDeviceHeaderReader->FillRadioTapParameters(aData);
@@ -254,6 +245,7 @@ void Handler80211::Update(std::string_view aData)
         case Main80211PacketType::Data:
             // Only do something with the data frame if we care about this network
             UpdateSourceMac();
+            UpdateBSSID();
             if (IsMACAllowed(mSourceMac) && IsBSSIDAllowed(mLockedBSSID)) {
                 UpdateAckable();
                 UpdateDataPacketType();
@@ -268,7 +260,19 @@ void Handler80211::Update(std::string_view aData)
                         case Data80211PacketType::DataCFACKCFPoll:
                         case Data80211PacketType::DataCFPoll:
                             SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
+                            mShouldSend = true;
                         default:
+                            // Run through the packet types again for the QoS types
+                            switch (mDataPacketType) {
+                                case Data80211PacketType::QoSData:
+                                case Data80211PacketType::QoSDataCFACK:
+                                case Data80211PacketType::QoSDataCFACKCFPoll:
+                                case Data80211PacketType::QoSDataCFPoll:
+                                    mShouldSend = true;
+                                    break;
+                                default:
+                                    break;
+                            }
                             break;
                     }
                 }
@@ -281,13 +285,13 @@ void Handler80211::Update(std::string_view aData)
                 UpdateManagementPacketType();
 
                 if (mManagementPacketType == Management80211PacketType::Beacon) {
-                    mParameter80211Reader.Update(mLastReceivedData);
-                    if (IsSSIDAllowed(mParameter80211Reader.GetSSID())) {
+                    mParameter80211Reader->Update(mLastReceivedData);
+                    if (IsSSIDAllowed(mParameter80211Reader->GetSSID())) {
                         UpdateBSSID();
                         if (mBSSID != mLockedBSSID) {
                             mLockedBSSID = mBSSID;
                             Logger::GetInstance().Log(std::string("SSID switched:") +
-                                                          mParameter80211Reader.GetSSID().data() +
+                                                          mParameter80211Reader->GetSSID().data() +
                                                           " , BSSID: " + std::to_string(mBSSID),
                                                       Logger::Level::DEBUG);
                         }
@@ -328,8 +332,7 @@ void Handler80211::UpdateControlPacketType()
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lControlType{static_cast<uint8_t>(
-            GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
+        uint8_t lControlType{static_cast<uint8_t>(GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
 
         if ((lControlType & 0b0010U) == 0b0010U) {
             lResult = Control80211PacketType::Trigger;
@@ -365,7 +368,7 @@ void Handler80211::UpdateDataPacketType()
         uint8_t lDataType{static_cast<uint8_t>(
             GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
 
-        if ((lDataType & ~0b0000U) == 0b0000U) {
+        if ((lDataType & 0b1111U) == 0b0000U) {
             lResult = Data80211PacketType::Data;
         } else if ((lDataType & 0b0001U) == 0b0001U) {
             lResult = Data80211PacketType::DataCFACK;
@@ -412,7 +415,7 @@ void Handler80211::UpdateMainPacketType()
     if (mPhysicalDeviceHeaderReader != nullptr) {
         uint8_t lMainType{static_cast<uint8_t>(
             GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 2U)};
-        if ((lMainType & ~0b00U) == 0b00U) {
+        if ((lMainType & 0b11U) == 0b00U) {
             lResult = Main80211PacketType::Management;
         } else if ((lMainType & 0b01U) == 0b01U) {
             lResult = Main80211PacketType::Control;
@@ -431,10 +434,9 @@ void Handler80211::UpdateManagementPacketType()
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lManagementType{static_cast<uint8_t>(
-            GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
+        uint8_t lManagementType{static_cast<uint8_t>((GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength())) >> 4U)};
 
-        if ((lManagementType & ~0b0000U) == 0b0000U) {
+        if ((lManagementType & 0b1111U) == 0b0000U) {
             lResult = Management80211PacketType::AssociationRequest;
         } else if ((lManagementType & 0b0001U) == 0b0001U) {
             lResult = Management80211PacketType::AssociationResponse;

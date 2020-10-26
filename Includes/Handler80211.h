@@ -74,13 +74,13 @@ public:
      * Gets destination MAC address of packet.
      * @return the destination MAC address.
      */
-    uint64_t GetDestinationMAC();
+    uint64_t GetDestinationMAC() const;
 
     /**
      * Gets locked onto BSSID.
      * @return the locked onto BSSID.
      */
-    uint64_t GetLockedBSSID();
+    uint64_t GetLockedBSSID() const;
 
     /**
      * Gets packet saved in this class.
@@ -109,10 +109,10 @@ public:
     [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const;
 
     /**
-     * Checks if last received packet is convertible to 802.3.
-     * @return true if can be converted.
+     * Checks if last received packet is convertible to 802.3 and should be sent.
+     * @return true if should be sent.
      */
-    bool IsConvertiblePacket();
+    bool ShouldSend();
 
     /**
      * Checks if this MAC is not blacklisted / whitelisted.
@@ -183,10 +183,11 @@ private:
     uint64_t mDestinationMac{0};
     uint64_t mLockedBSSID{0};
     bool     mQOSRetry{false};
+    bool     mShouldSend{false};
     uint64_t mSourceMac{0};
 
-    Parameter80211Reader            mParameter80211Reader;
-    std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader;
+    std::shared_ptr<Parameter80211Reader> mParameter80211Reader{nullptr};
+    std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader{nullptr};
 
     RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersControl{};
     RadioTapReader::PhysicalDeviceParameters mPhysicalDeviceParametersData{};

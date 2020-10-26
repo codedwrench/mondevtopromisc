@@ -74,10 +74,12 @@ static uint64_t SwapMacEndian(uint64_t aMac)
  * Helper function for ConvertPacket, adds the IEEE80211 Header.
  * This one is based on Ad-Hoc traffic.
  * @param aData - Data to insert the Header to
+ * @param aSourceAddress - Source MAC to insert.
+ * @param aDestinationAddress - Destination MAC to insert.
  * @param aBSSID - BSSID to insert.
  * @param aIndex - Index to insert the header at.
  */
-static void InsertIEEE80211Header(char* aPacket, uint64_t aBSSID, uint8_t aIndex)
+static void InsertIEEE80211Header(char* aPacket, uint64_t aSourceAddress, uint64_t aDestinationAddress, uint64_t aBSSID, uint8_t aIndex)
 {
     ieee80211_hdr lIeee80211Header{};
     memset(&lIeee80211Header, 0, sizeof(lIeee80211Header));
@@ -91,11 +93,11 @@ static void InsertIEEE80211Header(char* aPacket, uint64_t aBSSID, uint8_t aIndex
     //  | Destination | Source      | BSSID       | N/A       |
 
     memcpy(&lIeee80211Header.addr1[0],
-           reinterpret_cast<const char*>(aPacket[Net_8023_Constants::cDestinationAddressIndex]),
+           reinterpret_cast<const char*>(aSourceAddress),
            Net_80211_Constants::cDestinationAddressLength * sizeof(uint8_t));
 
     memcpy(&lIeee80211Header.addr2[0],
-           reinterpret_cast<const char*>(aPacket[Net_8023_Constants::cSourceAddressIndex]),
+           reinterpret_cast<const char*>(aDestinationAddress),
            Net_80211_Constants::cSourceAddressLength * sizeof(uint8_t));
 
     uint64_t lBSSID = aBSSID;
@@ -126,9 +128,14 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
     lRadioTapHeader.bytes_in_header = RadioTap_Constants::cRadioTapSize;
 
     if (aParameters.mKnownMCSInfo != 0) {
+        // Clear bit 2, DataRate
+        lRadioTapHeader.present_flags &= ~(1 << 2);
+
         // Set bit 19, MCS info
         lRadioTapHeader.present_flags &= (1 << 19);
-        lRadioTapHeader.bytes_in_header += 3;
+
+        // Add 2 to the radiotap size (-1 for the data rate + 3 for the MCS info)
+        lRadioTapHeader.bytes_in_header += 2;
     }
     memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
 
@@ -137,10 +144,12 @@ static void InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePa
     memcpy(aPacket + lIndex, &lFlags, sizeof(lFlags));
     lIndex += sizeof(lFlags);
 
-    // Optional header (Rate Flags)
-    uint8_t lRateFlags{aParameters.mDataRate};
-    memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
-    lIndex += sizeof(lRateFlags);
+    if (aParameters.mKnownMCSInfo == 0) {
+        // Optional header (Rate Flags)
+        uint8_t lRateFlags{aParameters.mDataRate};
+        memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
+        lIndex += sizeof(lRateFlags);
+    }
 
     // Optional headers (Channel & Channel Flags)
     uint16_t lChannel{aParameters.mFrequency};

@@ -28,7 +28,7 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
         lIndex += RadioTap_Constants::cRadioTapSize;
 
         // IEEE80211 Header
-        InsertIEEE80211Header(&lFullPacket[0], aBSSID, lIndex);
+        InsertIEEE80211Header(&lFullPacket[0], mSourceMAC, mDestinationMAC, aBSSID, lIndex);
         lIndex += lIeee80211HeaderSize;
 
         // Logical Link Control (LLC) header

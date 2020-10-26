@@ -1,10 +1,15 @@
 #include "../Includes/Parameter80211Reader.h"
 
+#include <utility>
+
 /* Copyright (c) 2020 [Rick de Bondt] - Parameter80211Reader.cpp */
 
 #include "../Includes/NetConversionFunctions.h"
 #include "../Includes/NetworkingHeaders.h"
 
+Parameter80211Reader::Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader) {
+    mPhysicalDeviceHeaderReader = std::move(aPhysicalDeviceHeaderReader);
+}
 
 uint8_t Parameter80211Reader::GetFrequency() const
 {
@@ -94,9 +99,9 @@ uint8_t Parameter80211Reader::UpdateSSID()
 {
     uint8_t lSSIDLength{0};
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint8_t lSSIDLength{GetRawData<uint8_t>(
+        lSSIDLength = GetRawData<uint8_t>(
             mLastReceivedPacket,
-            mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1)};
+            mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 1);
         mSSID = GetRawString(
             mLastReceivedPacket,
             mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cFixedParameterTypeSSIDIndex + 2,

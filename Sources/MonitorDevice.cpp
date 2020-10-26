@@ -86,7 +86,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     }
 
     // If this packet is convertible to something XLink can understand, send
-    if (mPacketHandler.IsConvertiblePacket()) {
+    if (mPacketHandler.ShouldSend()) {
         if (Logger::GetInstance().GetLogLevel() == Logger::Level::TRACE) {
             ShowPacketStatistics(aData, aHeader);
         }
@@ -225,7 +225,9 @@ bool MonitorDevice::StartReceiverThread()
 
 void MonitorDevice::SetSourceMACToFilter(uint64_t aMac)
 {
-    mPacketHandler.AddToMACWhiteList(aMac);
+    if (aMac != 0) {
+        mPacketHandler.AddToMACWhiteList(aMac);
+    }
 }
 
 void MonitorDevice::SetAcknowledgePackets(bool aAcknowledge)
