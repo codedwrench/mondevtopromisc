@@ -134,7 +134,7 @@ static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePar
         lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & ~uint32_t(1U << 2U);
 
         // Set bit 19, MCS info
-        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & ~uint32_t(1U << 19U);
+        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & uint32_t(1U << 19U);
 
         // Add 2 to the radiotap size (-1 for the data rate + 3 for the MCS info)
         lRadioTapHeader.bytes_in_header += 2;
@@ -154,8 +154,10 @@ static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePar
         // Optional header (Rate Flags)
         uint8_t lRateFlags{aParameters.mDataRate};
         memcpy(aPacket + lIndex, &lRateFlags, sizeof(lRateFlags));
-        lIndex += sizeof(lRateFlags);
     }
+
+    // Even if no datarate, there needs to be padding
+    lIndex += sizeof(uint8_t);
 
     // Optional headers (Channel & Channel Flags)
     uint16_t lChannel{aParameters.mFrequency};
