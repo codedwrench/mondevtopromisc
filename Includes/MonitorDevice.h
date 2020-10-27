@@ -60,7 +60,7 @@ public:
 
 private:
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
-    void ShowPacketStatistics(const unsigned char* aData, const pcap_pkthdr* aHeader);
+    void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
 
     bool                           mAcknowledgePackets{false};
     bool                           mConnected{false};

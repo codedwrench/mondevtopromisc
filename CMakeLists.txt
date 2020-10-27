@@ -97,6 +97,7 @@ add_executable(mondevtopromisc main.cpp
         Includes/Handler8023.h
         Includes/Handler80211.h
         Includes/IConnector.h
+        Includes/IHandler.h
         Includes/IPCapDevice.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h

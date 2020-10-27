@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "IHandler.h"
 #include "NetworkingHeaders.h"
 #include "Parameter80211Reader.h"
 #include "RadioTapReader.h"
@@ -17,7 +18,7 @@
 /**
  * This class reads packets from a monitor format and converts to a promiscuous format.
  **/
-class Handler80211
+class Handler80211 : public IHandler
 {
 public:
     /**
@@ -26,7 +27,7 @@ public:
      * @param aType - Type of physical device header, usually radiotap is used, and for now this is the only supported
      * type.
      */
-    explicit Handler80211(PhysicalDeviceHeaderType aType);
+    explicit Handler80211(PhysicalDeviceHeaderType aType = PhysicalDeviceHeaderType::RadioTap);
 
     /**
      * Add the source MAC address to blacklist.
@@ -53,7 +54,6 @@ public:
     /**
      * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
      * 802.11 header and adding an 802.3 header. Only converts data packets!
-     * @param aData - The packet data to convert.
      * @return converted packet data, empty string if failed.
      */
     std::string ConvertPacket();
@@ -70,35 +70,22 @@ public:
      */
     const RadioTapReader::PhysicalDeviceParameters& GetDataPacketParameters();
 
-    /**
-     * Gets destination MAC address of packet.
-     * @return the destination MAC address.
-     */
-    uint64_t GetDestinationMAC() const;
-
-    /**
-     * Gets source MAC address of packet.
-     * @return the source MAC address.
-     */
-    uint64_t GetSourceMAC() const;
+    [[nodiscard]] uint64_t GetDestinationMAC() const override;
+    [[nodiscard]] uint64_t GetSourceMAC() const override;
 
     /**
      * Gets locked onto BSSID.
      * @return the locked onto BSSID.
      */
-    uint64_t GetLockedBSSID() const;
+    [[nodiscard]] uint64_t GetLockedBSSID() const;
 
-    /**
-     * Gets packet saved in this class.
-     * @return string_view with data.
-     */
-    std::string_view GetPacket();
+    std::string_view GetPacket() override;
 
     /**
      * Checks if a packet is ackable.
      * @return true is packet is ackable.
      */
-    bool IsAckable() const;
+    [[nodiscard]] bool IsAckable() const;
 
     /**
      * Checks if this BSSID is locked onto.
@@ -118,7 +105,7 @@ public:
      * Checks if last received packet is convertible to 802.3 and should be sent.
      * @return true if should be sent.
      */
-    bool ShouldSend();
+    [[nodiscard]] bool ShouldSend() const;
 
     /**
      * Checks if this MAC is not blacklisted / whitelisted.
@@ -155,11 +142,7 @@ public:
      */
     void SetSSIDFilterList(std::vector<std::string>& aSSIDList);
 
-    /**
-     * Preload data about this packet into this class.
-     * @param aData - Packet to dissect.
-     */
-    void Update(std::string_view aPacket);
+    void Update(std::string_view aPacket) override;
 
 private:
     void UpdateBSSID();

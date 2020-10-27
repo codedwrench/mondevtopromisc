@@ -166,7 +166,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                         // If it is actually a monitor device, do convert.
                         if (lMonitorDevice != nullptr) {
                             mEthernetData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(),
-                                                                 lMonitorDevice->GetDataPacketParameters());
+                                                                         lMonitorDevice->GetDataPacketParameters());
 
                             // Data from XLink Kai should never be caught in the receiver thread of the Monitor device.
                             lMonitorDevice->BlackList(mPacketHandler.GetSourceMAC());

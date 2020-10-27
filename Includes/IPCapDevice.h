@@ -41,6 +41,7 @@ public:
     /**
      * Opens the PCAP device so it can be used for capture.
      * @param aName - Name of the interface or file to use.
+     * @todo SSIDFilter is monitor mode specific. Do not add here.
      * @param aSSIDFilter - The SSIDS to listen to.
      * @return true if successful.
      */

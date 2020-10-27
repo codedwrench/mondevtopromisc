@@ -79,8 +79,8 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     mPacketHandler.Update(lData);
 
     if (mAcknowledgePackets && mPacketHandler.IsAckable()) {
-        std::string lAcknowledgementFrame = ConstructAcknowledgementFrame(mPacketHandler.GetSourceMAC(),
-                                                                          mPacketHandler.GetControlPacketParameters());
+        std::string lAcknowledgementFrame =
+            ConstructAcknowledgementFrame(mPacketHandler.GetSourceMAC(), mPacketHandler.GetControlPacketParameters());
 
         Send(lAcknowledgementFrame);
     }
@@ -88,7 +88,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     // If this packet is convertible to something XLink can understand, send
     if (mPacketHandler.ShouldSend()) {
         if (Logger::GetInstance().GetLogLevel() == Logger::Level::TRACE) {
-            ShowPacketStatistics(aData, aHeader);
+            ShowPacketStatistics(aHeader);
         }
 
         std::string lPacket{mPacketHandler.ConvertPacket()};
@@ -101,7 +101,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     return lReturn;
 }
 
-void MonitorDevice::ShowPacketStatistics(const unsigned char* aData, const pcap_pkthdr* aHeader)
+void MonitorDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader) const
 {
     Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 

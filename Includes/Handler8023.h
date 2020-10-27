@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "IHandler.h"
 #include "NetworkingHeaders.h"
 #include "Parameter80211Reader.h"
 #include "RadioTapReader.h"
@@ -17,7 +18,7 @@
 /**
  * This class reads packets from a monitor format and converts to a promiscuous format.
  **/
-class Handler8023
+class Handler8023 : public IHandler
 {
 public:
     /**
@@ -29,23 +30,17 @@ public:
      */
     std::string ConvertPacket(uint64_t aBSSID, RadioTapReader::PhysicalDeviceParameters aParameters);
 
-    /**
-     * Gets destination MAC address of packet.
-     * @return the destination MAC address. 0 if not found.
-     */
-    uint64_t GetDestinationMAC() const;
+    [[nodiscard]] uint64_t GetDestinationMAC() const override;
 
-    /**
-     * Tries to find the source mac in a packet.
-     * @return uint64_t containing source mac of this packet. 0 if not found.
-     */
-    uint64_t GetSourceMAC() const;
+    std::string_view GetPacket() override;
+
+    [[nodiscard]] uint64_t GetSourceMAC() const override;
 
     /**
      * Preloads data from 802.3 header into this object.
      * @param aPacket - Packet to use for loading data.
      */
-    void Update(std::string_view aPacket);
+    void Update(std::string_view aPacket) override;
 
 private:
     std::string mLastReceivedData{};

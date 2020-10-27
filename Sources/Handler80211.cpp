@@ -147,7 +147,7 @@ bool Handler80211::IsBSSIDAllowed(uint64_t aBSSID) const
     return mBSSID == aBSSID;
 }
 
-bool Handler80211::ShouldSend()
+bool Handler80211::ShouldSend() const
 {
     return mShouldSend;
 }
@@ -219,16 +219,16 @@ void Handler80211::SetSSIDFilterList(std::vector<std::string>& aSSIDList)
     mSSIDList = std::move(aSSIDList);
 }
 
-void Handler80211::Update(std::string_view aData)
+void Handler80211::Update(std::string_view aPacket)
 {
     // Save data in object and fill RadioTap parameters.
-    mLastReceivedData = aData;
+    mLastReceivedData = aPacket;
 
     mAckable    = false;
     mShouldSend = false;
 
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        mPhysicalDeviceHeaderReader->FillRadioTapParameters(aData);
+        mPhysicalDeviceHeaderReader->FillRadioTapParameters(aPacket);
     }
 
     UpdateMainPacketType();
@@ -366,7 +366,7 @@ void Handler80211::UpdateControlPacketType()
 
 void Handler80211::UpdateDataPacketType()
 {
-    Data80211PacketType lResult{Control80211PacketType::None};
+    Data80211PacketType lResult{Data80211PacketType::None};
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
@@ -435,7 +435,7 @@ void Handler80211::UpdateMainPacketType()
 
 void Handler80211::UpdateManagementPacketType()
 {
-    Management80211PacketType lResult{Control80211PacketType::None};
+    Management80211PacketType lResult{Management80211PacketType::None};
 
     // Makes more sense if you read this: https://en.wikipedia.org/wiki/802.11_Frame_Types#Frame_Control
     if (mPhysicalDeviceHeaderReader != nullptr) {
