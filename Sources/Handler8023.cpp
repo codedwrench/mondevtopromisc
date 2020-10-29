@@ -5,6 +5,30 @@
 #include "../Includes/Logger.h"
 #include "../Includes/NetConversionFunctions.h"
 
+void Handler8023::AddToMACBlackList(uint64_t aMAC)
+{
+    if (!IsMACBlackListed(aMAC)) {
+        Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to blacklist.", Logger::Level::TRACE);
+        mBlackList.push_back(aMAC);
+    }
+}
+
+void Handler8023::AddToMACWhiteList(uint64_t aMAC)
+{
+    Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to whitelist.", Logger::Level::TRACE);
+    mWhiteList.push_back(aMAC);
+}
+
+void Handler8023::ClearMACBlackList()
+{
+    mBlackList.clear();
+}
+
+void Handler8023::ClearMACWhiteList()
+{
+    mWhiteList.clear();
+}
+
 std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::PhysicalDeviceParameters aParameters)
 {
     std::string lReturn;
@@ -73,6 +97,35 @@ std::string_view Handler8023::GetPacket()
 uint64_t Handler8023::GetSourceMAC() const
 {
     return mSourceMAC;
+}
+
+
+bool Handler8023::IsMACAllowed(uint64_t aMAC)
+{
+    bool lReturn{false};
+
+    if (mWhiteList.empty()) {
+        if (std::find(mBlackList.begin(), mBlackList.end(), aMAC) == mBlackList.end()) {
+            lReturn = true;
+        }
+    } else {
+        if (std::find(mWhiteList.begin(), mWhiteList.end(), aMAC) != mWhiteList.end()) {
+            lReturn = true;
+        }
+    }
+
+    return lReturn;
+}
+
+bool Handler8023::IsMACBlackListed(uint64_t aMAC) const
+{
+    bool lReturn{false};
+
+    if (std::find(mBlackList.begin(), mBlackList.end(), aMAC) != mBlackList.end()) {
+        lReturn = true;
+    }
+
+    return lReturn;
 }
 
 void Handler8023::Update(std::string_view aPacket)

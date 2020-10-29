@@ -21,6 +21,11 @@
 class Handler8023 : public IHandler
 {
 public:
+    void AddToMACBlackList(uint64_t aMAC) override;
+    void AddToMACWhiteList(uint64_t aMAC) override;
+    void ClearMACBlackList() override;
+    void ClearMACWhiteList() override;
+
     /**
      * This function converts a monitor mode packet to a monitor mode packet, adding the radiotap and
      * 802.11 header and removing the 802.3 header.
@@ -31,10 +36,10 @@ public:
     std::string ConvertPacket(uint64_t aBSSID, RadioTapReader::PhysicalDeviceParameters aParameters);
 
     [[nodiscard]] uint64_t GetDestinationMAC() const override;
-
-    std::string_view GetPacket() override;
-
+    std::string_view       GetPacket() override;
     [[nodiscard]] uint64_t GetSourceMAC() const override;
+    [[nodiscard]] bool     IsMACBlackListed(uint64_t aMAC) const override;
+    bool                   IsMACAllowed(uint64_t aMAC) override;
 
     /**
      * Preloads data from 802.3 header into this object.
@@ -46,4 +51,7 @@ private:
     std::string mLastReceivedData{};
     uint64_t    mSourceMAC{0};
     uint64_t    mDestinationMAC{0};
+
+    std::vector<uint64_t> mBlackList{};
+    std::vector<uint64_t> mWhiteList{};
 };

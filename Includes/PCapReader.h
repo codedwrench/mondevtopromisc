@@ -28,27 +28,29 @@ public:
     explicit PCapReader(bool aMonitorCapture);
     ~PCapReader() = default;
 
-    void                 Close() override{};
+    void                 Close() override;
     std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     const unsigned char* GetData() override;
     const pcap_pkthdr*   GetHeader() override;
     bool                 Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
     bool                 Send(std::string_view aData) override;
+    void                 SetAcknowledgePackets(bool aAcknowledge);
     void                 SetConnector(std::shared_ptr<IConnector> aDevice) override;
-
+    void                 SetSourceMACToFilter(uint64_t aMac);
     // In this case tries to simulate a real device
     bool StartReceiverThread() override;
 
 private:
-    bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
-    void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
+    bool ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader);
+    bool ReadNextData();
+    void ShowPacketStatistics(pcap_pkthdr* aHeader) const;
 
     bool                           mAcknowledgePackets{false};
     bool                           mConnected{false};
     std::shared_ptr<IConnector>    mConnector{nullptr};
     const unsigned char*           mData{nullptr};
     pcap_t*                        mHandler{nullptr};
-    const pcap_pkthdr*             mHeader{nullptr};
+    pcap_pkthdr*                   mHeader{nullptr};
     bool                           mMonitorCapture{false};
     std::shared_ptr<IHandler>      mPacketHandler{nullptr};
     std::shared_ptr<boost::thread> mReplayThread{nullptr};

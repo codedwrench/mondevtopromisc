@@ -29,27 +29,10 @@ public:
      */
     explicit Handler80211(PhysicalDeviceHeaderType aType = PhysicalDeviceHeaderType::RadioTap);
 
-    /**
-     * Add the source MAC address to blacklist.
-     * @param aMac - MAC address to blacklist.
-     */
-    void AddToMACBlackList(uint64_t aMAC);
-
-    /**
-     * Add the source MAC address to whitelist. Whitelist takes prevalence over the blacklist.
-     * @param aMac - MAC address to whitelist.
-     */
-    void AddToMACWhiteList(uint64_t aMAC);
-
-    /**
-     * Clears blacklist.
-     */
-    void ClearMACBlackList();
-
-    /**
-     * Clears whitelist.
-     */
-    void ClearMACWhiteList();
+    void AddToMACBlackList(uint64_t aMAC) override;
+    void AddToMACWhiteList(uint64_t aMAC) override;
+    void ClearMACBlackList() override;
+    void ClearMACWhiteList() override;
 
     /**
      * This function converts a monitor mode packet to a promiscuous mode packet, stripping the radiotap and
@@ -100,12 +83,7 @@ public:
      */
     [[nodiscard]] bool IsBSSIDAllowed(uint64_t aBSSID) const;
 
-    /**
-     * Checks if MAC is in receiver blacklist.
-     * @param aMAC - MAC to check
-     * @return true if MAC is blacklisted.
-     */
-    [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const;
+    [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const override;
 
     /**
      * Checks if last received packet is convertible to 802.3 and should be sent.
@@ -113,12 +91,7 @@ public:
      */
     [[nodiscard]] bool ShouldSend() const;
 
-    /**
-     * Checks if this MAC is not blacklisted / whitelisted.
-     * @param aMAC - MAC to check
-     * @return true if MAC address is allowed.
-     */
-    bool IsMACAllowed(uint64_t aMAC);
+    bool IsMACAllowed(uint64_t aMAC) override;
 
     /**
      * Checks if this SSID is whitelisted.
