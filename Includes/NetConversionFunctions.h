@@ -288,17 +288,19 @@ static std::string PrettyHexString(std::string_view aData)
 
     // Start on new line immediately
     lFormattedString << std::endl;
+    lFormattedString << "000000 ";
 
     // Loop through the packet and print it as hexidecimal representations of octets
     for (unsigned int lCount = 0; lCount < aData.size(); lCount++) {
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << (0xFF & aData.at(lCount));
-
         // Start printing on the next line after every 64 octets
         if ((lCount != 0) && (lCount % 64 == 0)) {
             lFormattedString << std::endl;
-        } else {
+            lFormattedString << std::hex << std::setfill('0') << std::setw(6) << lCount << " ";
+        } else if (lCount != 0) {
             lFormattedString << " ";
         }
+
+        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << (0xFF & aData.at(lCount));
     }
 
     return lFormattedString.str();
