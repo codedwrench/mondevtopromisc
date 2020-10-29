@@ -182,6 +182,9 @@ bool PCapReader::StartReceiverThread()
                         lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
 
                         // Wait for next send.
+                        std::this_thread::sleep_for(lSleepFor);
+
+                        // Wait for next send.
                         ReadCallback(mData, mHeader);
                     }
                 }
