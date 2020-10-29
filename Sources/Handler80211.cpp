@@ -56,10 +56,6 @@ std::string Handler80211::ConvertPacket()
         // If there is QOS data added to the 80211 header, we need to skip past that as well
         switch (mDataPacketType) {
             case Data80211PacketType::QoSData:
-            case Data80211PacketType::QoSDataCFACK:
-            case Data80211PacketType::QoSDataCFACKCFPoll:
-            case Data80211PacketType::QoSDataCFPoll:
-            case Data80211PacketType::QoSNull:
                 lTypeIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
                 lDataIndex += sizeof(uint8_t) * Net_80211_Constants::cDataQOSLength;
                 break;
@@ -68,16 +64,11 @@ std::string Handler80211::ConvertPacket()
         }
 
         switch (mDataPacketType) {
-            // These packet types can't be handled yet, or at all
-            case Data80211PacketType::CFACK:
-            case Data80211PacketType::CFACKCFPoll:
-            case Data80211PacketType::CFPoll:
-            case Data80211PacketType::QoSCFACKCFPoll:
-            case Data80211PacketType::QoSCFPoll:
             case Data80211PacketType::QoSNull:
             case Data80211PacketType::Null:
                 break;
-            default:
+            case Data80211PacketType::QoSData:
+            case Data80211PacketType::Data:
                 // The header should have it's complete size for the packet to be valid.
                 if (mLastReceivedData.size() >
                     Net_80211_Constants::cDataHeaderLength + mPhysicalDeviceHeaderReader->GetLength()) {
@@ -100,6 +91,8 @@ std::string Handler80211::ConvertPacket()
                     Logger::GetInstance().Log("The header has an invalid length, cannot convert the packet",
                                               Logger::Level::WARNING);
                 }
+            default:
+                break;
         }
     }
 
@@ -260,24 +253,14 @@ void Handler80211::Update(std::string_view aPacket)
                 if (!mQOSRetry) {
                     switch (mDataPacketType) {
                         case Data80211PacketType::Data:
-                        case Data80211PacketType::DataCFACK:
-                        case Data80211PacketType::DataCFACKCFPoll:
-                        case Data80211PacketType::DataCFPoll:
                             SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
                             mShouldSend = true;
-                        default:
-                            // Run through the packet types again for the QoS types
-                            switch (mDataPacketType) {
-                                case Data80211PacketType::QoSData:
-                                case Data80211PacketType::QoSDataCFACK:
-                                case Data80211PacketType::QoSDataCFACKCFPoll:
-                                case Data80211PacketType::QoSDataCFPoll:
+                            break;
+                        case Data80211PacketType::QoSData:
                                     mShouldSend = true;
                                     break;
                                 default:
                                     break;
-                            }
-                            break;
                     }
                 }
             }
@@ -338,21 +321,10 @@ void Handler80211::UpdateControlPacketType()
     if (mPhysicalDeviceHeaderReader != nullptr) {
         uint8_t lControlType{static_cast<uint8_t>(
             GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
-
-        if ((lControlType & 0b0010U) == 0b0010U) {
-            lResult = Control80211PacketType::Trigger;
-        } else if ((lControlType & 0b0011U) == 0b0011U) {
-            lResult = Control80211PacketType::TACK;
-        } else if ((lControlType & 0b1000U) == 0b1000U) {
+        if ((lControlType & 0b1000U) == 0b1000U) {
             lResult = Control80211PacketType::BlockAckRequest;
         } else if ((lControlType & 0b1001U) == 0b1001U) {
             lResult = Control80211PacketType::BlockAck;
-        } else if ((lControlType & 0b1010U) == 0b1010U) {
-            lResult = Control80211PacketType::PSPoll;
-        } else if ((lControlType & 0b1011U) == 0b1011U) {
-            lResult = Control80211PacketType::RTS;
-        } else if ((lControlType & 0b1100U) == 0b1100U) {
-            lResult = Control80211PacketType::CTS;
         } else if ((lControlType & 0b1101U) == 0b1101U) {
             lResult = Control80211PacketType::ACK;
         } else {
@@ -375,34 +347,12 @@ void Handler80211::UpdateDataPacketType()
 
         if ((lDataType & 0b1111U) == 0b0000U) {
             lResult = Data80211PacketType::Data;
-        } else if ((lDataType & 0b0001U) == 0b0001U) {
-            lResult = Data80211PacketType::DataCFACK;
-        } else if ((lDataType & 0b0010U) == 0b0010U) {
-            lResult = Data80211PacketType::DataCFPoll;
-        } else if ((lDataType & 0b0011U) == 0b0011U) {
-            lResult = Data80211PacketType::DataCFACKCFPoll;
         } else if ((lDataType & 0b0100U) == 0b0100U) {
             lResult = Data80211PacketType::Null;
-        } else if ((lDataType & 0b0101U) == 0b0101U) {
-            lResult = Data80211PacketType::CFACK;
-        } else if ((lDataType & 0b0110U) == 0b0110U) {
-            lResult = Data80211PacketType::CFPoll;
-        } else if ((lDataType & 0b0111U) == 0b0111U) {
-            lResult = Data80211PacketType::CFACKCFPoll;
         } else if ((lDataType & 0b1000U) == 0b1000U) {
             lResult = Data80211PacketType::QoSData;
-        } else if ((lDataType & 0b1001U) == 0b1001U) {
-            lResult = Data80211PacketType::QoSDataCFACK;
-        } else if ((lDataType & 0b1010U) == 0b1010U) {
-            lResult = Data80211PacketType::QoSDataCFPoll;
-        } else if ((lDataType & 0b1011U) == 0b1011U) {
-            lResult = Data80211PacketType::QoSDataCFACKCFPoll;
         } else if ((lDataType & 0b1100U) == 0b1100U) {
             lResult = Data80211PacketType::QoSNull;
-        } else if ((lDataType & 0b1110U) == 0b1110U) {
-            lResult = Data80211PacketType::QoSCFPoll;
-        } else if ((lDataType & 0b1111U) == 0b1111U) {
-            lResult = Data80211PacketType::QoSCFACKCFPoll;
         } else {
             Logger::GetInstance().Log("Could not determine data packet type: " + std::to_string(lDataType),
                                       Logger::Level::DEBUG);
@@ -480,13 +430,7 @@ void Handler80211::UpdateQOSRetry()
 {
     if (mPhysicalDeviceHeaderReader != nullptr) {
         switch (mDataPacketType) {
-            case Data80211PacketType::QoSCFACKCFPoll:
-            case Data80211PacketType::QoSCFPoll:
             case Data80211PacketType::QoSData:
-            case Data80211PacketType::QoSDataCFACK:
-            case Data80211PacketType::QoSDataCFACKCFPoll:
-            case Data80211PacketType::QoSDataCFPoll:
-            case Data80211PacketType::QoSNull:
                 mQOSRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
                             Net_80211_Constants::cDataQOSRetryFlag;
             default:

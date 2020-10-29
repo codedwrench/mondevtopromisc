@@ -59,11 +59,6 @@ enum class Control80211PacketType
     ACK = 0,
     BlockAck,
     BlockAckRequest,
-    CTS,
-    PSPoll,
-    RTS,
-    TACK,
-    Trigger,
     None
 };
 
@@ -72,20 +67,9 @@ enum class Control80211PacketType
  */
 enum class Data80211PacketType
 {
-    CFACK = 0,
-    CFACKCFPoll,
-    CFPoll,
     Data,
-    DataCFACK,
-    DataCFACKCFPoll,
-    DataCFPoll,
     Null,
-    QoSCFACKCFPoll,
-    QoSCFPoll,
     QoSData,
-    QoSDataCFACK,
-    QoSDataCFACKCFPoll,
-    QoSDataCFPoll,
     QoSNull,
     None
 };
