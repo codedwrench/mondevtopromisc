@@ -257,10 +257,10 @@ void Handler80211::Update(std::string_view aPacket)
                             mShouldSend = true;
                             break;
                         case Data80211PacketType::QoSData:
-                                    mShouldSend = true;
-                                    break;
-                                default:
-                                    break;
+                            mShouldSend = true;
+                            break;
+                        default:
+                            break;
                     }
                 }
             }

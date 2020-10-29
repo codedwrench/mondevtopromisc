@@ -254,3 +254,21 @@ static std::string ConstructAcknowledgementFrame(uint64_t                       
     lReturn = std::string(lFullPacket.begin(), lFullPacket.end());
     return lReturn;
 }
+
+// Converts the data to a pretty Hex-String for easy reading 
+std::string PrettyHexString(std::string_view aData)
+{
+    std::stringstream lFormattedString;
+    // Loop through the packet and print it as hexidecimal representations of octets
+    for (unsigned int lCount = 0; lCount < aData.size(); lCount++) {
+        // Start printing on the next line after every 16 octets
+        if (lCount % 16 == 0) {
+            lFormattedString << std::endl;
+        }
+
+        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(aData.at(lCount))
+                         << " ";
+    }
+
+    return lFormattedString.str();
+}

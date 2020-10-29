@@ -8,6 +8,8 @@
 
 #include "../Includes/Logger.h"
 #include "../Includes/MonitorDevice.h"
+#include "../Includes/NetConversionFunctions.h"
+
 
 using namespace boost::asio;
 
@@ -76,7 +78,13 @@ bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
     if (mSocket.is_open()) {
         if ((mConnected || aCommand == cConnectString || aCommand == cDisconnectString)) {
             try {
-                Logger::GetInstance().Log("Sent: " + std::string(aCommand) + std::string(aData), Logger::Level::TRACE);
+                if(aCommand == cEthernetDataString)
+                {
+                    Logger::GetInstance().Log("Sent: " + std::string(aCommand) + PrettyHexString(aData), Logger::Level::TRACE);
+                } else {
+                    Logger::GetInstance().Log("Sent: " + std::string(aCommand) + aData.data(), Logger::Level::DEBUG);
+                }
+
                 mSocket.send_to(buffer(std::string(aCommand) + std::string(aData)), mRemote);
             } catch (const boost::system::system_error& lException) {
                 Logger::GetInstance().Log(
@@ -129,7 +137,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
 
     // If we actually received anything useful, react.
     if (!lData.empty()) {
-        Logger::GetInstance().Log("Received: " + lData, Logger::Level::TRACE);
+        Logger::GetInstance().Log("Received: " + PrettyHexString(lData), Logger::Level::TRACE);
         std::size_t lFirstSeparator{lData.find(cSeparator)};
         std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
