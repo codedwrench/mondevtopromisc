@@ -253,9 +253,9 @@ void Handler80211::Update(std::string_view aPacket)
             UpdateSourceMac();
             UpdateBSSID();
             if (IsMACAllowed(mSourceMac) && IsBSSIDAllowed(mLockedBSSID)) {
+                UpdateDestinationMac();
                 UpdateAckable();
                 UpdateDataPacketType();
-                UpdateDestinationMac();
                 UpdateQOSRetry();
 
                 // Only save parameters on normal data types.
@@ -271,9 +271,8 @@ void Handler80211::Update(std::string_view aPacket)
                             break;
                         default:
                             break;
-
-                            mIsDropped = false;
                     }
+                    mIsDropped = false;
                 } else {
                     Logger::GetInstance().Log("QoS Retry blocked", Logger::Level::TRACE);
                 }

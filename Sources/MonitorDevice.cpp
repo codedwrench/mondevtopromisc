@@ -79,6 +79,11 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
 
     mPacketHandler.Update(lData);
 
+    if (!mPacketHandler.IsDropped()) {
+        ShowPacketStatistics(aHeader);
+        Logger::GetInstance().Log("Received: " + PrettyHexString(lData), Logger::Level::TRACE);
+    }
+
     if (mAcknowledgePackets && mPacketHandler.IsAckable()) {
         std::string lAcknowledgementFrame =
             ConstructAcknowledgementFrame(mPacketHandler.GetSourceMAC(), mPacketHandler.GetControlPacketParameters());
@@ -91,10 +96,6 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     if (mPacketHandler.ShouldSend()) {
         std::string lPacket{mPacketHandler.ConvertPacket()};
         mConnector->Send(lPacket);
-    }
-
-    if (!mPacketHandler.IsDropped()) {
-        ShowPacketStatistics(aHeader);
     }
 
     mData   = aData;
