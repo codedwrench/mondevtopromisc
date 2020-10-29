@@ -133,13 +133,13 @@ static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePar
 
     if (aParameters.mKnownMCSInfo != 0) {
         // Clear bit 2, DataRate
-        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & ~uint32_t(1U << 2U);
+        lRadioTapHeader.present_flags &= ~uint32_t(1U << 2U);
 
         // Set bit 19, MCS info
-        lRadioTapHeader.present_flags = lRadioTapHeader.present_flags & uint32_t(1U << 19U);
+        lRadioTapHeader.present_flags |= uint32_t(1U << 19U);
 
-        // Add 2 to the radiotap size (-1 for the data rate + 3 for the MCS info)
-        lRadioTapHeader.bytes_in_header += 2;
+        // Add 3 to the radiotap size (+ 3 for the MCS info)
+        lRadioTapHeader.bytes_in_header += 3;
     }
     memcpy(aPacket, &lRadioTapHeader, sizeof(lRadioTapHeader));
 
@@ -171,7 +171,7 @@ static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePar
     lIndex += sizeof(lChannelFlags);
 
     // Optional header (TX Flags)
-    uint32_t lTXFlags{RadioTap_Constants::cTXFlags};
+    uint16_t lTXFlags{RadioTap_Constants::cTXFlags};
     memcpy(aPacket + lIndex, &lTXFlags, sizeof(lTXFlags));
     lIndex += sizeof(lTXFlags);
 

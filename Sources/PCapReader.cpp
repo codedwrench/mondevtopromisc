@@ -67,6 +67,12 @@ bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFil
         lReturn = false;
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
                                   Logger::Level::ERROR);
+    } else {
+        if (mMonitorCapture) {
+            // If we have a monitor device we want the 80211 handler.
+            auto lHandler{std::dynamic_pointer_cast<Handler80211>(mPacketHandler)};
+            lHandler->SetSSIDFilterList(aSSIDFilter);
+        }
     }
 
     return lReturn;
