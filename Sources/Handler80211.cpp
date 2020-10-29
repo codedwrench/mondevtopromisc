@@ -191,6 +191,11 @@ bool Handler80211::IsSSIDAllowed(std::string_view aSSID)
     return lReturn;
 }
 
+bool Handler80211::IsDropped() const
+{
+    return mIsDropped;
+}
+
 void Handler80211::SavePhysicalDeviceParameters(RadioTapReader::PhysicalDeviceParameters& aParameters)
 {
     if (mPhysicalDeviceHeaderReader != nullptr) {
@@ -219,6 +224,7 @@ void Handler80211::Update(std::string_view aPacket)
     mLastReceivedData = aPacket;
 
     mAckable    = false;
+    mIsDropped  = true;
     mShouldSend = false;
 
     if (mPhysicalDeviceHeaderReader != nullptr) {
@@ -238,6 +244,7 @@ void Handler80211::Update(std::string_view aPacket)
                 if (mControlPacketType == Control80211PacketType::ACK) {
                     Logger::GetInstance().Log("Saving parameters for a Control packet type", Logger::Level::TRACE);
                     SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
+                    mIsDropped = false;
                 }
             }
             break;
@@ -264,6 +271,8 @@ void Handler80211::Update(std::string_view aPacket)
                             break;
                         default:
                             break;
+
+                            mIsDropped = false;
                     }
                 } else {
                     Logger::GetInstance().Log("QoS Retry blocked", Logger::Level::TRACE);
@@ -284,8 +293,10 @@ void Handler80211::Update(std::string_view aPacket)
                             mLockedBSSID = mBSSID;
                             Logger::GetInstance().Log(std::string("SSID switched:") +
                                                           mParameter80211Reader->GetSSID().data() +
-                                                          " , BSSID: " + std::to_string(mBSSID),
+                                                          ", BSSID: " + IntToMac(mBSSID),
                                                       Logger::Level::DEBUG);
+
+                            mIsDropped = false;
                         }
                     }
                 }

@@ -76,11 +76,6 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
 
     // Load all needed information into the handler
     std::string lData{DataToString(aData, aHeader)};
-    
-    if (Logger::GetInstance().GetLogLevel() == Logger::Level::TRACE) {
-            Logger::GetInstance().Log("Received: " + PrettyHexString(lData), Logger::Level::TRACE);
-            ShowPacketStatistics(aHeader);
-    }
 
     mPacketHandler.Update(lData);
 
@@ -98,13 +93,18 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
         mConnector->Send(lPacket);
     }
 
+    if (!mPacketHandler.IsDropped()) {
+        ShowPacketStatistics(aHeader);
+    }
+
     mData   = aData;
     mHeader = aHeader;
+    mPacketCount++;
 
     return lReturn;
 }
 
-void MonitorDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader) const
+void MonitorDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader)
 {
     Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 

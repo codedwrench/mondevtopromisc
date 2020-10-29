@@ -78,9 +78,9 @@ bool XLinkKaiConnection::Send(std::string_view aCommand, std::string_view aData)
     if (mSocket.is_open()) {
         if ((mConnected || aCommand == cConnectString || aCommand == cDisconnectString)) {
             try {
-                if(aCommand == cEthernetDataString)
-                {
-                    Logger::GetInstance().Log("Sent: " + std::string(aCommand) + PrettyHexString(aData), Logger::Level::TRACE);
+                if (aCommand == cEthernetDataString) {
+                    Logger::GetInstance().Log("Sent: " + std::string(aCommand) + PrettyHexString(aData),
+                                              Logger::Level::TRACE);
                 } else {
                     Logger::GetInstance().Log("Sent: " + std::string(aCommand) + aData.data(), Logger::Level::DEBUG);
                 }
@@ -137,10 +137,14 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
 
     // If we actually received anything useful, react.
     if (!lData.empty()) {
-        Logger::GetInstance().Log("Received: " + PrettyHexString(lData), Logger::Level::TRACE);
         std::size_t lFirstSeparator{lData.find(cSeparator)};
         std::string lCommand{lData.substr(0, lFirstSeparator + 1)};
 
+        if (lCommand == cEthernetDataString) {
+            Logger::GetInstance().Log("Received: " + PrettyHexString(lData), Logger::Level::TRACE);
+        } else {
+            Logger::GetInstance().Log("Received: " + lCommand + lData, Logger::Level::TRACE);
+        }
 
         if (!mConnected && (lCommand == std::string(cConnectedFormat) + cSeparator.data())) {
             lCommand = lData.substr(0, cConnectedString.size());

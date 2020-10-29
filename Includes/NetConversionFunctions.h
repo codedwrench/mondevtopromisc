@@ -16,9 +16,9 @@
 #endif
 
 #include <cstring>
+#include <iomanip>
 #include <ios>
 #include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -196,12 +196,10 @@ static std::string IntToMac(uint64_t aMac)
 {
     std::ostringstream lOutput{};
 
-    for(unsigned int lCount = 0; lCount < Net_80211_Constants::cSourceAddressLength; lCount++)
-    {
-        uint8_t lNibble{static_cast<uint8_t>(aMac >> lCount)};
-        lOutput << std::hex << std::setfill('0') << std::setw(2) << lNibble;
-        if (lCount != Net_80211_Constants::cSourceAddressLength - 1)
-        {
+    for (unsigned int lCount = 0; lCount < Net_80211_Constants::cSourceAddressLength; lCount++) {
+        uint8_t lNibble{static_cast<uint8_t>(aMac >> (lCount * 8))};
+        lOutput << std::hex << std::setfill('0') << std::setw(2) << (0xFF & lNibble);
+        if (lCount != Net_80211_Constants::cSourceAddressLength - 1) {
             lOutput << ":";
         }
     }
@@ -287,15 +285,20 @@ static std::string ConstructAcknowledgementFrame(uint64_t                       
 static std::string PrettyHexString(std::string_view aData)
 {
     std::stringstream lFormattedString;
+
+    // Start on new line immediately
+    lFormattedString << std::endl;
+
     // Loop through the packet and print it as hexidecimal representations of octets
     for (unsigned int lCount = 0; lCount < aData.size(); lCount++) {
-        // Start printing on the next line after every 16 octets
-        if (lCount % 16 == 0) {
-            lFormattedString << std::endl;
-        }
+        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << (0xFF & aData.at(lCount));
 
-        lFormattedString << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned int>(aData.at(lCount))
-                         << " ";
+        // Start printing on the next line after every 64 octets
+        if ((lCount != 0) && (lCount % 64 == 0)) {
+            lFormattedString << std::endl;
+        } else {
+            lFormattedString << " ";
+        }
     }
 
     return lFormattedString.str();

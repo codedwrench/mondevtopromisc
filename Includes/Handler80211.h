@@ -88,6 +88,12 @@ public:
     [[nodiscard]] bool IsAckable() const;
 
     /**
+     * Checks if the packet has been used by the handler.
+     * @return true if unused.
+     */
+    [[nodiscard]] bool IsDropped() const;
+
+    /**
      * Checks if this BSSID is locked onto.
      * @param aBSSID - BSSID to check
      * @return true if BSSID is locked onto.
@@ -174,6 +180,7 @@ private:
     bool     mQOSRetry{false};
     bool     mShouldSend{false};
     uint64_t mSourceMac{0};
+    bool     mIsDropped{false};
 
     std::shared_ptr<Parameter80211Reader> mParameter80211Reader{nullptr};
     std::shared_ptr<RadioTapReader>       mPhysicalDeviceHeaderReader{nullptr};
