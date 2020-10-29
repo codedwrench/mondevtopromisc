@@ -17,6 +17,8 @@
 
 #include <cstring>
 #include <ios>
+#include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -186,6 +188,28 @@ static int InsertRadioTapHeader(char* aPacket, RadioTapReader::PhysicalDevicePar
 }
 
 /**
+ * Converts a mac address int to string format: (xx:xx:xx:xx:xx:xx)
+ * @param aMac - The mac address string to convert to an int.
+ * @return std::string with the converted mac address.
+ */
+static std::string IntToMac(uint64_t aMac)
+{
+    std::ostringstream lOutput{};
+
+    for(unsigned int lCount = 0; lCount < Net_80211_Constants::cSourceAddressLength; lCount++)
+    {
+        uint8_t lNibble{static_cast<uint8_t>(aMac >> lCount)};
+        lOutput << std::hex << std::setfill('0') << std::setw(2) << lNibble;
+        if (lCount != Net_80211_Constants::cSourceAddressLength - 1)
+        {
+            lOutput << ":";
+        }
+    }
+
+    return lOutput.str();
+}
+
+/**
  * Converts a mac address string in format (xx:xx:xx:xx:xx:xx) to an int, has no safety build in for invalid
  * strings!
  * @param aMac - The mac address string to convert to an int.
@@ -255,8 +279,12 @@ static std::string ConstructAcknowledgementFrame(uint64_t                       
     return lReturn;
 }
 
-// Converts the data to a pretty Hex-String for easy reading 
-std::string PrettyHexString(std::string_view aData)
+/**
+ * Converts string to a pretty hex string for easy reading.
+ * @param aData - Data to prettify.
+ * @return prettified data as string.
+ */
+static std::string PrettyHexString(std::string_view aData)
 {
     std::stringstream lFormattedString;
     // Loop through the packet and print it as hexidecimal representations of octets

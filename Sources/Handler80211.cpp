@@ -17,13 +17,14 @@ Handler80211::Handler80211(PhysicalDeviceHeaderType aType)
 void Handler80211::AddToMACBlackList(uint64_t aMAC)
 {
     if (!IsMACBlackListed(aMAC)) {
-        Logger::GetInstance().Log("Added: " + std::to_string(aMAC) + " to blacklist.", Logger::Level::TRACE);
+        Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to blacklist.", Logger::Level::TRACE);
         mBlackList.push_back(aMAC);
     }
 }
 
 void Handler80211::AddToMACWhiteList(uint64_t aMAC)
 {
+    Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to whitelist.", Logger::Level::TRACE);
     mWhiteList.push_back(aMAC);
 }
 
@@ -69,7 +70,7 @@ std::string Handler80211::ConvertPacket()
                 break;
             case Data80211PacketType::QoSData:
             case Data80211PacketType::Data:
-                // The header should have it's complete size for the packet to be valid.
+                // The header should have its complete size for the packet to be valid.
                 if (mLastReceivedData.size() >
                     Net_80211_Constants::cDataHeaderLength + mPhysicalDeviceHeaderReader->GetLength()) {
                     // Strip framecheck sequence as well.
@@ -235,6 +236,7 @@ void Handler80211::Update(std::string_view aPacket)
                 UpdateControlPacketType();
 
                 if (mControlPacketType == Control80211PacketType::ACK) {
+                    Logger::GetInstance().Log("Saving parameters for a Control packet type", Logger::Level::TRACE);
                     SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
                 }
             }
@@ -253,6 +255,7 @@ void Handler80211::Update(std::string_view aPacket)
                 if (!mQOSRetry) {
                     switch (mDataPacketType) {
                         case Data80211PacketType::Data:
+                            Logger::GetInstance().Log("Saving parameters for a Data packet type", Logger::Level::TRACE);
                             SavePhysicalDeviceParameters(mPhysicalDeviceParametersData);
                             mShouldSend = true;
                             break;
@@ -262,6 +265,8 @@ void Handler80211::Update(std::string_view aPacket)
                         default:
                             break;
                     }
+                } else {
+                    Logger::GetInstance().Log("QoS Retry blocked", Logger::Level::TRACE);
                 }
             }
             break;
