@@ -4,17 +4,26 @@ Emulates a promiscuous mode wifi card using monitor mode and packet injection an
 As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai.
 
 ## Wifi cards this has been tested and found working on (Linux, kernel 5.x):
+# Atheros
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
 - TP-Link TL-WDN4800 (Atheros AR93xx (ath9k))
-- Intel Pro Wireless 5100 AGN (iwlwifi)
+- NetGear, Inc. WNA1100 Wireless-N 150 (Atheros 9271 (ath9k_htc))
+
+# Broadcom
+- Dell Wireless 1390 (Broadcom BCM4311 (b43)) with the following patch: https://gist.github.com/codedwrench/8d7916d63993574e1dd089a62dd523a9
+
+# Intel
 - Intel Centrino Wireless-N 1000 (iwlwifi)
 - Intel Centrino Advanced-N 6205 (iwlwifi)
-- WTXUP Ralink RT3070 (rt2800usb)
+- Intel Pro Wireless 5100 AGN (iwlwifi)
+
+# Ralink
 - TP-Link TL-WN727N v1 (Ralink rt3070 (rt2800usb))
-- TP-Link TL-WN823N V2 (Realtek rtl8192eu (kimocoder/rtl8192eu))
-- Dell Wireless 1390 (Broadcom BCM4311 (b43)) with the following patch: https://gist.github.com/codedwrench/8d7916d63993574e1dd089a62dd523a9
+- WTXUP Ralink RT3070 (rt2800usb)
+
+# Realtek
 - Hercules Guillemot HWGUm-54 (rtl8192su (codedwrench/rtl8192su))
-- NetGear, Inc. WNA1100 Wireless-N 150 (Atheros 9271 (ath9k_htc))
+- TP-Link TL-WN823N V2 (Realtek rtl8192eu (kimocoder/rtl8192eu))
 
 ## How to compile
 
