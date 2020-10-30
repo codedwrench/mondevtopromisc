@@ -84,6 +84,7 @@ bool PCapReader::ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader)
 
     // Load all needed information into the handler
     std::string lData{DataToString(aData, aHeader)};
+    
     mPacketHandler->Update(lData);
 
     if (mMonitorCapture) {
@@ -124,7 +125,8 @@ bool PCapReader::ReadNextData()
     bool lReturn = true;
 
     if (pcap_next_ex(mHandler, &mHeader, &mData) < 0) {
-        Logger::GetInstance().Log("Reading offline capture failed: " + std::string(pcap_geterr(mHandler)), Logger::Level::ERROR);
+        Logger::GetInstance().Log("Reading offline capture failed: " + std::string(pcap_geterr(mHandler)),
+                                  Logger::Level::ERROR);
         lReturn = false;
     }
 

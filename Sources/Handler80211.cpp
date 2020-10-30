@@ -256,10 +256,10 @@ void Handler80211::Update(std::string_view aPacket)
                 UpdateDestinationMac();
                 UpdateAckable();
                 UpdateDataPacketType();
-                UpdateQOSRetry();
+                UpdateRetry();
 
                 // Only save parameters on normal data types.
-                if (!mQOSRetry) {
+                if (!mRetry) {
                     switch (mDataPacketType) {
                         case Data80211PacketType::Data:
                             Logger::GetInstance().Log("Saving parameters for a Data packet type", Logger::Level::TRACE);
@@ -274,7 +274,7 @@ void Handler80211::Update(std::string_view aPacket)
                     }
                     mIsDropped = false;
                 } else {
-                    Logger::GetInstance().Log("QoS Retry blocked", Logger::Level::TRACE);
+                    Logger::GetInstance().Log("Packet Retry blocked", Logger::Level::TRACE);
                 }
             }
             break;
@@ -441,16 +441,11 @@ void Handler80211::UpdateManagementPacketType()
     mManagementPacketType = lResult;
 }
 
-void Handler80211::UpdateQOSRetry()
+void Handler80211::UpdateRetry()
 {
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        switch (mDataPacketType) {
-            case Data80211PacketType::QoSData:
-                mQOSRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
-                            Net_80211_Constants::cDataQOSRetryFlag;
-            default:
-                break;
-        }
+        mRetry = GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + 1) ==
+                 Net_80211_Constants::cDataRetryFlag;
     }
 }
 

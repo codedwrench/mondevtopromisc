@@ -130,7 +130,7 @@ private:
     void UpdateMainPacketType();
     void UpdateManagementPacketType();
     void UpdateAckable();
-    void UpdateQOSRetry();
+    void UpdateRetry();
     void UpdateDestinationMac();
     void UpdateSourceMac();
 
@@ -150,7 +150,7 @@ private:
     uint64_t mBSSID{0};
     uint64_t mDestinationMac{0};
     uint64_t mLockedBSSID{0};
-    bool     mQOSRetry{false};
+    bool     mRetry{false};
     bool     mShouldSend{false};
     uint64_t mSourceMac{0};
     bool     mIsDropped{false};
