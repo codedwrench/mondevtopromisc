@@ -5,6 +5,7 @@ As of right now it is a working proof of concept where you can receive and send 
 
 ## Wifi cards this has been tested and found working on (Linux, kernel 5.x):
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
+- TP-Link TL-WDN4800 (Atheros AR93xx (ath9k))
 - Intel Pro Wireless 5100 AGN (iwlwifi)
 - Intel Centrino Wireless-N 1000 (iwlwifi)
 - Intel Centrino Advanced-N 6205 (iwlwifi)
