@@ -223,10 +223,10 @@ namespace RadioTap_Constants
 
     // Channel 1 (2412hz)
     static constexpr uint16_t cChannel{0x096c};       // 0x096c = 2412hz
-    static constexpr uint16_t cChannelFlags{0x00a0};  // 2.4Ghz, Turbo on
+    static constexpr uint16_t cChannelFlags{0x00c0};  // 2.4Ghz, Turbo on
 
     // Using 11mbps for Vita and PSP traffic
-    static constexpr uint8_t cRateFlags{0x16};
+    static constexpr uint8_t cRateFlags{0x30};
 
     // No Ack
     static constexpr uint16_t cTXFlags{0x0008};
