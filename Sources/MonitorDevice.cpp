@@ -211,7 +211,6 @@ bool MonitorDevice::StartReceiverThread()
                             "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
                             Logger::Level::DEBUG);
                     }
-                    std::this_thread::sleep_for(std::chrono::microseconds(1));
                 }
 
                 mSendReceivedData = lSendReceivedDataOld;
