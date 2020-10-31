@@ -7,7 +7,8 @@
 
 using namespace std::chrono;
 
-PCapReader::PCapReader(bool aMonitorCapture) : mMonitorCapture(aMonitorCapture)
+PCapReader::PCapReader(bool aMonitorCapture, bool aTimeAccurate) :
+    mMonitorCapture(aMonitorCapture), mTimeAccurate(aTimeAccurate)
 {
     if (mMonitorCapture) {
         mPacketHandler = std::make_shared<Handler80211>();
@@ -58,6 +59,11 @@ const pcap_pkthdr* PCapReader::GetHeader()
     return mHeader;
 }
 
+bool PCapReader::IsDoneReceiving() const
+{
+    return mDoneReceiving;
+}
+
 bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter)
 {
     bool                               lReturn{true};
@@ -84,7 +90,7 @@ bool PCapReader::ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader)
 
     // Load all needed information into the handler
     std::string lData{DataToString(aData, aHeader)};
-    
+
     mPacketHandler->Update(lData);
 
     if (mMonitorCapture) {
@@ -111,6 +117,9 @@ bool PCapReader::ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader)
                 mConnector->Send(lPacket);
             }
         }
+    } else {
+        // We don't really need to do any conversion.
+        mConnector->Send(lData);
     }
 
     mData   = aData;
@@ -189,13 +198,16 @@ bool PCapReader::StartReceiverThread()
                         microseconds lSleepFor{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec - lTimeStamp.count()};
                         lTimeStamp = microseconds(mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec);
 
-                        // Wait for next send.
-                        std::this_thread::sleep_for(lSleepFor);
+                        if (mTimeAccurate) {
+                            // Wait for next send.
+                            std::this_thread::sleep_for(lSleepFor);
+                        }
 
                         // Wait for next send.
                         ReadCallback(mData, mHeader);
                     }
                 }
+                mDoneReceiving = true;
             });
         } else {
             Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::Level::ERROR);

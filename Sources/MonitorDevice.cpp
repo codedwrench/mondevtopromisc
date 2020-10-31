@@ -105,7 +105,7 @@ bool MonitorDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* 
     return lReturn;
 }
 
-void MonitorDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader)
+void MonitorDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader) const
 {
     Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 

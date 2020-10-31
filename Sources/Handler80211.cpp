@@ -246,7 +246,7 @@ void Handler80211::Update(std::string_view aPacket)
                     SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
                     mIsDropped = false;
                 }
-           }
+            }
             break;
         case Main80211PacketType::Data:
             // Only do something with the data frame if we care about this network

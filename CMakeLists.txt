@@ -129,9 +129,13 @@ if (ENABLE_TESTS)
     find_package(GTest REQUIRED)
     include(GoogleTest)
     enable_testing()
-    add_executable(tests Tests/PacketConverter_Test.cpp
+    add_executable(tests Tests/PacketHandling_Test.cpp
             Tests/WindowModel_Test.cpp
+            Sources/Handler8023.cpp
+            Sources/Handler80211.cpp
             Sources/Logger.cpp
+            Sources/MonitorDevice.cpp
+            Sources/Parameter80211Reader.cpp
             Sources/PCapReader.cpp
             Sources/RadioTapReader.cpp
             Sources/WindowModel.cpp
