@@ -246,7 +246,7 @@ void Handler80211::Update(std::string_view aPacket)
                     SavePhysicalDeviceParameters(mPhysicalDeviceParametersControl);
                     mIsDropped = false;
                 }
-            }
+           }
             break;
         case Main80211PacketType::Data:
             // Only do something with the data frame if we care about this network
@@ -336,11 +336,11 @@ void Handler80211::UpdateControlPacketType()
     if (mPhysicalDeviceHeaderReader != nullptr) {
         uint8_t lControlType{static_cast<uint8_t>(
             GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 4U)};
-        if ((lControlType & 0b1000U) == 0b1000U) {
+        if ((lControlType & 0b1111U) == 0b1000U) {
             lResult = Control80211PacketType::BlockAckRequest;
-        } else if ((lControlType & 0b1001U) == 0b1001U) {
+        } else if ((lControlType & 0b1111U) == 0b1001U) {
             lResult = Control80211PacketType::BlockAck;
-        } else if ((lControlType & 0b1101U) == 0b1101U) {
+        } else if ((lControlType & 0b1111U) == 0b1101U) {
             lResult = Control80211PacketType::ACK;
         } else {
             Logger::GetInstance().Log("Could not determine control packet type: " + std::to_string(lControlType),
@@ -362,11 +362,11 @@ void Handler80211::UpdateDataPacketType()
 
         if ((lDataType & 0b1111U) == 0b0000U) {
             lResult = Data80211PacketType::Data;
-        } else if ((lDataType & 0b0100U) == 0b0100U) {
+        } else if ((lDataType & 0b1111U) == 0b0100U) {
             lResult = Data80211PacketType::Null;
-        } else if ((lDataType & 0b1000U) == 0b1000U) {
+        } else if ((lDataType & 0b1111U) == 0b1000U) {
             lResult = Data80211PacketType::QoSData;
-        } else if ((lDataType & 0b1100U) == 0b1100U) {
+        } else if ((lDataType & 0b1111U) == 0b1100U) {
             lResult = Data80211PacketType::QoSNull;
         } else {
             Logger::GetInstance().Log("Could not determine data packet type: " + std::to_string(lDataType),
@@ -387,9 +387,9 @@ void Handler80211::UpdateMainPacketType()
             GetRawData<uint8_t>(mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength()) >> 2U)};
         if ((lMainType & 0b11U) == 0b00U) {
             lResult = Main80211PacketType::Management;
-        } else if ((lMainType & 0b01U) == 0b01U) {
+        } else if ((lMainType & 0b11U) == 0b01U) {
             lResult = Main80211PacketType::Control;
-        } else if ((lMainType & 0b10U) == 0b10U) {
+        } else if ((lMainType & 0b11U) == 0b10U) {
             lResult = Main80211PacketType::Data;
         }
         // Ignore extensions
@@ -409,27 +409,27 @@ void Handler80211::UpdateManagementPacketType()
 
         if ((lManagementType & 0b1111U) == 0b0000U) {
             lResult = Management80211PacketType::AssociationRequest;
-        } else if ((lManagementType & 0b0001U) == 0b0001U) {
+        } else if ((lManagementType & 0b1111U) == 0b0001U) {
             lResult = Management80211PacketType::AssociationResponse;
-        } else if ((lManagementType & 0b0010U) == 0b0010U) {
+        } else if ((lManagementType & 0b1111U) == 0b0010U) {
             lResult = Management80211PacketType::ReassociationRequest;
-        } else if ((lManagementType & 0b0011U) == 0b0011U) {
+        } else if ((lManagementType & 0b1111U) == 0b0011U) {
             lResult = Management80211PacketType::ReassociationResponse;
-        } else if ((lManagementType & 0b0100U) == 0b0100U) {
+        } else if ((lManagementType & 0b1111U) == 0b0100U) {
             lResult = Management80211PacketType::ProbeRequest;
-        } else if ((lManagementType & 0b0101U) == 0b0101U) {
+        } else if ((lManagementType & 0b1111U) == 0b0101U) {
             lResult = Management80211PacketType::ProbeResponse;
-        } else if ((lManagementType & 0b1000U) == 0b1000U) {
+        } else if ((lManagementType & 0b1111U) == 0b1000U) {
             lResult = Management80211PacketType::Beacon;
-        } else if ((lManagementType & 0b1010U) == 0b1010U) {
+        } else if ((lManagementType & 0b1111U) == 0b1010U) {
             lResult = Management80211PacketType::Disassociation;
-        } else if ((lManagementType & 0b1011U) == 0b1011U) {
+        } else if ((lManagementType & 0b1111U) == 0b1011U) {
             lResult = Management80211PacketType::Authentication;
-        } else if ((lManagementType & 0b1100U) == 0b1100U) {
+        } else if ((lManagementType & 0b1111U) == 0b1100U) {
             lResult = Management80211PacketType::Deauthentication;
-        } else if ((lManagementType & 0b1101U) == 0b1101U) {
+        } else if ((lManagementType & 0b1111U) == 0b1101U) {
             lResult = Management80211PacketType::Action;
-        } else if ((lManagementType & 0b1110U) == 0b1110U) {
+        } else if ((lManagementType & 0b1111U) == 0b1110U) {
             lResult = Management80211PacketType::ActionNoAck;
         } else {
             Logger::GetInstance().Log("Could not determine management packet type: " + std::to_string(lManagementType),
@@ -452,13 +452,13 @@ void Handler80211::UpdateRetry()
 void Handler80211::UpdateDestinationMac()
 {
     if (mPhysicalDeviceHeaderReader != nullptr) {
-        uint64_t lSourceMac{GetRawData<uint64_t>(
+        uint64_t lDestinationMac{GetRawData<uint64_t>(
             mLastReceivedData,
             mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cDestinationAddressIndex)};
-        lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
+        lDestinationMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
         // Big- to Little endian
-        mDestinationMac = SwapMacEndian(lSourceMac);
+        mDestinationMac = SwapMacEndian(lDestinationMac);
     }
 }
 
