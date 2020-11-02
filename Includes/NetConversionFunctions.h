@@ -15,6 +15,7 @@
 #include <byteswap.h>  // bswap_16 bswap_32 bswap_64
 #endif
 
+#include <array>
 #include <cstring>
 #include <iomanip>
 #include <ios>

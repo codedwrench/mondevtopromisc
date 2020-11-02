@@ -8,8 +8,6 @@
 
 #include <string_view>
 
-#include <bits/stdint-uintn.h>
-
 class IHandler
 {
 public:
