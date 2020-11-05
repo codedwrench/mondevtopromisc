@@ -19,6 +19,13 @@ class IConnector
 public:
     /**
      * Closes the device/file.
+     * @param aArgument - File/Device/IP to use
+     * @return true if successful
+     */
+    virtual bool Open(std::string_view aArgument) = 0;
+
+    /**
+     * Closes the device/file.
      */
     virtual void Close() = 0;
 

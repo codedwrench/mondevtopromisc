@@ -86,6 +86,12 @@ public:
     [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const override;
 
     /**
+     * Sets a BSSID to listen to in case no beacon frames were sent out.
+     * @param aBSSID - BSSID to listen to.
+     */
+    void SetBSSID(uint64_t aBSSID);
+
+    /**
      * Checks if last received packet is convertible to 802.3 and should be sent.
      * @return true if should be sent.
      */

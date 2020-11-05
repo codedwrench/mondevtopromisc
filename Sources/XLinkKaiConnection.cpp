@@ -18,14 +18,9 @@ XLinkKaiConnection::~XLinkKaiConnection()
     Close();
 }
 
-bool XLinkKaiConnection::Open()
+bool XLinkKaiConnection::Open(std::string_view aArgument)
 {
-    return Open("", 0);
-}
-
-bool XLinkKaiConnection::Open(std::string_view aIp)
-{
-    return Open(aIp, cPort);
+    return Open(aArgument, cPort);
 }
 
 bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)

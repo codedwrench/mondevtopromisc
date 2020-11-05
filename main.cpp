@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
                     if (!mWindowModel.mAutoDiscoverXLinkKaiInstance) {
                         lSuccess = lXLinkKaiConnection->Open(mWindowModel.mXLinkIp, std::stoi(mWindowModel.mXLinkPort));
                     } else {
-                        lSuccess = lXLinkKaiConnection->Open();
+                        lSuccess = lXLinkKaiConnection->Open("");
                     }
 
                     // Now set up the wifi interface

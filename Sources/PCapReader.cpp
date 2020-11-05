@@ -10,16 +10,11 @@ using namespace std::chrono;
 PCapReader::PCapReader(bool aMonitorCapture, bool aTimeAccurate) :
     mMonitorCapture(aMonitorCapture), mTimeAccurate(aTimeAccurate)
 {
-    if (mMonitorCapture) {
-        mPacketHandler = std::make_shared<Handler80211>();
-    } else {
-        mPacketHandler = std::make_shared<Handler8023>();
-    }
 }
 
 void PCapReader::Close()
 {
-    if (mReplayThread->joinable()) {
+    if ((mReplayThread != nullptr) && mReplayThread->joinable()) {
         mReplayThread->join();
     }
 
@@ -49,6 +44,20 @@ std::string PCapReader::DataToString(const unsigned char* aData, const pcap_pkth
     return lData;
 }
 
+uint64_t PCapReader::GetBSSID() const
+{
+    uint64_t lBSSID{mBSSID};
+
+    if (mMonitorCapture) {
+        auto lHandler = std::dynamic_pointer_cast<Handler80211>(mPacketHandler);
+        if (lHandler != nullptr) {
+            lBSSID = lHandler->GetLockedBSSID();            
+        }
+    }
+
+    return lBSSID;
+}
+
 const unsigned char* PCapReader::GetData()
 {
     return mData;
@@ -59,32 +68,73 @@ const pcap_pkthdr* PCapReader::GetHeader()
     return mHeader;
 }
 
+std::shared_ptr<IHandler> PCapReader::GetPacketHandler()
+{
+    return mPacketHandler;
+}
+
+std::shared_ptr<RadioTapReader::PhysicalDeviceParameters> PCapReader::GetDataParameters()
+{
+    std::shared_ptr<RadioTapReader::PhysicalDeviceParameters> lParameters{mParameters};
+
+    if (mMonitorCapture) {
+        auto lHandler = std::dynamic_pointer_cast<Handler80211>(mPacketHandler);
+        if (lHandler != nullptr) {
+            lParameters = std::make_shared<RadioTapReader::PhysicalDeviceParameters>(lHandler->GetDataPacketParameters());            
+        }
+    }
+
+    return lParameters;
+}
+
 bool PCapReader::IsDoneReceiving() const
 {
     return mDoneReceiving;
 }
 
-bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter)
+bool PCapReader::Open(std::string_view aArgument)
 {
+    mMonitorCapture = false;
+    // Create an 8023 handler, this is going to be a promiscuous capture
+    mPacketHandler = std::make_shared<Handler8023>();
+
     bool                               lReturn{true};
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
-    mHandler = pcap_open_offline(aName.data(), lErrorBuffer.data());
+    mHandler = pcap_open_offline(aArgument.data(), lErrorBuffer.data());
+
     if (mHandler == nullptr) {
         lReturn = false;
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
                                   Logger::Level::ERROR);
-    } else {
-        if (mMonitorCapture) {
-            // If we have a monitor device we want the 80211 handler.
+    }
+    
+    return lReturn;
+}
+
+
+bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter)
+{
+    mMonitorCapture = true;
+    // Create an 80211 handler, this is going to ge a monitor capture
+    mPacketHandler = std::make_shared<Handler80211>();
+
+    bool                               lReturn{true};
+    std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
+    mHandler = pcap_open_offline(aName.data(), lErrorBuffer.data());
+    if (mHandler != nullptr) {
+        // If we have a monitor device we want the 80211 handler.
             auto lHandler{std::dynamic_pointer_cast<Handler80211>(mPacketHandler)};
             lHandler->SetSSIDFilterList(aSSIDFilter);
-        }
+    } else {
+                lReturn = false;
+        Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
+                                  Logger::Level::ERROR);
     }
 
     return lReturn;
 }
 
-bool PCapReader::ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader)
+bool PCapReader::ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader)
 {
     bool lReturn{false};
 
@@ -113,17 +163,20 @@ bool PCapReader::ReadCallback(const unsigned char* aData, pcap_pkthdr* aHeader)
 
             // If this packet is convertible to something XLink can understand, send
             if (lHandler->ShouldSend()) {
-                std::string lPacket{lHandler->ConvertPacket()};
-                mConnector->Send(lPacket);
+                mConnector->Send(lHandler->ConvertPacket());
             }
         }
     } else {
-        // We don't really need to do any conversion.
-        mConnector->Send(lData);
+        // Pretending to be XLink Kai or other outgoing connector
+        if (mIncomingConnection != nullptr) {
+            auto lHandler = std::dynamic_pointer_cast<Handler8023>(mPacketHandler);
+            if (lHandler != nullptr) {
+                mIncomingConnection->Send(lHandler->ConvertPacket(mBSSID, *mParameters));
+            }
+        } else {
+            mConnector->Send(lData);
+        }
     }
-
-    mData   = aData;
-    mHeader = aHeader;
     mPacketCount++;
 
     return lReturn;
@@ -157,12 +210,27 @@ bool PCapReader::Send(std::string_view aData)
     return lReturn;
 }
 
+void PCapReader::SetBSSID(uint64_t aBSSID)
+{
+    mBSSID = aBSSID;
+}
+
+void PCapReader::SetParameters(std::shared_ptr<RadioTapReader::PhysicalDeviceParameters> aParameters)
+{
+    mParameters = std::move(aParameters);
+}
+
 void PCapReader::SetConnector(std::shared_ptr<IConnector> aDevice)
 {
     mConnector = aDevice;
 }
 
-void PCapReader::ShowPacketStatistics(pcap_pkthdr* aHeader) const
+void PCapReader::SetIncomingConnection(std::shared_ptr<IPCapDevice> aDevice)
+{
+    mIncomingConnection = aDevice;
+}
+
+void PCapReader::ShowPacketStatistics(const pcap_pkthdr* aHeader) const
 {
     Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
 
