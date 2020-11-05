@@ -18,7 +18,7 @@ class IConnector
 {
 public:
     /**
-     * Closes the device/file.
+     * Opens the device/file.
      * @param aArgument - File/Device/IP to use
      * @return true if successful
      */
