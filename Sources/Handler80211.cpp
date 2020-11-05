@@ -138,7 +138,7 @@ bool Handler80211::IsAckable() const
 
 bool Handler80211::IsBSSIDAllowed(uint64_t aBSSID) const
 {
-    return mBSSID == aBSSID;
+    return mLockedBSSID == aBSSID;
 }
 
 bool Handler80211::ShouldSend() const
@@ -252,7 +252,7 @@ void Handler80211::Update(std::string_view aPacket)
             // Only do something with the data frame if we care about this network
             UpdateSourceMac();
             UpdateBSSID();
-            if (IsMACAllowed(mSourceMac) && IsBSSIDAllowed(mLockedBSSID)) {
+            if (IsMACAllowed(mSourceMac) && IsBSSIDAllowed(mBSSID)) {
                 UpdateDestinationMac();
                 UpdateAckable();
                 UpdateDataPacketType();
