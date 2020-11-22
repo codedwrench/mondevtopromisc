@@ -205,7 +205,7 @@ void Handler80211::SavePhysicalDeviceParameters(RadioTapReader::PhysicalDevicePa
 
 void Handler80211::SetBSSID(uint64_t aBSSID)
 {
-    mLockedBSSID = aBSSID;    
+    mLockedBSSID = aBSSID;
 }
 
 void Handler80211::SetMACBlackList(std::vector<uint64_t>& aBlackList)

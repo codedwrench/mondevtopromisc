@@ -40,6 +40,13 @@ public:
     MOCK_METHOD(bool, StartReceiverThread, ());
 };
 
+class PCapReaderDerived : public PCapReader
+{
+public:
+    using PCapReader::PCapReader;
+    MOCK_METHOD(bool, Send, (std::string_view aData));
+};
+
 class PacketHandlingTest : public ::testing::Test
 {
 protected:
@@ -123,10 +130,10 @@ TEST_F(PacketHandlingTest, MonitorToPromiscuous)
 
 TEST_F(PacketHandlingTest, PromiscuousToMonitor)
 {
-    std::shared_ptr<PCapReader> lConnector{std::make_shared<PCapReader>(true, false)};
-    std::shared_ptr<IPCapDeviceMock> lIncomingConnection{std::make_shared<IPCapDeviceMock>()};    
-    std::shared_ptr<IConnector> lExpectedConnector{std::make_shared<IConnectorMock>()};
-    PCapReader                  lPCapExpectedReader{false, false};
+    std::shared_ptr<PCapReader>      lConnector{std::make_shared<PCapReader>(true, false)};
+    std::shared_ptr<IPCapDeviceMock> lIncomingConnection{std::make_shared<IPCapDeviceMock>()};
+    std::shared_ptr<IConnector>      lExpectedConnector{std::make_shared<IConnectorMock>()};
+    PCapReader                       lPCapExpectedReader{false, false};
 
 
     pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
@@ -152,7 +159,7 @@ TEST_F(PacketHandlingTest, PromiscuousToMonitor)
 
     // Our expected output didn't contain any beacon frames, so tell the handler what to listen to.
     lPacketHandler->SetBSSID(MacToInt("01:23:45:67:ab:cd"));
-    
+
     ASSERT_NE(lPacketHandler, nullptr);
 
     // This piece of magic will grab sent output for me and save its timestamps
@@ -171,16 +178,17 @@ TEST_F(PacketHandlingTest, PromiscuousToMonitor)
             lPCapExpectedReader.DataToString(lPCapExpectedReader.GetData(), lPCapExpectedReader.GetHeader())};
 
         lSendExpectedBuffer.push_back(lExpectedDataString);
-        
+
         // We are secretly going to update twice here, but this is so we can get the data parameters before
         // ReadCallBack is called
         lPacketHandler->Update(lExpectedDataString);
-        
+
         lPCapExpectedReader.ReadCallback(lPCapExpectedReader.GetData(), lPCapExpectedReader.GetHeader());
 
         // Update parameters for the 80211 conversion
         lConnector->SetBSSID(lPacketHandler->GetLockedBSSID());
-        auto lParameters{std::make_shared<RadioTapReader::PhysicalDeviceParameters>(lPacketHandler->GetDataPacketParameters())};
+        auto lParameters{
+            std::make_shared<RadioTapReader::PhysicalDeviceParameters>(lPacketHandler->GetDataPacketParameters())};
         lConnector->SetParameters(lParameters);
 
         // Now run the callback with correct parameters
@@ -211,33 +219,94 @@ TEST_F(PacketHandlingTest, PromiscuousToMonitor)
 }
 
 
+// What we should be seeing after this test is acknowledgements added to 169.254.93.107. With destination mac:
+// d4:4b:5e:69:df:a6. It should have copied the wireless parameters from an ack packet with the following destination
+// address: d4:4b:5e:a8:c1:c4
+TEST_F(PacketHandlingTest, ConstructAcknowledgementFrame)
+{
+    std::shared_ptr<IConnector> lConnector{std::make_shared<IConnectorMock>()};
+    std::shared_ptr<IConnector> lExpectedConnector{std::make_shared<IConnectorMock>()};
+    pcap_t*                     lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
+    const std::string           lOutputFileName = "../Tests/Output/ConstructAcknowledgementFrame.pcap";
+    pcap_dumper_t*              lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
 
-// TEST_F(PacketHandlingTest, ConstructAcknowledgementFrame)
-// {
-//     pcap_t*           lHandler        = pcap_open_dead(DLT_IEEE802_11_RADIO, 65535);
-//     const std::string lOutputFileName = "../Tests/Output/ConstructAcknowledgementFrame.pcap";
-//     pcap_dumper_t*    lDumper         = pcap_dump_open(lHandler, lOutputFileName.c_str());
+    PCapReaderDerived        lPCapReader{true, false};
+    std::vector<std::string> lSSIDFilter{"SCE_NPWR05830_01"};
+    lPCapReader.Open("../Tests/Input/AcknowledgeTest.pcapng", lSSIDFilter);
 
-//     PCapReader               lPCapExpectedReader{};
-//     std::vector<std::string> lFilter{"None"};
-//     lPCapExpectedReader.Open("../Tests/Input/ConstructAcknowledgementFrame_Expected.pcap", lFilter, 2412);
+    // Pretend to be a promiscuous capture so no conversion is done
+    PCapReader lPCapExpectedReader{false, false};
+    lPCapExpectedReader.Open("../Tests/Input/ConstructAcknowledgementFrame_Expected.pcap");
 
+    lPCapReader.SetConnector(lConnector);
+    lPCapExpectedReader.SetConnector(lExpectedConnector);
 
-//     // Create Acknowledgement frame
-//     std::array<uint8_t, 6> lTransmitterAddress{0x01, 0x23, 0x45, 0x67, 0x89, 0xab};
-//     std::string lAcknowledgementFrame{mPacketConverter.ConstructAcknowledgementFrame(lTransmitterAddress, 2412,
-//     0x6c)};
+    lPCapReader.SetAcknowledgePackets(true);
 
-//     pcap_pkthdr lAcknowledgementFrameHeader{};
-//     lAcknowledgementFrameHeader.caplen = lAcknowledgementFrame.size();
-//     lAcknowledgementFrameHeader.len    = lAcknowledgementFrame.size();
+    // MAC coming from XLink Kai.
+    lPCapReader.BlackList(MacToInt("d4:4b:5e:a8:c1:c4"));
 
-//     // Output to file for easy inspection
-//     pcap_dump(reinterpret_cast<u_char*>(lDumper),
-//               &lAcknowledgementFrameHeader,
-//               reinterpret_cast<const u_char*>(lAcknowledgementFrame.c_str()));
+    std::vector<std::string> lSendBuffer{};
+    std::vector<timeval>     lTimeStamp{};
 
-//     // Now compare against expectation
-//     ASSERT_TRUE(lPCapExpectedReader.ReadNextData());
-//     ASSERT_EQ(lPCapExpectedReader.LastDataToString(), lAcknowledgementFrame);
-// }
+    std::vector<std::string> lSendExpectedBuffer{};
+
+    // This piece of magic will grab sent output for me and save its timestamps
+    EXPECT_CALL(*std::dynamic_pointer_cast<IConnectorMock>(lConnector), Send(_)).WillRepeatedly(Return(true));
+
+    // Save acks to the SendBuffer
+    EXPECT_CALL(lPCapReader, Send(_))
+        .WillRepeatedly(DoAll(WithArg<0>([&](std::string_view aMessage) {
+                                  lSendBuffer.emplace_back(std::string(aMessage));
+                                  timeval lTv;
+                                  lTv.tv_sec = lTimeStamp.back().tv_sec;
+                                  lTv.tv_usec =
+                                      lTimeStamp.back().tv_usec + 1000;  // Pretend that we sent this 1000 USec later
+                                  lTimeStamp.emplace_back(lTv);
+                              }),
+                              Return(true)));
+
+    // And save the expected messages to the expected buffer.
+    EXPECT_CALL(*std::dynamic_pointer_cast<IConnectorMock>(lExpectedConnector), Send(_))
+        .WillRepeatedly(DoAll(
+            WithArg<0>([&](std::string_view aMessage) { lSendExpectedBuffer.emplace_back(std::string(aMessage)); }),
+            Return(true)));
+
+    // Do not use thread here because we want to do some manual stuff
+    while (lPCapExpectedReader.ReadNextData()) {
+        // Input will have less data, which is why we're doing it this way
+        if (lPCapReader.ReadNextData()) {
+            // We want the data before conversion actually happens, remember we're only testing if the Acknowledge
+            // happens at the right time (and in the right format).
+            std::string lDataString{lPCapReader.DataToString(lPCapReader.GetData(), lPCapReader.GetHeader())};
+
+            lSendBuffer.emplace_back(lDataString);
+            lTimeStamp.emplace_back(lPCapReader.GetHeader()->ts);
+
+            lPCapReader.ReadCallback(lPCapReader.GetData(), lPCapReader.GetHeader());
+        }
+        lPCapExpectedReader.ReadCallback(lPCapExpectedReader.GetData(), lPCapExpectedReader.GetHeader());
+    }
+
+    ASSERT_EQ(lSendBuffer.size(), lSendExpectedBuffer.size());
+
+    size_t lCount = 0;
+    for (auto& lMessage : lSendBuffer) {
+        pcap_pkthdr lHeader{};
+        lHeader.caplen = lMessage.size();
+        lHeader.len    = lMessage.size();
+        lHeader.ts     = lTimeStamp.at(lCount);
+
+        // Output a file with the results as well so the results can be further inspected
+        pcap_dump(reinterpret_cast<u_char*>(lDumper), &lHeader, reinterpret_cast<const u_char*>(lMessage.c_str()));
+
+        EXPECT_EQ(lMessage, lSendExpectedBuffer.at(lCount));
+        lCount++;
+    }
+
+    pcap_dump_close(lDumper);
+    pcap_close(lHandler);
+
+    lPCapReader.Close();
+    lPCapExpectedReader.Close();
+}

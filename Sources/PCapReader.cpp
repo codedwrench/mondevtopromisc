@@ -9,7 +9,16 @@ using namespace std::chrono;
 
 PCapReader::PCapReader(bool aMonitorCapture, bool aTimeAccurate) :
     mMonitorCapture(aMonitorCapture), mTimeAccurate(aTimeAccurate)
+{}
+
+void PCapReader::BlackList(uint64_t aMAC)
 {
+    if (mMonitorCapture) {
+        auto lHandler = std::dynamic_pointer_cast<Handler80211>(mPacketHandler);
+        if (lHandler != nullptr) {
+            mPacketHandler->AddToMACBlackList(aMAC);
+        }
+    }
 }
 
 void PCapReader::Close()
@@ -51,7 +60,7 @@ uint64_t PCapReader::GetBSSID() const
     if (mMonitorCapture) {
         auto lHandler = std::dynamic_pointer_cast<Handler80211>(mPacketHandler);
         if (lHandler != nullptr) {
-            lBSSID = lHandler->GetLockedBSSID();            
+            lBSSID = lHandler->GetLockedBSSID();
         }
     }
 
@@ -80,7 +89,8 @@ std::shared_ptr<RadioTapReader::PhysicalDeviceParameters> PCapReader::GetDataPar
     if (mMonitorCapture) {
         auto lHandler = std::dynamic_pointer_cast<Handler80211>(mPacketHandler);
         if (lHandler != nullptr) {
-            lParameters = std::make_shared<RadioTapReader::PhysicalDeviceParameters>(lHandler->GetDataPacketParameters());            
+            lParameters =
+                std::make_shared<RadioTapReader::PhysicalDeviceParameters>(lHandler->GetDataPacketParameters());
         }
     }
 
@@ -107,7 +117,7 @@ bool PCapReader::Open(std::string_view aArgument)
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
                                   Logger::Level::ERROR);
     }
-    
+
     return lReturn;
 }
 
@@ -123,10 +133,10 @@ bool PCapReader::Open(std::string_view aName, std::vector<std::string>& aSSIDFil
     mHandler = pcap_open_offline(aName.data(), lErrorBuffer.data());
     if (mHandler != nullptr) {
         // If we have a monitor device we want the 80211 handler.
-            auto lHandler{std::dynamic_pointer_cast<Handler80211>(mPacketHandler)};
-            lHandler->SetSSIDFilterList(aSSIDFilter);
+        auto lHandler{std::dynamic_pointer_cast<Handler80211>(mPacketHandler)};
+        lHandler->SetSSIDFilterList(aSSIDFilter);
     } else {
-                lReturn = false;
+        lReturn = false;
         Logger::GetInstance().Log("pcap_open_offline failed, " + std::string(lErrorBuffer.data()),
                                   Logger::Level::ERROR);
     }
