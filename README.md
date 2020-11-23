@@ -8,7 +8,7 @@ As of right now it is a working proof of concept where you can receive and send 
 - Azurewave AR5BHB92 (Atheros 9280 (ath9k))
 - TP-Link TL-WDN4800 (Atheros AR93xx (ath9k))
 - NetGear, Inc. WNA1100 Wireless-N 150 (Atheros 9271 (ath9k_htc))
-- TP-Link TL-WN821N v3 (Atheros 9271 (ath9k_htc))
+- TP-Link TL-WN821N v3 (Atheros 9287 (ath9k_htc))
 
 
 ### Broadcom
