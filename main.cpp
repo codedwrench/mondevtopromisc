@@ -77,12 +77,12 @@ int main(int argc, char* argv[])
     lXLinkKaiConnection->SetIncomingConnection(lMonitorDevice);
 
     bool lSuccess{false};
-    
+
     // If we need more entry methods, make an actual state machine
-    bool lWaitEntry{false};
+    bool                                               lWaitEntry{true};
     std::chrono::time_point<std::chrono::system_clock> lWaitStart{std::chrono::seconds{0}};
 
-    while (gRunning) {        
+    while (gRunning) {
         if (lWindowController.Process()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             switch (mWindowModel.mCommand) {
@@ -111,41 +111,42 @@ int main(int argc, char* argv[])
                             lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                             if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
-                                mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
+                                mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
                             } else {
                                 Logger::GetInstance().Log("Failed to start receiver threads", Logger::Level::ERROR);
-                                mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
-                                mWindowModel.mCommand = WindowModel_Constants::Command::WaitForTime;
-                                mWindowModel.mTimeToWait = std::chrono::seconds(5);
+                                mWindowModel.mEngineStatus     = WindowModel_Constants::EngineStatus::Error;
+                                mWindowModel.mCommand          = WindowModel_Constants::Command::WaitForTime;
+                                mWindowModel.mTimeToWait       = std::chrono::seconds(5);
                                 mWindowModel.mCommandAfterWait = WindowModel_Constants::Command::StopEngine;
                             }
                         } else {
                             Logger::GetInstance().Log("Failed to activate monitor interface", Logger::Level::ERROR);
-                            mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
-                            mWindowModel.mCommand = WindowModel_Constants::Command::WaitForTime;
-                            mWindowModel.mTimeToWait = std::chrono::seconds(5);
+                            mWindowModel.mEngineStatus     = WindowModel_Constants::EngineStatus::Error;
+                            mWindowModel.mCommand          = WindowModel_Constants::Command::WaitForTime;
+                            mWindowModel.mTimeToWait       = std::chrono::seconds(5);
                             mWindowModel.mCommandAfterWait = WindowModel_Constants::Command::StopEngine;
                         }
                     } else {
-                        Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying in 10 seconds!", Logger::Level::ERROR);
+                        Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying in 10 seconds!",
+                                                  Logger::Level::ERROR);
                         // Have it take some time between tries
-                        mWindowModel.mCommand = WindowModel_Constants::Command::WaitForTime;
-                        mWindowModel.mTimeToWait = std::chrono::seconds(10);
+                        mWindowModel.mCommand          = WindowModel_Constants::Command::WaitForTime;
+                        mWindowModel.mTimeToWait       = std::chrono::seconds(10);
                         mWindowModel.mCommandAfterWait = WindowModel_Constants::Command::NoCommand;
                     }
                     break;
                 case WindowModel_Constants::Command::WaitForTime:
                     // Wait state, use this to add a delay without making the UI unresponsive.
-                    if(lWaitEntry)
-                    {
+                    if (lWaitEntry) {
                         lWaitStart = std::chrono::system_clock::now();
+                        lWaitEntry = false;
                     }
-                    
-                    if(std::chrono::system_clock::now() > lWaitStart + mWindowModel.mTimeToWait)
-                    {
+
+                    if (std::chrono::system_clock::now() > lWaitStart + mWindowModel.mTimeToWait) {
                         mWindowModel.mCommand = mWindowModel.mCommandAfterWait;
+                        lWaitEntry            = true;
                     }
-                    break;               
+                    break;
                 case WindowModel_Constants::Command::StopEngine:
                     lXLinkKaiConnection->Close();
                     lMonitorDevice->Close();

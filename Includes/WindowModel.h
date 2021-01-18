@@ -75,12 +75,12 @@ public:
 
     // Commands
     WindowModel_Constants::Command mCommand{WindowModel_Constants::Command::NoCommand};
-    
+
     // Command parameters
-    
+
     // WaitForTime-command
     WindowModel_Constants::Command mCommandAfterWait{WindowModel_Constants::Command::NoCommand};
-    std::chrono::seconds mTimeToWait{0};
+    std::chrono::seconds           mTimeToWait{0};
 
     // Config
 

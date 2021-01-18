@@ -56,7 +56,7 @@ void MonitorDevice::Close()
         pcap_breakloop(mHandler);
     }
 
-    if (mReceiverThread->joinable()) {
+    if (mReceiverThread != nullptr && mReceiverThread->joinable()) {
         mReceiverThread->join();
     }
 
