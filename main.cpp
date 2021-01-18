@@ -115,11 +115,8 @@ int main(int argc, char* argv[])
                             mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
                         }
                     } else {
-                        Logger::GetInstance().Log("Failed to open connection to XLink Kai", Logger::Level::ERROR);
-                        mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
+                        Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying!", Logger::Level::ERROR);
                     }
-
-                    mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
                     break;
                 case WindowModel_Constants::Command::StopEngine:
                     lXLinkKaiConnection->Close();
@@ -150,4 +147,5 @@ int main(int argc, char* argv[])
     if (lThread.joinable()) {
         lThread.join();
     }
+    exit(0);
 }

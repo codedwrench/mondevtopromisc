@@ -28,7 +28,8 @@ bool MonitorDevice::Open(std::string_view aName, std::vector<std::string>& aSSID
     mHandler = pcap_create(aName.data(), lErrorBuffer.data());
     pcap_set_snaplen(mHandler, cSnapshotLength);
     pcap_set_timeout(mHandler, cTimeout);
-    pcap_set_immediate_mode(mHandler, 1);
+    // TODO: Test without immediate mode, see if it helps
+    // pcap_set_immediate_mode(mHandler, 1);
 
     int lStatus{pcap_activate(mHandler)};
 

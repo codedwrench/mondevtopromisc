@@ -4,3 +4,4 @@ cmake-build-debug/
 Tests/Output/*
 .vscode/
 .cache
+.bak

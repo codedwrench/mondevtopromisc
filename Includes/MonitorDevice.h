@@ -18,7 +18,7 @@
 namespace WirelessMonitorDevice_Constants
 {
     static constexpr unsigned int cSnapshotLength{65535};
-    static constexpr unsigned int cTimeout{10};
+    static constexpr unsigned int cTimeout{1};
 }  // namespace WirelessMonitorDevice_Constants
 
 using namespace WirelessMonitorDevice_Constants;

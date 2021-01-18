@@ -1,11 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
 project(mondevtopromisc)
 
+# TODO fill in with imports we have now
+set(CMAKE_MODULE_PATH
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+  "${CMAKE_MODULE_PATH}"
+)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BUILD_DOC "Build doxygen" OFF)
 option(ENABLE_TESTS "Build unittests" OFF)
+option(BUILD_STATIC "Statically link all libraries that can be statically linked" OFF)
 
 include_directories(Sources)
 include_directories(Tests)
@@ -43,15 +50,19 @@ if (MSVC OR MSYS OR MINGW)
     endif ()
     
     set(PCAP_ROOT_DIR "c:/npcapsdk")
-    set(BOOST_ROOT "c:/Program Files/boost_1_74_0/output/")
+    set(BOOST_ROOT "d:/boost_1_75_0")
+    set(Boost_LIBRARY_DIR "d:/boost_1_75_0/stage/lib")
 
-    # Magic that boost on windows seems to need.
-    add_definitions( -DBOOST_ALL_NO_LIB )
-    add_definitions( -DBOOST_ALL_DYN_LINK )
+    if (NOT BUILD_STATIC)
+        # Magic that boost on windows seems to need.
+        add_definitions( -DBOOST_ALL_NO_LIB )
+        add_definitions( -DBOOST_ALL_DYN_LINK )
+    endif ()
 
     set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
-    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
-    include(FindPDCurses.cmake)
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.a")
+    find_package(PDCurses REQUIRED)
+    
     set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
     set(CURSES_LIBRARIES ${PDCURSES_LIBRARIES})
 
@@ -62,17 +73,17 @@ else ()
     find_package(Curses)
 endif ()
 
+if (BUILD_STATIC)
+    message("Static linking enabled")
+    set(BUILD_STATIC ON)
+    set(Boost_USE_STATIC_LIBS ON)
+endif()
 # Concepts seems to break on a bunch of compilers, see: https://github.com/boostorg/asio/issues/312
 add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
-include(FindPCAP.cmake)
-find_package(Boost 1.71 REQUIRED COMPONENTS thread system program_options)
-
-# Linux needs this to have threading support
-# TODO: Can this be added to platform specific libraries? Test
-if (NOT APPLE AND NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-endif ()
+find_package(PCAP REQUIRED)
+find_package(Threads REQUIRED)
+find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options)
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(mondevtopromisc main.cpp
@@ -121,8 +132,12 @@ add_executable(mondevtopromisc main.cpp
 	    Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h
         ${EXTRA_INCLUDES})
+        
+if (BUILD_STATIC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+endif ()
 
-target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} ${CURSES_INCLUDE_DIRS})
+target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
 target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
 
 if (ENABLE_TESTS)

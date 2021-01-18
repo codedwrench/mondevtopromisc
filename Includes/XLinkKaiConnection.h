@@ -30,6 +30,7 @@ namespace XLinkKai_Constants
     static constexpr std::string_view     cEmulatorName{"Real_PSP"};
     static constexpr unsigned int         cPort{34523};
     static constexpr std::chrono::seconds cConnectionTimeout{10};
+    static constexpr std::chrono::seconds cKeepAliveTimeout{60};
 
     static const std::string cConnectString{std::string(cConnectFormat) + cSeparator.data() +
                                             cLocallyUniqueName.data() + cSeparator.data() + cEmulatorName.data() +
@@ -97,6 +98,11 @@ public:
     bool Send(std::string_view aData) override;
 
     void Close() final;
+    /**
+     * Closes the connection.
+     * @param aKillThread - set true if the receiver thread needs to be killed as well.
+     */
+    void Close(bool aKillThread);
 
     /**
      * Sets port to XLink Kai interface.
@@ -121,6 +127,7 @@ private:
     bool                                               mConnected{false};
     bool                                               mConnectInitiated{false};
     std::chrono::time_point<std::chrono::system_clock> mConnectionTimerStart{std::chrono::seconds{0}};
+    std::chrono::time_point<std::chrono::system_clock> mKeepAliveTimerStart{std::chrono::seconds{0}};
 
     std::array<char, cMaxLength> mData{};
     // Raw ethernet data received from XLink Kai
