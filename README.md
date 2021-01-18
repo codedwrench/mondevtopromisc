@@ -23,6 +23,7 @@ As of right now it is a working proof of concept where you can receive and send 
 - TP-Link TL-WN727N v1 (Ralink rt3070 (rt2800usb))
 - WTXUP Ralink RT3070 (rt2800usb)
 - TOOGOO®/SODIAL® Mini 150Mbps USB WiFi Wireless LAN 802.11 n/g/b Netzwerk Adapter Ralink RT5370 (rt2800usb)
+- Planex GW-US54Mini2 (Ralink rt2501usb (rt73))
 
 ### Realtek
 - Hercules Guillemot HWGUm-54 (rtl8192su (codedwrench/rtl8192su))
