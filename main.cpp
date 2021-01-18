@@ -106,16 +106,18 @@ int main(int argc, char* argv[])
                             lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                             if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
-                                mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
+                                mWindowModel.mCommand = WindowModel_Constants::Command::StopEngine;
                             } else {
                                 Logger::GetInstance().Log("Failed to start receiver threads", Logger::Level::ERROR);
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
-                                mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
+                                std::this_thread::sleep_for(std::chrono::seconds(10));
+                                mWindowModel.mCommand = WindowModel_Constants::Command::StopEngine;
                             }
                         } else {
                             Logger::GetInstance().Log("Failed to activate monitor interface", Logger::Level::ERROR);
                             mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
-                            mWindowModel.mCommand = WindowModel_Constants::Command::NoCommand;
+                            std::this_thread::sleep_for(std::chrono::seconds(10));
+                            mWindowModel.mCommand = WindowModel_Constants::Command::StopEngine;
                         }
                     } else {
                         Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying in 10 seconds!", Logger::Level::ERROR);
