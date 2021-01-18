@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <chrono>
 #include <string>
 
 #include "../Includes/Logger.h"
@@ -47,6 +48,7 @@ namespace WindowModel_Constants
         StartSearchNetworks,
         StopSearchNetworks,
         SaveSettings,
+        WaitForTime,
         NoCommand
     };
 }  // namespace WindowModel_Constants
@@ -73,6 +75,12 @@ public:
 
     // Commands
     WindowModel_Constants::Command mCommand{WindowModel_Constants::Command::NoCommand};
+    
+    // Command parameters
+    
+    // WaitForTime-command
+    WindowModel_Constants::Command mCommandAfterWait{WindowModel_Constants::Command::NoCommand};
+    std::chrono::seconds mTimeToWait{0};
 
     // Config
 
