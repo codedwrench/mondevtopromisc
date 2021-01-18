@@ -115,7 +115,9 @@ int main(int argc, char* argv[])
                             mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Error;
                         }
                     } else {
-                        Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying!", Logger::Level::ERROR);
+                        Logger::GetInstance().Log("Failed to open connection to XLink Kai, retrying in 10 seconds!", Logger::Level::ERROR);
+                        // Have it take some time between tries
+                        std::this_thread::sleep_for(std::chrono::seconds(10));
                     }
                     break;
                 case WindowModel_Constants::Command::StopEngine:
