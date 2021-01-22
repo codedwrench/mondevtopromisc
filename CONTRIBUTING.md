@@ -1,8 +1,8 @@
-# Contributing to mondevtopromisc
+# Contributing to XLHA
 
 Thanks for wanting to contribute! It's really appreciated.
 
-The following is a set of guidelines for contributing to mondevtopromisc.
+The following is a set of guidelines for contributing to XLHA.
 
 ## Code of Conduct
 
@@ -36,11 +36,11 @@ If you find anything that does not work, it's important to file a bug report. Wh
 - What device were you testing with?
 - What game were you trying?
 - Could the device be seen in XLink Kai?
-- What commit of mondevtopromisc did the bug happen in?
+- What commit of XLHA did the bug happen in?
 - How do you reproduce the bug? Or are you not able to reproduce it easily?
 
 Other useful information to supplement are the following things:
-- The log.txt that mondevtopromisc produces with mondevtopromisc preferably in TRACE mode.
+- The log.txt that XLHA produces with XLHA preferably in TRACE mode.
 - A capture file (wireshark) of when the bug occured (this may show some private information about your network, so only do this if you're okay with that, mailing this file to me personally is allowed.)
 - If on linux, the dmesg file outputted to a file.
 
