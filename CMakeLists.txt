@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(mondevtopromisc)
+project(xlinkhandheldassistant)
 
 # TODO fill in with imports we have now
 set(CMAKE_MODULE_PATH
@@ -86,7 +86,7 @@ find_package(Threads REQUIRED)
 find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options)
 
 # TODO: Make this search for source files automatically, this is very ugly!
-add_executable(mondevtopromisc main.cpp
+add_executable(xlinkhandheldassistant main.cpp
         Sources/Handler8023.cpp
         Sources/Handler80211.cpp
         Sources/Logger.cpp
@@ -137,8 +137,8 @@ if (BUILD_STATIC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif ()
 
-target_include_directories(mondevtopromisc PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
-target_link_libraries(mondevtopromisc ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
+target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
+target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
 
 if (ENABLE_TESTS)
     find_package(GTest REQUIRED)
