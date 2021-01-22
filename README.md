@@ -1,4 +1,4 @@
-# mondevtopromisc
+# XLHA - XLink Handheld Assistant
 Emulates a promiscuous mode wifi card using monitor mode and packet injection and sends the data over XLink Kai.
 
 As of right now it is a working proof of concept where you can receive and send PSP traffic succesfully through XLink Kai.
@@ -98,7 +98,7 @@ sudo airmon-ng start wificard 2412
 
 After the program has been built succesfully it can be ran as follows:
 ```bash
-sudo ./mondevtopromisc
+sudo ./xlinkhandheldassistant
 ``` 
 
 ## Known issues
