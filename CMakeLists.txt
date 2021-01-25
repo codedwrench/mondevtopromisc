@@ -99,6 +99,7 @@ add_executable(xlinkhandheldassistant main.cpp
         Sources/UserInterface/CheckBox.cpp
         Sources/UserInterface/NetworkingWindow.cpp
         Sources/RadioTapReader.cpp
+        Sources/WirelessPSPPluginDevice.cpp
         Sources/UserInterface/String.cpp
         Sources/UserInterface/TextField.cpp
         Sources/UserInterface/UIObject.cpp
@@ -117,6 +118,7 @@ add_executable(xlinkhandheldassistant main.cpp
         Includes/RadioTapReader.h
         Includes/MonitorDevice.h
         Includes/XLinkKaiConnection.h
+        Includes/WirelessPSPPluginDevice.h
         Includes/UserInterface/Button.h
         Includes/UserInterface/CheckBox.h
         Includes/UserInterface/IUIObject.h
