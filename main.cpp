@@ -7,12 +7,15 @@
 #include <boost/thread.hpp>
 
 #include <curses.h>
+
+#include "Includes/IPCapDevice.h"
 #undef timeout
 
 #include "Includes/Logger.h"
 #include "Includes/MonitorDevice.h"
 #include "Includes/NetConversionFunctions.h"
 #include "Includes/UserInterface/WindowController.h"
+#include "Includes/WirelessPSPPluginDevice.h"
 #include "Includes/XLinkKaiConnection.h"
 
 namespace
@@ -70,11 +73,10 @@ int main(int argc, char* argv[])
     WindowController         lWindowController(mWindowModel);
     lWindowController.SetUp();
 
-    std::shared_ptr<MonitorDevice>      lMonitorDevice{std::make_shared<MonitorDevice>()};
+    std::shared_ptr<IPCapDevice>        lDevice{nullptr};
     std::shared_ptr<XLinkKaiConnection> lXLinkKaiConnection{std::make_shared<XLinkKaiConnection>()};
 
-    lMonitorDevice->SetConnector(lXLinkKaiConnection);
-    lXLinkKaiConnection->SetIncomingConnection(lMonitorDevice);
+    lXLinkKaiConnection->SetIncomingConnection(lDevice);
 
     bool lSuccess{false};
 
@@ -91,6 +93,22 @@ int main(int argc, char* argv[])
                         Logger::GetInstance().SetLogLevel(mWindowModel.mLogLevel);
                     }
 
+                    // If we are using a PSP plugin device set up normal WiFi adapter
+                    if (mWindowModel.mUsePSPPlugin) {
+                        if (std::dynamic_pointer_cast<WirelessPSPPluginDevice>(lDevice) == nullptr) {
+                            lDevice = std::make_shared<WirelessPSPPluginDevice>();
+                        }
+                    } else {
+                        if (std::dynamic_pointer_cast<MonitorDevice>(lDevice) == nullptr) {
+                            lDevice = std::make_shared<MonitorDevice>();
+                            std::shared_ptr<MonitorDevice> lMonitorDevice =
+                                std::dynamic_pointer_cast<MonitorDevice>(lDevice);
+                            lMonitorDevice->SetSourceMACToFilter(MacToInt(mWindowModel.mOnlyAcceptFromMac));
+                            lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
+                        }
+                    }
+                    lDevice->SetConnector(lXLinkKaiConnection);
+
                     // If we are auto discovering PSP/VITA networks add those to the filter list
                     if (mWindowModel.mAutoDiscoverPSPVitaNetworks) {
                         lSSIDFilters.emplace_back(cPSPSSIDFilterName.data());
@@ -106,10 +124,8 @@ int main(int argc, char* argv[])
 
                     // Now set up the wifi interface
                     if (lSuccess) {
-                        if (lMonitorDevice->Open(mWindowModel.mWifiAdapter, lSSIDFilters)) {
-                            lMonitorDevice->SetSourceMACToFilter(MacToInt(mWindowModel.mOnlyAcceptFromMac));
-                            lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
-                            if (lMonitorDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
+                        if (lDevice->Open(mWindowModel.mWifiAdapter, lSSIDFilters)) {
+                            if (lDevice->StartReceiverThread() && lXLinkKaiConnection->StartReceiverThread()) {
                                 mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Running;
                                 mWindowModel.mCommand      = WindowModel_Constants::Command::NoCommand;
                             } else {
@@ -149,7 +165,7 @@ int main(int argc, char* argv[])
                     break;
                 case WindowModel_Constants::Command::StopEngine:
                     lXLinkKaiConnection->Close();
-                    lMonitorDevice->Close();
+                    lDevice->Close();
                     lSSIDFilters.clear();
 
                     mWindowModel.mEngineStatus = WindowModel_Constants::EngineStatus::Idle;

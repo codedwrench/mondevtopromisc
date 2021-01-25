@@ -58,10 +58,10 @@ void WirelessPSPPluginDevice::Close()
         pcap_close(mHandler);
     }
 
-    mHandler            = nullptr;
-    mData               = nullptr;
-    mHeader             = nullptr;
-    mReceiverThread     = nullptr;
+    mHandler        = nullptr;
+    mData           = nullptr;
+    mHeader         = nullptr;
+    mReceiverThread = nullptr;
 }
 
 bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader)
@@ -73,7 +73,9 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
 
     // With the plugin the destination mac is kept at the end of the packet
     std::string lActualDestinationMac{lData.substr(lData.size() - Net_8023_Constants::cDestinationAddressLength)};
-    lData.replace(Net_8023_Constants::cDestinationAddressIndex, Net_8023_Constants::cDestinationAddressLength, lActualDestinationMac);
+    lData.replace(Net_8023_Constants::cDestinationAddressIndex,
+                  Net_8023_Constants::cDestinationAddressLength,
+                  lActualDestinationMac);
     lData.resize(lData.size() - Net_8023_Constants::cDestinationAddressLength);
     mConnector->Send(lData);
 

@@ -10,6 +10,7 @@
 
 namespace
 {
+    static constexpr std::string_view cUsePSPPlugin{"Use PSP plugin method"};
     static constexpr std::string_view cWifiAdapterToUse{"WiFi adapter to use"};
     static constexpr std::string_view cChannel{"WiFi channel to listen to"};
     static constexpr std::string_view cScanWifiNetworksPSP{"Automatically connect to PSP/Vita networks"};
@@ -25,6 +26,6 @@ class NetworkingWindow : public Window
 {
 public:
     NetworkingWindow(WindowModel& aModel, std::string_view aTitle, const std::function<Dimensions()>& aCalculation);
-
+    void Draw() override;
     void SetUp() override;
 };

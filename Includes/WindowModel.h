@@ -14,6 +14,7 @@ namespace WindowModel_Constants
     static constexpr std::string_view cSaveAutoDiscoverPSPVita{"AutoDiscoverPSPVita"};
     static constexpr std::string_view cSaveAutoDiscoverXLinkKai{"AutoDiscoverXLinkKai"};
     static constexpr std::string_view cSaveUseXLinkKaiHints{"UseXLinkKaiHints"};
+    static constexpr std::string_view cSavePSPPlugin{"PSPPlugin"};
     static constexpr std::string_view cSaveWifiAdapter{"WifiAdapter"};
     static constexpr std::string_view cSaveChannel{"Channel"};
     static constexpr std::string_view cSaveXLinkIp{"XLinkIp"};
@@ -22,15 +23,16 @@ namespace WindowModel_Constants
     static constexpr std::string_view cSaveOnlyAcceptFromMac{"OnlyAcceptFromMac"};
 
     static constexpr Logger::Level    cDefaultLogLevel{Logger::Level::ERROR};
-    static constexpr bool             cDefaultAutoDiscoverPSPVita{false};
+    static constexpr bool             cDefaultAutoDiscoverPSPVita{true};
     static constexpr bool             cDefaultAutoDiscoverXLinkKai{false};
     static constexpr bool             cDefaultUseXLinkKaiHints{false};
+    static constexpr bool             cDefaultPSPPlugin{false};
     static constexpr std::string_view cDefaultChannel{"1"};
     static constexpr std::string_view cDefaultWifiAdapter{""};
     static constexpr std::string_view cDefaultXLinkIp{"127.0.0.1"};
     static constexpr std::string_view cDefaultXLinkPort{"34523"};
-    static constexpr std::string_view cDefaultAcknowledgeDataFrames{"AckDataFrames"};
-    static constexpr std::string_view cDefaultOnlyAcceptFromMac{"OnlyAcceptFromMac"};
+    static constexpr bool             cDefaultAcknowledgeDataFrames{false};
+    static constexpr std::string_view cDefaultOnlyAcceptFromMac{""};
 
     enum class EngineStatus
     {
@@ -62,8 +64,9 @@ public:
     bool          mAutoDiscoverXLinkKaiInstance{WindowModel_Constants::cDefaultAutoDiscoverXLinkKai};
     bool          mXLinkKaiHints{WindowModel_Constants::cDefaultUseXLinkKaiHints};
     std::string   mWifiAdapter{WindowModel_Constants::cDefaultWifiAdapter};
-    bool          mAcknowledgeDataFrames{false};
-    std::string   mOnlyAcceptFromMac{};
+    bool          mUsePSPPlugin{WindowModel_Constants::cDefaultPSPPlugin};
+    bool          mAcknowledgeDataFrames{WindowModel_Constants::cDefaultAcknowledgeDataFrames};
+    std::string   mOnlyAcceptFromMac{WindowModel_Constants::cDefaultOnlyAcceptFromMac};
 
     // Channel as a string because of the textfield this is bound to.
     std::string mChannel{WindowModel_Constants::cDefaultChannel};
