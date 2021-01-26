@@ -35,6 +35,8 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
     if (lStatus == 0) {
         mConnected = true;
         mAdapterMACAddress = GetAdapterMACAddress(aName);
+        // Do not try to negiotiate with localhost
+        BlackList(mAdapterMACAddress);
     } else {
         lReturn = false;
         Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)),
