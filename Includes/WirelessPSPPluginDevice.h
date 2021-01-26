@@ -29,6 +29,10 @@ using namespace WirelessPSPPluginDevice_Constants;
 class WirelessPSPPluginDevice : public IPCapDevice
 {
 public:
+    void BlackList(uint64_t aMAC) override;
+    void ClearMACBlackList();
+    [[nodiscard]] bool IsMACBlackListed(uint64_t aMAC) const;
+
     void                 Close() override;
     std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     const unsigned char* GetData() override;
@@ -41,15 +45,16 @@ public:
     uint64_t GetLockedBSSID();
 
     bool Open(std::string_view aName, std::vector<std::string>& aSSIDFilter) override;
+    bool Send(std::string_view aData, bool aModifyData);
     bool Send(std::string_view aData) override;
     void SetConnector(std::shared_ptr<IConnector> aDevice) override;
-    void SetSourceMACToFilter(uint64_t aMac);
     bool StartReceiverThread() override;
 
 private:
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
     void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
-
+    
+    std::vector<uint64_t>          mBlackList{};
     bool                           mConnected{false};
     std::shared_ptr<IConnector>    mConnector{nullptr};
     const unsigned char*           mData{nullptr};

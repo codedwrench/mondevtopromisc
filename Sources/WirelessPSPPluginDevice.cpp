@@ -71,50 +71,79 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
 
     // Load all needed information into the handler
     std::string lData{DataToString(aData, aHeader)};
+    uint64_t    lSourceMac{
+        (GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex) & Net_Constants::cBroadcastMac)};
+    
+    lSourceMac = SwapMacEndian(lSourceMac);
 
-    if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) & Net_Constants::cBroadcastMac) ==
-         Net_Constants::cBroadcastMac) &&
-        (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
-        // Obtain required MACs
-        uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
-        auto lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
-        
-        // Tell the PSP what Mac address to use
-        std::string lPacket{};
-        // Reserve size
-        lPacket.resize(Net_8023_Constants::cHeaderLength + Net_8023_Constants::cSourceAddressLength);
+    if (!IsMACBlackListed(lSourceMac)) {
+        if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) &
+              Net_Constants::cBroadcastMac) == Net_Constants::cBroadcastMac) &&
+            (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
+            // Obtain required MACs
+            uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
+            auto     lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
 
-        // Now put it into a packet
-        int lIndex{0};
-        memcpy(lPacket.data(), &lPSPMAC, Net_8023_Constants::cDestinationAddressLength);
-        lIndex += Net_8023_Constants::cDestinationAddressLength;
+            // Tell the PSP what Mac address to use
+            std::string lPacket{};
+            // Reserve size
+            lPacket.resize(Net_8023_Constants::cHeaderLength + Net_8023_Constants::cSourceAddressLength);
 
-        memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cSourceAddressLength);
-        lIndex += Net_8023_Constants::cSourceAddressLength;
+            // Now put it into a packet
+            int lIndex{0};
+            memcpy(lPacket.data(), &lPSPMAC, Net_8023_Constants::cDestinationAddressLength);
+            lIndex += Net_8023_Constants::cDestinationAddressLength;
 
-        memcpy(lPacket.data() + lIndex, &Net_Constants::cPSPEtherType, Net_8023_Constants::cEtherTypeLength);
-        lIndex += Net_8023_Constants::cEtherTypeLength;
+            memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cSourceAddressLength);
+            lIndex += Net_8023_Constants::cSourceAddressLength;
 
-        memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cDestinationAddressLength);
+            memcpy(lPacket.data() + lIndex, &Net_Constants::cPSPEtherType, Net_8023_Constants::cEtherTypeLength);
+            lIndex += Net_8023_Constants::cEtherTypeLength;
 
-        Send(lPacket);
-    } else {
-        // With the plugin the destination mac is kept at the end of the packet
-        std::string lActualDestinationMac{lData.substr(lData.size() - Net_8023_Constants::cDestinationAddressLength)};
-        lData.replace(Net_8023_Constants::cDestinationAddressIndex,
-                      Net_8023_Constants::cDestinationAddressLength,
-                      lActualDestinationMac);
-        lData.resize(lData.size() - Net_8023_Constants::cDestinationAddressLength);
-        mConnector->Send(lData);
+            memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cDestinationAddressLength);
 
-        mData   = aData;
-        mHeader = aHeader;
-        mPacketCount++;
+            Send(lPacket, false);
+        } else {
+            // With the plugin the destination mac is kept at the end of the packet
+            std::string lActualDestinationMac{
+                lData.substr(lData.size() - Net_8023_Constants::cDestinationAddressLength)};
+            lData.replace(Net_8023_Constants::cDestinationAddressIndex,
+                          Net_8023_Constants::cDestinationAddressLength,
+                          lActualDestinationMac);
+            lData.resize(lData.size() - Net_8023_Constants::cDestinationAddressLength);
+            mConnector->Send(lData);
+
+            mData   = aData;
+            mHeader = aHeader;
+            mPacketCount++;
+        }
     }
 
     return lReturn;
 }
 
+void WirelessPSPPluginDevice::BlackList(uint64_t aMAC) {
+    if (!IsMACBlackListed(aMAC)) {
+        Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to blacklist.", Logger::Level::TRACE);
+        mBlackList.push_back(aMAC);
+    }
+}
+
+void WirelessPSPPluginDevice::ClearMACBlackList()
+{
+    mBlackList.clear();
+}
+
+bool WirelessPSPPluginDevice::IsMACBlackListed(uint64_t aMAC) const
+{
+    bool lReturn{false};
+
+    if (std::find(mBlackList.begin(), mBlackList.end(), aMAC) != mBlackList.end()) {
+        lReturn = true;
+    }
+
+    return lReturn;
+}
 void WirelessPSPPluginDevice::ShowPacketStatistics(const pcap_pkthdr* aHeader) const
 {
     Logger::GetInstance().Log("Packet # " + std::to_string(mPacketCount), Logger::Level::TRACE);
@@ -159,14 +188,33 @@ std::string WirelessPSPPluginDevice::DataToString(const unsigned char* aData, co
     return lData;
 }
 
-bool WirelessPSPPluginDevice::Send(std::string_view aData)
+bool WirelessPSPPluginDevice::Send(std::string_view aData) {
+    return Send(aData, true);
+}
+
+bool WirelessPSPPluginDevice::Send(std::string_view aData, bool aModifyData)
 {
     bool lReturn{false};
     if (mHandler != nullptr) {
         if (!aData.empty()) {
-            Logger::GetInstance().Log(std::string("Sent: ") + PrettyHexString(aData), Logger::Level::TRACE);
+            std::string lData{aData};
 
-            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(aData.data()), aData.size()) == 0) {
+            if (aModifyData) {
+                uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
+
+                std::string lActualSourceMac{
+                    lData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength)};
+
+                memcpy(lData.data() + Net_8023_Constants::cSourceAddressIndex,
+                       &lAdapterMAC,
+                       Net_8023_Constants::cSourceAddressLength);
+
+                lData.append(lActualSourceMac);
+            }
+            
+            Logger::GetInstance().Log(std::string("Sent: ") + PrettyHexString(lData), Logger::Level::TRACE);
+
+            if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.data()), lData.size()) == 0) {
                 lReturn = true;
             } else {
                 Logger::GetInstance().Log("pcap_sendpacket failed, " + std::string(pcap_geterr(mHandler)),
