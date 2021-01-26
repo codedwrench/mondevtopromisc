@@ -77,7 +77,7 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
         (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
         // Obtain required MACs
         uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
-        uint64_t lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
+        auto lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
         
         // Tell the PSP what Mac address to use
         std::string lPacket{};
@@ -92,7 +92,7 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
         memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cSourceAddressLength);
         lIndex += Net_8023_Constants::cSourceAddressLength;
 
-        memcpy(lPacket.data() + lIndex, &Net_Constants::cSetMacType, Net_8023_Constants::cEtherTypeLength);
+        memcpy(lPacket.data() + lIndex, &Net_Constants::cPSPEtherType, Net_8023_Constants::cEtherTypeLength);
         lIndex += Net_8023_Constants::cEtherTypeLength;
 
         memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cDestinationAddressLength);
