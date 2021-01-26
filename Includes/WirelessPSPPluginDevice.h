@@ -54,6 +54,7 @@ private:
     std::shared_ptr<IConnector>    mConnector{nullptr};
     const unsigned char*           mData{nullptr};
     pcap_t*                        mHandler{nullptr};
+    uint64_t                       mAdapterMACAddress{};
     const pcap_pkthdr*             mHeader{nullptr};
     unsigned int                   mPacketCount{0};
     std::shared_ptr<boost::thread> mReceiverThread{nullptr};

@@ -76,8 +76,6 @@ int main(int argc, char* argv[])
     std::shared_ptr<IPCapDevice>        lDevice{nullptr};
     std::shared_ptr<XLinkKaiConnection> lXLinkKaiConnection{std::make_shared<XLinkKaiConnection>()};
 
-    lXLinkKaiConnection->SetIncomingConnection(lDevice);
-
     bool lSuccess{false};
 
     // If we need more entry methods, make an actual state machine
@@ -107,6 +105,7 @@ int main(int argc, char* argv[])
                             lMonitorDevice->SetAcknowledgePackets(mWindowModel.mAcknowledgeDataFrames);
                         }
                     }
+                    lXLinkKaiConnection->SetIncomingConnection(lDevice);
                     lDevice->SetConnector(lXLinkKaiConnection);
 
                     // If we are auto discovering PSP/VITA networks add those to the filter list

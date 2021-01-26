@@ -140,6 +140,14 @@ PACK(struct RadioTapHeader {
     uint32_t present_flags; /**< Which parts of the RadioTap header are present. See source code for more info. */
 });
 
+// General Network Constants, for both 802.3 and 802.11
+namespace Net_Constants
+{
+    // Own packet type used to tell PSP what mac to use
+    static constexpr uint16_t cSetMacType{0x636d};
+    static constexpr uint16_t cPSPEtherType{0xc888};
+    static constexpr uint64_t cBroadcastMac{0xFFFFFFFFFFFF};
+}
 namespace Net_8023_Constants
 {
     static constexpr uint8_t cDestinationAddressIndex{0};

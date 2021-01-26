@@ -13,6 +13,14 @@
 #define bswap_64(x) _byteswap_uint64(x)
 #else
 #include <byteswap.h>  // bswap_16 bswap_32 bswap_64
+#include <ifaddrs.h>
+#ifdef __linux__
+#include <arpa/inet.h>
+#include <net/ethernet.h>
+#include <netpacket/packet.h>
+#else
+#include <net/if_dl.h>
+#endif
 #endif
 
 #include <array>
@@ -24,6 +32,7 @@
 #include <string>
 #include <vector>
 
+#include "Logger.h"
 #include "RadioTapReader.h"
 
 /**
@@ -306,3 +315,77 @@ static std::string PrettyHexString(std::string_view aData)
 
     return lFormattedString.str();
 }
+
+#if defined(_WIN32) || defined(_WIN64)
+inline uint64_t GetAdapterMACAddress(std::string_view aAdapter)
+{
+    uint64_t lReturn{0};
+
+    PIP_ADAPTER_INFO lAdapterInfo;
+    DWORD            lBufferLength = sizeof(IP_ADAPTER_INFO);
+
+    lAdapterInfo = (IP_ADAPTER_INFO*) malloc(sizeof(IP_ADAPTER_INFO));
+    if (lAdapterInfo != nullptr) {
+        // Make an initial call to GetAdaptersInfo to get the necessary size into the lBufferLength variable
+        if (GetAdaptersInfo(lAdapterInfo, &lBufferLength) == ERROR_BUFFER_OVERFLOW) {
+            free(lAdapterInfo);
+            lAdapterInfo = (IP_ADAPTER_INFO*) malloc(lBufferLength);
+            if (lAdapterInfo == nullptr) {
+                Logger::GetInstance().Log("Error allocating memory needed to call GetAdaptersinfo",
+                                          Logger::Level::ERROR);
+                free(lMacAddress);
+            }
+        }
+
+        if (lAdapterInfo != nullptr && (GetAdaptersInfo(lAdapterInfo, &lBufferLength) == NO_ERROR)) {
+            // Contains pointer to current adapter info
+            PIP_ADAPTER_INFO lAdapterInfoPtr = lAdapterInfo;
+            do {
+                // technically should look at pAdapterInfo->AddressLength
+                //   and not assume it is 6.
+                if (aAdapter == lAdapterInfoPtr->AdapterName) {
+                    memcpy(&lReturn, lAdapterInfoPtr->Address, 6);
+                }
+                lAdapterInfoPtr = lAdapterInfoPtr->Next;
+            } while (lAdapterInfoPtr);
+        }
+    } else {
+        Logger::GetInstance().Log("Error allocating memory needed to call GetAdaptersinfo", Logger::Level::ERROR);
+    }
+
+    free(lAdapterInfo);
+    return lReturn;
+}
+#else
+inline uint64_t GetAdapterMACAddress(std::string_view aAdapter)
+{
+    uint64_t lReturn{0};
+
+    ifaddrs* lInterfaceAddresses{nullptr};
+    ifaddrs* lInterfaceAddress{nullptr};
+
+    if (getifaddrs(&lInterfaceAddresses) == 0) {
+        for (lInterfaceAddress = lInterfaceAddresses; (lInterfaceAddress != nullptr) && (lReturn == 0);
+             lInterfaceAddress = lInterfaceAddress->ifa_next) {
+#ifdef __linux__
+            if ((lInterfaceAddress->ifa_name == aAdapter) && (lInterfaceAddress->ifa_addr->sa_family == AF_PACKET)) {
+                auto* lSocketAddress = reinterpret_cast<sockaddr_ll*>(lInterfaceAddress->ifa_addr);
+                memcpy(&lReturn, &lSocketAddress->sll_addr, 6);
+                lReturn = SwapMacEndian(lReturn);
+            }
+#else
+            if ((lInterfaceAddress->ifa_name == aAdapter) && (lInterfaceAddress->ifa_addr->sa_family == AF_LINK)) {
+                unsigned char* lAddress = reinterpret_cast<unsigned char*>(
+                    LLADDR(reinterpret_cast<sockaddr_dl*>(lInterfaceAddress->ifa_addr)));
+                memcpy(&lReturn, lAddress, 6);
+                lReturn = SwapMacEndian(lReturn);
+            }
+#endif
+        }
+        freeifaddrs(lInterfaceAddresses);
+    } else {
+        Logger::GetInstance().Log("Could not get network addresses", Logger::Level::ERROR);
+    }
+    return lReturn;
+}
+#endif
