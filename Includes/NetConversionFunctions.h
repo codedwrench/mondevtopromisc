@@ -7,7 +7,10 @@
  **/
 
 #if defined(_MSC_VER) or defined(__MINGW32__)
+#include <Winsock2.h>
+#include <iphlpapi.h>
 #include <stdlib.h>
+#pragma comment(lib, "IPHLPAPI.lib")
 #define bswap_16(x) _byteswap_ushort(x)
 #define bswap_32(x) _byteswap_ulong(x)
 #define bswap_64(x) _byteswap_uint64(x)
@@ -23,6 +26,7 @@
 #endif
 #endif
 
+#include <algorithm>
 #include <array>
 #include <cstring>
 #include <iomanip>
@@ -321,39 +325,39 @@ inline uint64_t GetAdapterMACAddress(std::string_view aAdapter)
 {
     uint64_t lReturn{0};
 
-    PIP_ADAPTER_INFO lAdapterInfo;
-    DWORD            lBufferLength = sizeof(IP_ADAPTER_INFO);
+    std::string lAdapter{aAdapter};
 
-    lAdapterInfo = (IP_ADAPTER_INFO*) malloc(sizeof(IP_ADAPTER_INFO));
-    if (lAdapterInfo != nullptr) {
-        // Make an initial call to GetAdaptersInfo to get the necessary size into the lBufferLength variable
-        if (GetAdaptersInfo(lAdapterInfo, &lBufferLength) == ERROR_BUFFER_OVERFLOW) {
-            free(lAdapterInfo);
-            lAdapterInfo = (IP_ADAPTER_INFO*) malloc(lBufferLength);
-            if (lAdapterInfo == nullptr) {
-                Logger::GetInstance().Log("Error allocating memory needed to call GetAdaptersinfo",
-                                          Logger::Level::ERROR);
-                free(lMacAddress);
-            }
-        }
+    size_t lIndex{lAdapter.find("NPF")};
 
-        if (lAdapterInfo != nullptr && (GetAdaptersInfo(lAdapterInfo, &lBufferLength) == NO_ERROR)) {
-            // Contains pointer to current adapter info
-            PIP_ADAPTER_INFO lAdapterInfoPtr = lAdapterInfo;
-            do {
-                // technically should look at pAdapterInfo->AddressLength
-                //   and not assume it is 6.
-                if (aAdapter == lAdapterInfoPtr->AdapterName) {
-                    memcpy(&lReturn, lAdapterInfoPtr->Address, 6);
-                }
-                lAdapterInfoPtr = lAdapterInfoPtr->Next;
-            } while (lAdapterInfoPtr);
+    // Remove NPF part
+    if (lIndex != std::string::npos) {
+        lIndex = lAdapter.find_first_of('{', lIndex);
+        if (lIndex != std::string::npos) {
+            lAdapter = lAdapter.substr(lIndex);
+        } else {
+            lIndex = 0;
         }
-    } else {
-        Logger::GetInstance().Log("Error allocating memory needed to call GetAdaptersinfo", Logger::Level::ERROR);
     }
 
-    free(lAdapterInfo);
+    if (lIndex != 0) {
+        // Uppercase the string
+        std::transform(lAdapter.begin(), lAdapter.end(), lAdapter.begin(), ::toupper);
+        ULONG lBuffer = sizeof(IP_ADAPTER_ADDRESSES);
+
+        GetAdaptersAddresses(0, 0, nullptr, nullptr, &lBuffer);
+        std::vector<uint8_t>  lBytes(lBuffer, 0);
+        PIP_ADAPTER_ADDRESSES lCurrentAddresses = (IP_ADAPTER_ADDRESSES*) lBytes.data();
+        DWORD                 lResult           = GetAdaptersAddresses(0, 0, nullptr, lCurrentAddresses, &lBuffer);
+        if (lResult == NO_ERROR) {
+            while (lCurrentAddresses != nullptr) {
+                if (lCurrentAddresses->AdapterName == lAdapter) {
+                    memcpy(&lReturn, lCurrentAddresses->PhysicalAddress, Net_8023_Constants::cSourceAddressLength);
+                    lReturn = SwapMacEndian(lReturn);
+                }
+                lCurrentAddresses = lCurrentAddresses->Next;
+            }
+        }
+    }
     return lReturn;
 }
 #else
@@ -370,14 +374,14 @@ inline uint64_t GetAdapterMACAddress(std::string_view aAdapter)
 #ifdef __linux__
             if ((lInterfaceAddress->ifa_name == aAdapter) && (lInterfaceAddress->ifa_addr->sa_family == AF_PACKET)) {
                 auto* lSocketAddress = reinterpret_cast<sockaddr_ll*>(lInterfaceAddress->ifa_addr);
-                memcpy(&lReturn, &lSocketAddress->sll_addr, 6);
+                memcpy(&lReturn, &lSocketAddress->sll_addr, Net_8023_Constants::cSourceAddressLength);
                 lReturn = SwapMacEndian(lReturn);
             }
 #else
             if ((lInterfaceAddress->ifa_name == aAdapter) && (lInterfaceAddress->ifa_addr->sa_family == AF_LINK)) {
                 unsigned char* lAddress = reinterpret_cast<unsigned char*>(
                     LLADDR(reinterpret_cast<sockaddr_dl*>(lInterfaceAddress->ifa_addr)));
-                memcpy(&lReturn, lAddress, 6);
+                memcpy(&lReturn, lAddress, Net_8023_Constants::cSourceAddressLength);
                 lReturn = SwapMacEndian(lReturn);
             }
 #endif

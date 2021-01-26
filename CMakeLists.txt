@@ -10,6 +10,12 @@ set(CMAKE_MODULE_PATH
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+else ()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+endif ()
+
 option(BUILD_DOC "Build doxygen" OFF)
 option(ENABLE_TESTS "Build unittests" OFF)
 option(BUILD_STATIC "Statically link all libraries that can be statically linked" OFF)
@@ -50,17 +56,17 @@ if (MSVC OR MSYS OR MINGW)
     endif ()
     
     set(PCAP_ROOT_DIR "c:/npcapsdk")
-    set(BOOST_ROOT "d:/boost_1_75_0")
-    set(Boost_LIBRARY_DIR "d:/boost_1_75_0/stage/lib")
-
+    set(BOOST_ROOT "e:/boost_1_75_0")
+    set(Boost_LIBRARY_DIR "e:/boost_1_75_0/stage/lib")
     if (NOT BUILD_STATIC)
         # Magic that boost on windows seems to need.
+        add_definitions( -DWIN32_LEAN_AND_MEAN )
         add_definitions( -DBOOST_ALL_NO_LIB )
         add_definitions( -DBOOST_ALL_DYN_LINK )
     endif ()
 
     set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
-    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.a")
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
     find_package(PDCurses REQUIRED)
     
     set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
@@ -75,15 +81,18 @@ endif ()
 
 if (BUILD_STATIC)
     message("Static linking enabled")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
     set(BUILD_STATIC ON)
+    add_definitions(-DBUILD_STATIC)
     set(Boost_USE_STATIC_LIBS ON)
 endif()
+
 # Concepts seems to break on a bunch of compilers, see: https://github.com/boostorg/asio/issues/312
 add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 find_package(PCAP REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options)
+find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options regex)
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(xlinkhandheldassistant main.cpp
@@ -135,9 +144,7 @@ add_executable(xlinkhandheldassistant main.cpp
         Includes/UserInterface/XLinkWindow.h
         ${EXTRA_INCLUDES})
         
-if (BUILD_STATIC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-endif ()
+
 
 target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
 target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})

@@ -164,16 +164,6 @@ bool WirelessPSPPluginDevice::Send(std::string_view aData)
     bool lReturn{false};
     if (mHandler != nullptr) {
         if (!aData.empty()) {
-            // With the plugin the destination mac is kept at the end of the packet
-            std::string lData{aData};
-            std::string lActualSourceMac{
-                lData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength)};
-
-            uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
-            memcpy(lData.data(), &lAdapterMAC, Net_8023_Constants::cSourceAddressLength);
-
-            lData.append(lActualSourceMac);
-
             Logger::GetInstance().Log(std::string("Sent: ") + PrettyHexString(aData), Logger::Level::TRACE);
 
             if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(aData.data()), aData.size()) == 0) {
