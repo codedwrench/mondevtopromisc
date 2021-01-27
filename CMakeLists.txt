@@ -99,7 +99,7 @@ add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 find_package(PCAP REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options)
+find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options regex)
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(xlinkhandheldassistant main.cpp

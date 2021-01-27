@@ -44,7 +44,6 @@ bool InitNPcapDLLPath()
       lNPcapDirectory.append("\\Npcap");
       if (SetDllDirectory(lNPcapDirectory.data()) != 0) {
           lReturn = true;
-          std::cout << lNPcapDirectory << std::endl;
       }
     }
     return lReturn;
