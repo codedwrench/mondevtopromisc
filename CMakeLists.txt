@@ -48,16 +48,23 @@ if (MSVC OR MSYS OR MINGW)
     message("You're running Windows! Make sure your paths are set correctly.")
 
     if (MSYS OR MINGW)
-        # Add WinSock to the platform specific libraries, MINGW needs it.
-        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32")
+        # Add delay loaded library so npcap can be loaded properly
+        execute_process(COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/build_scripts/generateDelayLoadedWPCap.bat"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build_scripts
+        )
+            
+        # Add WinSock and liphlpapi to the platform specific libraries, MINGW needs it.
+        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32 -liphlpapi")
     
         # Needed because otherwise the libraries cannot be found.
         set(Boost_ARCHITECTURE "-x64")
+    elseif (MSVC)
+        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "/delayload:wpcap.dll")
     endif ()
     
     set(PCAP_ROOT_DIR "c:/npcapsdk")
-    set(BOOST_ROOT "e:/boost_1_75_0")
-    set(Boost_LIBRARY_DIR "e:/boost_1_75_0/stage/lib")
+    set(BOOST_ROOT "d:/boost_1_75_0")
+    set(Boost_LIBRARY_DIR "d:/boost_1_75_0/stage/lib")
     if (NOT BUILD_STATIC)
         # Magic that boost on windows seems to need.
         add_definitions( -DWIN32_LEAN_AND_MEAN )
@@ -66,7 +73,7 @@ if (MSVC OR MSYS OR MINGW)
     endif ()
 
     set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
-    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.a")
     find_package(PDCurses REQUIRED)
     
     set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
@@ -92,7 +99,7 @@ add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 find_package(PCAP REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options regex)
+find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options)
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(xlinkhandheldassistant main.cpp

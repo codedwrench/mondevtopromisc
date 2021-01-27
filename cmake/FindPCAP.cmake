@@ -39,7 +39,9 @@ endif ()
 
 find_library(PCAP_LIBRARY
     NAMES pcap wpcap
-    HINTS ${HINT_DIR}
+    HINTS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Objects
+    ${HINT_DIR}
 )
 
 include(FindPackageHandleStandardArgs)

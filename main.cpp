@@ -30,6 +30,27 @@ namespace
     bool gRunning{true};
 }  // namespace
 
+// Add npcap to the dll path for windows
+#if defined(_WIN32) || defined(_WIN64)
+#include <Windows.h>
+bool InitNPcapDLLPath()
+{
+    bool lReturn{false};
+    std::string lNPcapDirectory{};
+    lNPcapDirectory.resize(MAX_PATH);
+    unsigned int lLength = GetSystemDirectory(lNPcapDirectory.data(), MAX_PATH);
+    lNPcapDirectory.resize(lLength);
+    if (lLength > 0) {
+      lNPcapDirectory.append("\\Npcap");
+      if (SetDllDirectory(lNPcapDirectory.data()) != 0) {
+          lReturn = true;
+          std::cout << lNPcapDirectory << std::endl;
+      }
+    }
+    return lReturn;
+}
+#endif 
+
 
 static void SignalHandler(const boost::system::error_code& aError, int aSignalNumber)
 {
@@ -45,7 +66,7 @@ int main(int argc, char* argv[])
 {
     std::string lProgramPath{"./"};
 
-#if not defined(_MSC_VER) && not defined(__MINGW32__)
+#if not defined(_WIN32) || not defined(_WIN64)
     // Make robust against sudo path change.
     std::array<char, PATH_MAX> lResolvedPath{};
     if (realpath(argv[0], lResolvedPath.data()) != nullptr) {
@@ -56,6 +77,13 @@ int main(int argc, char* argv[])
         if (lExcecutableNameIndex != std::string::npos) {
             lProgramPath.erase(lExcecutableNameIndex + 1, lProgramPath.length() - lExcecutableNameIndex - 1);
         }
+    }
+#else
+    // Npcap needs this
+    if(!InitNPcapDLLPath())
+    {
+        // Quit the application almost immediately
+        gRunning = false;
     }
 #endif
 
