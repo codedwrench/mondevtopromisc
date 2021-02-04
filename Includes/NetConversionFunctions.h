@@ -415,9 +415,16 @@ inline uint64_t GetAdapterMACAddress(std::string_view aAdapter)
 #define UNICODE
 #endif
 // TODO make handle permanent only on windows somehow
-static bool GetNetworks(std::string_view aAdapter)
+// TODO find out if connected BSSID needs to be filtered out
+/**
+ * Gets list of adhoc networks that can be connected to.
+ * @param aAdapter - Network adapter to use.
+ * @return a list of adhoc networks.
+ *
+ **/
+static std::vector<std::string> GetAdhocNetworks(std::string_view aAdapter)
 {
-    bool lReturn{false};
+    std::vector<std::string> lReturn{};
 
     std::string lAdapter{aAdapter};
     size_t      lIndex{lAdapter.find("NPF")};
@@ -455,24 +462,29 @@ static bool GetNetworks(std::string_view aAdapter)
                     lNetworkInformation = &lNetworkList->Network[lCount];
 
                     if (lNetworkInformation->dot11Ssid.uSSIDLength != 0) {
+                        std::string lSSID{reinterpret_cast<char*>(lNetworkInformation->dot11Ssid.ucSSID),
+                                          lNetworkInformation->dot11Ssid.uSSIDLength};
+
+                        Logger::GetInstance().Log("SSID: " + lSSID, Logger::Level::TRACE);
+
+                        if (lNetworkInformation->dot11BssType == dot11_BSS_type_independent) {
+                            Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
+                            lReturn.emplace_back(lSSID);
+                        }
+
                         Logger::GetInstance().Log(
-                            "SSID: " + std::string(reinterpret_cast<char*>(lNetworkInformation->dot11Ssid.ucSSID),
-                                                   lNetworkInformation->dot11Ssid.uSSIDLength),
+                            "Amount of BSSIDs: " + std::to_string(lNetworkInformation->uNumberOfBssids),
                             Logger::Level::TRACE);
+
+                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED) {
+                            Logger::GetInstance().Log("Connected to this network", Logger::Level::TRACE);
+                        }
+
+                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_HAS_PROFILE) {
+                            Logger::GetInstance().Log("Network has a profile in network manager!",
+                                                      Logger::Level::TRACE);
+                        }
                     }
-                    if (lNetworkInformation->dot11BssType == dot11_BSS_type_independent) {
-                        Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
-                    }
-                    Logger::GetInstance().Log(
-                        "Amount of BSSIDs: " + std::to_string(lNetworkInformation->uNumberOfBssids),
-                        Logger::Level::TRACE);
-                    if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED) {
-                        Logger::GetInstance().Log("Connected to this network", Logger::Level::TRACE);
-                    }
-                    if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_HAS_PROFILE) {
-                        Logger::GetInstance().Log("Network has a profile in network manager!", Logger::Level::TRACE);
-                    }
-                    lReturn = true;
                 }
             } else {
                 Logger::GetInstance().Log("Could not gather scan results:" + std::system_category().message(lResult),
