@@ -9,9 +9,10 @@ set(CMAKE_MODULE_PATH
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_BUILD_TYPE "Release")
 
 if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /MT")
 else ()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif ()
@@ -58,13 +59,13 @@ if (MSVC OR MSYS OR MINGW)
     
         # Needed because otherwise the libraries cannot be found.
         set(Boost_ARCHITECTURE "-x64")
-    elseif (MSVC)
-        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "/delayload:wpcap.dll")
+    else()
+        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "delayimp.lib")
     endif ()
     
     set(PCAP_ROOT_DIR "c:/npcapsdk")
-    set(BOOST_ROOT "d:/boost_1_75_0")
-    set(Boost_LIBRARY_DIR "d:/boost_1_75_0/stage/lib")
+    set(BOOST_ROOT "e:/boost_1_75_0")
+    set(Boost_LIBRARY_DIR "e:/boost_1_75_0/stage/lib")
     if (NOT BUILD_STATIC)
         # Magic that boost on windows seems to need.
         add_definitions( -DWIN32_LEAN_AND_MEAN )
@@ -73,7 +74,7 @@ if (MSVC OR MSYS OR MINGW)
     endif ()
 
     set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
-    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.a")
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
     find_package(PDCurses REQUIRED)
     
     set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
@@ -127,6 +128,7 @@ add_executable(xlinkhandheldassistant main.cpp
         Includes/IConnector.h
         Includes/IHandler.h
         Includes/IPCapDevice.h
+        Includes/IWifiInterface.h
         Includes/Logger.h
         Includes/NetworkingHeaders.h
         Includes/Parameter80211Reader.h
@@ -148,10 +150,14 @@ add_executable(xlinkhandheldassistant main.cpp
         Includes/UserInterface/Window.h
         Includes/UserInterface/WindowController.h
 	    Includes/WindowModel.h
-        Includes/UserInterface/XLinkWindow.h
-        ${EXTRA_INCLUDES})
+        Includes/UserInterface/XLinkWindow.h)
         
-
+if(MSVC) 
+    set_property(TARGET xlinkhandheldassistant APPEND PROPERTY LINK_FLAGS "/DELAYLOAD:wpcap.dll")
+    target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceWindows.cpp Includes/WifiInterfaceWindows.h)
+else()
+    target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceLinuxBSD.cpp Includes/WifiInterfaceLinuxBSD.h)
+endif()
 
 target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
 target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})

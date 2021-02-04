@@ -14,6 +14,11 @@
 #include "IConnector.h"
 #include "IPCapDevice.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#include "WifiInterfaceWindows.h"
+#else
+#include "WifiInterfaceLinuxBSD.h"
+#endif
 
 namespace WirelessPSPPluginDevice_Constants
 {
@@ -54,14 +59,15 @@ private:
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
     void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
     
-    std::vector<uint64_t>          mBlackList{};
-    bool                           mConnected{false};
-    std::shared_ptr<IConnector>    mConnector{nullptr};
-    const unsigned char*           mData{nullptr};
-    pcap_t*                        mHandler{nullptr};
-    uint64_t                       mAdapterMACAddress{};
-    const pcap_pkthdr*             mHeader{nullptr};
-    unsigned int                   mPacketCount{0};
-    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
-    bool                           mSendReceivedData{false};
+    std::vector<uint64_t>           mBlackList{};
+    bool                            mConnected{false};
+    std::shared_ptr<IConnector>     mConnector{nullptr};
+    const unsigned char*            mData{nullptr};
+    pcap_t*                         mHandler{nullptr};
+    uint64_t                        mAdapterMACAddress{};
+    const pcap_pkthdr*              mHeader{nullptr};
+    unsigned int                    mPacketCount{0};
+    std::shared_ptr<boost::thread>  mReceiverThread{nullptr};
+    bool                            mSendReceivedData{false};
+    std::shared_ptr<IWifiInterface> mWifiInterface{nullptr};
 };

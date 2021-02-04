@@ -2,11 +2,14 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - XLinkKaiConnection.cpp */
 
+#include <boost/thread.hpp>
+
 #include <chrono>
 #include <cstring>
 #include <iostream>
 #include <utility>
 
+#include "../Includes/IPCapDevice.h"
 #include "../Includes/Logger.h"
 #include "../Includes/MonitorDevice.h"
 #include "../Includes/NetConversionFunctions.h"

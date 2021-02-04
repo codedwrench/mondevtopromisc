@@ -34,7 +34,8 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
 
     if (lStatus == 0) {
         mConnected = true;
-        mAdapterMACAddress = GetAdapterMACAddress(aName);
+        mWifiInterface = std::make_shared<WifiInterface>(aName);
+        mAdapterMACAddress = mWifiInterface->GetAdapterMACAddress();
         // Do not try to negiotiate with localhost
         BlackList(mAdapterMACAddress);
     } else {
@@ -65,6 +66,7 @@ void WirelessPSPPluginDevice::Close()
     mData           = nullptr;
     mHeader         = nullptr;
     mReceiverThread = nullptr;
+    mWifiInterface  = nullptr;
 }
 
 bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader)

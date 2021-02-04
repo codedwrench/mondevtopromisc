@@ -9,11 +9,14 @@
 #include <string>
 
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
 
 #include "Handler8023.h"
 #include "IConnector.h"
-#include "IPCapDevice.h"
+
+namespace boost
+{
+    class thread;
+}
 
 namespace XLinkKai_Constants
 {

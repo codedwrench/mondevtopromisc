@@ -13,7 +13,11 @@
 #include "Handler8023.h"
 #include "IConnector.h"
 #include "IPCapDevice.h"
-#include "XLinkKaiConnection.h"
+
+namespace boost
+{
+    class thread;
+}
 
 /**
  * This class contains the necessary components to read a PCap file.
