@@ -53,8 +53,8 @@ if (MSVC OR MSYS OR MINGW)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build_scripts
         )
             
-        # Add WinSock and liphlpapi to the platform specific libraries, MINGW needs it.
-        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32 -liphlpapi")
+        # Add WinSock, liphlpapi, wlanapi and ole32 to the platform specific libraries, MINGW needs it.
+        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32 -liphlpapi -lwlanapi -lole32")
     
         # Needed because otherwise the libraries cannot be found.
         set(Boost_ARCHITECTURE "-x64")
