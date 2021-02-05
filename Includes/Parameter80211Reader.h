@@ -27,6 +27,12 @@ public:
     [[nodiscard]] uint8_t GetFrequency() const;
 
     /**
+     * Returns if network is an Adhoc network.
+     * @return true if the network is an adhoc network.
+     */
+    [[nodiscard]] bool GetIsAdhoc() const;
+
+    /**
      * Gets the last obtained max data rate.
      * @return max data rate of last updated packet, 0 if unsuccessful.
      */
@@ -36,7 +42,7 @@ public:
      * Gets the last obtained SSID.
      * @return SSID of last updated packet, empty string if unsuccessful.
      */
-    [[nodiscard]] std::string_view GetSSID();
+    [[nodiscard]] std::string_view GetSSID() const;
 
     /**
      * Fills parameters into this object.
@@ -50,14 +56,16 @@ public:
     void Reset();
 
 private:
-    uint8_t UpdateChannelInfo(uint64_t aIndex);
-    uint8_t UpdateMaxRate(uint64_t aIndex);
-    uint8_t UpdateSSID();
+    uint8_t UpdateIsAdhoc(uint16_t aIndex);
+    uint8_t UpdateChannelInfo(uint16_t aIndex);
+    uint8_t UpdateMaxRate(uint16_t aIndex);
+    uint8_t UpdateSSID(uint16_t aIndex);
 
     std::shared_ptr<RadioTapReader> mPhysicalDeviceHeaderReader{nullptr};
 
     uint8_t          mFrequency{0};
     std::string_view mLastReceivedPacket{};
     uint8_t          mMaxRate{0};
+    bool             mIsAdhoc{false};
     std::string      mSSID{};
 };

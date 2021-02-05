@@ -17,7 +17,6 @@
 #include "Includes/UserInterface/WindowController.h"
 #include "Includes/WirelessPSPPluginDevice.h"
 #include "Includes/XLinkKaiConnection.h"
-
 namespace
 {
     constexpr std::string_view cLogFileName{"log.txt"};
@@ -35,20 +34,20 @@ namespace
 #include <Windows.h>
 bool InitNPcapDLLPath()
 {
-    bool lReturn{false};
+    bool        lReturn{false};
     std::string lNPcapDirectory{};
     lNPcapDirectory.resize(MAX_PATH);
     unsigned int lLength = GetSystemDirectory(lNPcapDirectory.data(), MAX_PATH);
     lNPcapDirectory.resize(lLength);
     if (lLength > 0) {
-      lNPcapDirectory.append("\\Npcap");
-      if (SetDllDirectory(lNPcapDirectory.data()) != 0) {
-          lReturn = true;
-      }
+        lNPcapDirectory.append("\\Npcap");
+        if (SetDllDirectory(lNPcapDirectory.data()) != 0) {
+            lReturn = true;
+        }
     }
     return lReturn;
 }
-#endif 
+#endif
 
 
 static void SignalHandler(const boost::system::error_code& aError, int aSignalNumber)
@@ -79,8 +78,7 @@ int main(int argc, char* argv[])
     }
 #else
     // Npcap needs this
-    if(!InitNPcapDLLPath())
-    {
+    if (!InitNPcapDLLPath()) {
         // Quit the application almost immediately
         gRunning = false;
     }

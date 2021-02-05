@@ -84,7 +84,8 @@ if (MSVC OR MSYS OR MINGW)
     # We have no GUI anyway!
     add_definitions( -DNOGDI )
 else ()
-    find_package(Curses)
+    find_package(Curses REQUIRED)
+    find_package(LibNL REQUIRED)
 endif ()
 
 if (BUILD_STATIC)
@@ -159,8 +160,8 @@ else()
     target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceLinuxBSD.cpp Includes/WifiInterfaceLinuxBSD.h)
 endif()
 
-target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS})
-target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES})
+target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ${LibNL_INCLUDE_DIR})
+target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES} ${LibNL_LIBRARIES})
 
 if (ENABLE_TESTS)
     find_package(GTest REQUIRED)

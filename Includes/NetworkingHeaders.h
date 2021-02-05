@@ -190,6 +190,7 @@ namespace Net_80211_Constants
     static constexpr uint8_t cFixedParameterTypeSSIDIndex{36};
     static constexpr uint8_t cFixedParameterTypeSupportedRates{0x1};
     static constexpr uint8_t cFixedParameterTypeDSParameterSet{0x3};
+    static constexpr uint8_t cFixedParameterTypeIBSS{0x6};
     static constexpr uint8_t cFixedParameterTypeExtendedRates{0x32};
 
     // LLC

@@ -27,7 +27,7 @@ public:
     std::vector<std::string> GetAdhocNetworks() override;
 
 private:
-    std::string mAdapterName{""};
+    std::string mAdapterName;
     GUID        mGUID{};
     HANDLE      mWifiHandle{nullptr};
 };
