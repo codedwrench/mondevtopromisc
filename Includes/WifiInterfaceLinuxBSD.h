@@ -18,8 +18,6 @@
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
 
-#include "Parameter80211Reader.h"
-
 struct nl_sock;
 
 /**
@@ -67,5 +65,4 @@ private:
     nl_sock*                                    mSocket{nullptr};
     int                                         mDriverId{0};
     unsigned int                                mNetworkAdapterIndex{0};
-    Parameter80211Reader                        mReader{nullptr};
 };
