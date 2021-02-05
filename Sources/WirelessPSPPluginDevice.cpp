@@ -33,8 +33,8 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
     int lStatus{pcap_activate(mHandler)};
 
     if (lStatus == 0) {
-        mConnected = true;
-        mWifiInterface = std::make_shared<WifiInterface>(aName);
+        mConnected         = true;
+        mWifiInterface     = std::make_shared<WifiInterface>(aName);
         mAdapterMACAddress = mWifiInterface->GetAdapterMACAddress();
         // Do not try to negiotiate with localhost
         BlackList(mAdapterMACAddress);
@@ -77,7 +77,7 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
     std::string lData{DataToString(aData, aHeader)};
     uint64_t    lSourceMac{
         (GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex) & Net_Constants::cBroadcastMac)};
-    
+
     lSourceMac = SwapMacEndian(lSourceMac);
 
     if (!IsMACBlackListed(lSourceMac)) {
@@ -126,7 +126,8 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
     return lReturn;
 }
 
-void WirelessPSPPluginDevice::BlackList(uint64_t aMAC) {
+void WirelessPSPPluginDevice::BlackList(uint64_t aMAC)
+{
     if (!IsMACBlackListed(aMAC)) {
         Logger::GetInstance().Log("Added: " + IntToMac(aMAC) + " to blacklist.", Logger::Level::TRACE);
         mBlackList.push_back(aMAC);
@@ -192,7 +193,8 @@ std::string WirelessPSPPluginDevice::DataToString(const unsigned char* aData, co
     return lData;
 }
 
-bool WirelessPSPPluginDevice::Send(std::string_view aData) {
+bool WirelessPSPPluginDevice::Send(std::string_view aData)
+{
     return Send(aData, true);
 }
 
@@ -215,7 +217,7 @@ bool WirelessPSPPluginDevice::Send(std::string_view aData, bool aModifyData)
 
                 lData.append(lActualSourceMac);
             }
-            
+
             Logger::GetInstance().Log(std::string("Sent: ") + PrettyHexString(lData), Logger::Level::TRACE);
 
             if (pcap_sendpacket(mHandler, reinterpret_cast<const unsigned char*>(lData.data()), lData.size()) == 0) {

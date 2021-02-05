@@ -147,7 +147,7 @@ namespace Net_Constants
     static constexpr uint16_t cSetMacType{0x636d};
     static constexpr uint16_t cPSPEtherType{0xc888};
     static constexpr uint64_t cBroadcastMac{0xFFFFFFFFFFFF};
-}
+}  // namespace Net_Constants
 namespace Net_8023_Constants
 {
     static constexpr uint8_t cDestinationAddressIndex{0};

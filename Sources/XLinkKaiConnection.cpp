@@ -2,12 +2,12 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - XLinkKaiConnection.cpp */
 
-#include <boost/thread.hpp>
-
 #include <chrono>
 #include <cstring>
 #include <iostream>
 #include <utility>
+
+#include <boost/thread.hpp>
 
 #include "../Includes/IPCapDevice.h"
 #include "../Includes/Logger.h"
@@ -182,7 +182,7 @@ void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& aError
                         if (lMonitorDevice != nullptr) {
                             mEthernetData = mPacketHandler.ConvertPacket(lMonitorDevice->GetLockedBSSID(),
                                                                          lMonitorDevice->GetDataPacketParameters());
-                        } 
+                        }
                         // Data from XLink Kai should never be caught in the receiver thread
                         mIncomingConnection->BlackList(mPacketHandler.GetSourceMAC());
                         mIncomingConnection->Send(mEthernetData);

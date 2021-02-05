@@ -2,8 +2,10 @@
 
 /* Copyright (c) 2020 [Rick de Bondt] - PCapReader.cpp */
 
-#include <boost/thread.hpp>
 #include <chrono>
+#include <thread>
+
+#include <boost/thread.hpp>
 
 #include "../Includes/Logger.h"
 #include "../Includes/NetConversionFunctions.h"

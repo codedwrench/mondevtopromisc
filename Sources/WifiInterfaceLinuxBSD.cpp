@@ -1,6 +1,4 @@
-
-#include "../Includes/Logger.h"
-#include "../Includes/NetConversionFunctions.h"
+#include "../Includes/WifiInterfaceLinuxBSD.h"
 
 #include "../Includes/Logger.h"
 #include "../Includes/NetConversionFunctions.h"
@@ -10,18 +8,14 @@ WifiInterface::WifiInterface(std::string_view aAdapter)
     mAdapterName = aAdapter;
 }
 
-WifiInterface::~WifiInterface()
-{
-
-}
+WifiInterface::~WifiInterface() {}
 
 std::vector<std::string> WifiInterface::GetAdhocNetworks()
 {
     // Declare and initialize variables.
     std::vector<std::string> lReturn{};
 
-            Logger::GetInstance().Log("Not implemented yet!",
-                                      Logger::Level::DEBUG);
+    Logger::GetInstance().Log("Not implemented yet!", Logger::Level::DEBUG);
 
     return lReturn;
 }
