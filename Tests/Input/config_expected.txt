@@ -2,8 +2,9 @@ LogLevel: "Trace"
 AutoDiscoverPSPVita: false
 AutoDiscoverXLinkKai: true
 UseXLinkKaiHints: false
-WifiAdapter: ""
+PSPPlugin: false
 Channel: "6"
+WifiAdapter: ""
 XLinkIp: "127.0.0.1"
 XLinkPort: "34523"
 AckDataFrames: false

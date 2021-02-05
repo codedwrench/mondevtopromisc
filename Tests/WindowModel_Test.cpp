@@ -60,8 +60,11 @@ TEST_F(WindowModelTest, LoadModel)
     EXPECT_EQ(mWindowModel.mAutoDiscoverPSPVitaNetworks, WindowModel_Constants::cDefaultAutoDiscoverPSPVita);
     EXPECT_EQ(mWindowModel.mAutoDiscoverXLinkKaiInstance, true);
     EXPECT_EQ(mWindowModel.mXLinkKaiHints, WindowModel_Constants::cDefaultUseXLinkKaiHints);
+    EXPECT_EQ(mWindowModel.mUsePSPPlugin, WindowModel_Constants::cDefaultPSPPlugin);
     EXPECT_EQ(mWindowModel.mChannel, "6");
     EXPECT_EQ(mWindowModel.mWifiAdapter, WindowModel_Constants::cDefaultWifiAdapter);
     EXPECT_EQ(mWindowModel.mXLinkIp, WindowModel_Constants::cDefaultXLinkIp);
     EXPECT_EQ(mWindowModel.mXLinkPort, WindowModel_Constants::cDefaultXLinkPort);
+    EXPECT_EQ(mWindowModel.mAcknowledgeDataFrames, WindowModel_Constants::cDefaultAcknowledgeDataFrames);
+    EXPECT_EQ(mWindowModel.mOnlyAcceptFromMac, WindowModel_Constants::cDefaultOnlyAcceptFromMac);
 }

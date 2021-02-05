@@ -31,8 +31,9 @@ bool WindowModel::SaveToFile(std::string_view aPath) const
         lFile << cSaveAutoDiscoverPSPVita << ": " << BoolToString(mAutoDiscoverPSPVitaNetworks) << std::endl;
         lFile << cSaveAutoDiscoverXLinkKai << ": " << BoolToString(mAutoDiscoverXLinkKaiInstance) << std::endl;
         lFile << cSaveUseXLinkKaiHints << ": " << BoolToString(mXLinkKaiHints) << std::endl;
-        lFile << cSaveWifiAdapter << ": \"" << mWifiAdapter << "\"" << std::endl;
+        lFile << cSavePSPPlugin << ": " << BoolToString(mUsePSPPlugin) << std::endl;
         lFile << cSaveChannel << ": \"" << mChannel << "\"" << std::endl;
+        lFile << cSaveWifiAdapter << ": \"" << mWifiAdapter << "\"" << std::endl;
         lFile << cSaveXLinkIp << ": \"" << mXLinkIp << "\"" << std::endl;
         lFile << cSaveXLinkPort << ": \"" << mXLinkPort << "\"" << std::endl;
         lFile << cSaveAcknowledgeDataFrames << ": " << BoolToString(mAcknowledgeDataFrames) << std::endl;
@@ -80,6 +81,8 @@ bool WindowModel::LoadFromFile(std::string_view aPath)
                             mAutoDiscoverXLinkKaiInstance = StringToBool(lResult);
                         } else if (lOption == cSaveUseXLinkKaiHints) {
                             mXLinkKaiHints = StringToBool(lResult);
+                        } else if (lOption == cSavePSPPlugin) {
+                            mUsePSPPlugin = StringToBool(lResult);
                         } else if (lOption == cSaveWifiAdapter) {
                             mWifiAdapter = lResult.substr(1, lResult.size() - 2);
                         } else if (lOption == cSaveChannel) {

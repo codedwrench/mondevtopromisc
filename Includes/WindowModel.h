@@ -23,7 +23,7 @@ namespace WindowModel_Constants
     static constexpr std::string_view cSaveOnlyAcceptFromMac{"OnlyAcceptFromMac"};
 
     static constexpr Logger::Level    cDefaultLogLevel{Logger::Level::ERROR};
-    static constexpr bool             cDefaultAutoDiscoverPSPVita{true};
+    static constexpr bool             cDefaultAutoDiscoverPSPVita{false};
     static constexpr bool             cDefaultAutoDiscoverXLinkKai{false};
     static constexpr bool             cDefaultUseXLinkKaiHints{false};
     static constexpr bool             cDefaultPSPPlugin{false};
