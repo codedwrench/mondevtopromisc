@@ -111,8 +111,8 @@ static int SkipSequenceCheck(nl_msg* aMessage, void* aArgument)
 static int FamilyHandler(nl_msg* aMessage, void* aArgument)
 {
     // https://git.kernel.org/pub/scm/linux/kernel/git/jberg/iw.git/tree/genl.c used as reference.
-    auto* lGroup{reinterpret_cast<HandlerArguments*>(aArgument)};
-    std::array<nlattr*, NL80211_ATTR_MAX + 1>          lIndices{};
+    auto*                                     lGroup{reinterpret_cast<HandlerArguments*>(aArgument)};
+    std::array<nlattr*, NL80211_ATTR_MAX + 1> lIndices{};
     auto*   lGenlMessageHeader{reinterpret_cast<genlmsghdr*>(nlmsg_data(nlmsg_hdr(aMessage)))};
     nlattr* lMultiCastGroup{};
     int     lRemaining{};
@@ -138,12 +138,11 @@ static int FamilyHandler(nl_msg* aMessage, void* aArgument)
             // If the group exists in this index
             if ((lMulticastGroupIndices.at(CTRL_ATTR_MCAST_GRP_NAME) != nullptr) &&
                 (lMulticastGroupIndices.at(CTRL_ATTR_MCAST_GRP_ID) != nullptr)) {
-
                 // If the group matches the expectation
                 std::string lCurrentGroup{
                     reinterpret_cast<char*>(nla_data(lMulticastGroupIndices.at(CTRL_ATTR_MCAST_GRP_NAME))),
                     static_cast<size_t>(nla_len(lMulticastGroupIndices.at(CTRL_ATTR_MCAST_GRP_NAME)) - 1)};
-                
+
                 if (lCurrentGroup == lGroup->group) {
                     lGroup->id = nla_get_u32(lMulticastGroupIndices.at(CTRL_ATTR_MCAST_GRP_ID));
                     // No other solution than calling break here sadly

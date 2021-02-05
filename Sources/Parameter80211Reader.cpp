@@ -2,8 +2,6 @@
 
 #include <utility>
 
-#include <sys/socket.h>
-
 /* Copyright (c) 2020 [Rick de Bondt] - Parameter80211Reader.cpp */
 
 #include "../Includes/NetConversionFunctions.h"

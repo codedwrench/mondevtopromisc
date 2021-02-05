@@ -18,6 +18,14 @@
 #define WLAN_AVAILABLE_NETWORK_CONSOLE_USER_PROFILE                                                                    \
     0x00000004  // The profile is the active console user's per user profile
 
+// Context to pass along with callbacks
+typedef struct _WLAN_CALLBACK_INFO
+{
+    GUID   interfaceGUID;
+    HANDLE scanEvent;
+    DWORD  callbackReason;
+} WLAN_CALLBACK_INFO;
+
 // Need to link with Wlanapi.lib and Ole32.lib
 #pragma comment(lib, "wlanapi.lib")
 #pragma comment(lib, "ole32.lib")
@@ -59,6 +67,30 @@ WifiInterface::~WifiInterface()
     }
 }
 
+static void WlanCallback(WLAN_NOTIFICATION_DATA* aScanNotificationData, PVOID aContext)
+{
+    // Get the data from my struct. If it's null, nothing to do
+    WLAN_CALLBACK_INFO* lCallbackInfo = (WLAN_CALLBACK_INFO*) aContext;
+    if (lCallbackInfo != nullptr) {
+        // Check the GUID in the struct against the GUID in the notification data, return if they don't match
+        if (memcmp(&lCallbackInfo->interfaceGUID, &aScanNotificationData->InterfaceGuid, sizeof(GUID)) == 0) {
+            // If the notification was for a scan complete or failure then we need to set the event
+            if ((aScanNotificationData->NotificationCode == wlan_notification_acm_scan_complete) ||
+                (aScanNotificationData->NotificationCode == wlan_notification_acm_scan_fail)) {
+                // Set the notification code as the callbackReason
+                lCallbackInfo->callbackReason = aScanNotificationData->NotificationCode;
+
+                // Set the event
+                SetEvent(lCallbackInfo->scanEvent);
+            }
+        }
+    } else {
+        Logger::GetInstance().Log("No callback info received", Logger::Level::ERROR);
+    }
+
+    return;
+}
+
 std::vector<std::string> WifiInterface::GetAdhocNetworks()
 {
     // Declare and initialize variables.
@@ -76,52 +108,98 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
         lResult = ERROR_SUCCESS;
     }
 
+    // Declare the callback parameter struct
+    WLAN_CALLBACK_INFO lCallbackInfo = {0};
+    lCallbackInfo.interfaceGUID      = mGUID;
+
+    // Create an event to be triggered in the scan case
+    lCallbackInfo.scanEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+    // Register for wlan scan notifications
+    WlanRegisterNotification(mWifiHandle,
+                             WLAN_NOTIFICATION_SOURCE_ALL,
+                             true,
+                             reinterpret_cast<WLAN_NOTIFICATION_CALLBACK>(WlanCallback),
+                             reinterpret_cast<PVOID>(&lCallbackInfo),
+                             nullptr,
+                             nullptr);
+
+
+    // Start a scan. If the WlanScan call fails, log the error
+    lResult = WlanScan(mWifiHandle, &mGUID, nullptr, nullptr, nullptr);
     if (lResult == ERROR_SUCCESS) {
-        lResult = WlanGetAvailableNetworkList(mWifiHandle, &mGUID, 0, nullptr, &lNetworkList);
-        if (lResult == ERROR_SUCCESS) {
-            Logger::GetInstance().Log("Amount of Networks: " + std::to_string(lNetworkList->dwNumberOfItems),
-                                      Logger::Level::TRACE);
+        // Scan request successfully sent
+        Logger::GetInstance().Log("Scan request sent. Waiting for reply", Logger::Level::TRACE);
 
-            for (int lCount = 0; lCount < lNetworkList->dwNumberOfItems; lCount++) {
-                lNetworkInformation = &lNetworkList->Network[lCount];
+        // Wait for the event to be signaled, or an error to occur. Don't wait longer than 15 seconds.
+        DWORD lWaitResult = WaitForSingleObject(lCallbackInfo.scanEvent, 15000);
 
-                if (lNetworkInformation->dot11Ssid.uSSIDLength != 0) {
-                    std::string lSSID{reinterpret_cast<char*>(lNetworkInformation->dot11Ssid.ucSSID),
-                                      lNetworkInformation->dot11Ssid.uSSIDLength};
-
-                    Logger::GetInstance().Log("SSID: " + lSSID, Logger::Level::TRACE);
-
-                    if (lNetworkInformation->dot11BssType == dot11_BSS_type_independent) {
-                        Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
-                        lReturn.emplace_back(lSSID);
-                    }
-
-                    Logger::GetInstance().Log(
-                        "Amount of BSSIDs: " + std::to_string(lNetworkInformation->uNumberOfBssids),
-                        Logger::Level::TRACE);
-
-                    if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED) {
-                        Logger::GetInstance().Log("Connected to this network", Logger::Level::TRACE);
-                    }
-
-                    if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_HAS_PROFILE) {
-                        Logger::GetInstance().Log("Network has a profile in network manager!", Logger::Level::TRACE);
-                    }
-                }
+        // Check how we got here, via callback or timeout
+        if (lWaitResult == WAIT_OBJECT_0) {
+            if (lCallbackInfo.callbackReason == wlan_notification_acm_scan_complete) {
+                Logger::GetInstance().Log("The scan for networks is completed", Logger::Level::TRACE);
+            } else if (lCallbackInfo.callbackReason == wlan_notification_acm_scan_fail) {
+                Logger::GetInstance().Log("The scan for connectable networks failed", Logger::Level::ERROR);
             }
+        } else if (lWaitResult == WAIT_TIMEOUT) {
+            Logger::GetInstance().Log("No response was received after 15 seconds", Logger::Level::ERROR);
         } else {
-            Logger::GetInstance().Log("Could not gather scan results:" + std::system_category().message(lResult),
+            Logger::GetInstance().Log("Unknown error waiting for response. Error Code: " + std::to_string(lWaitResult),
                                       Logger::Level::ERROR);
         }
-    } else {
-        mWifiHandle = nullptr;
-        Logger::GetInstance().Log("Could not open WlanHandle" + std::system_category().message(lResult),
-                                  Logger::Level::ERROR);
-    }
 
-    if (lNetworkList != nullptr) {
-        WlanFreeMemory(lNetworkList);
-        lNetworkList = nullptr;
+
+        if (lResult == ERROR_SUCCESS) {
+            lResult = WlanGetAvailableNetworkList(mWifiHandle, &mGUID, 0, nullptr, &lNetworkList);
+            if (lResult == ERROR_SUCCESS) {
+                Logger::GetInstance().Log("Amount of Networks: " + std::to_string(lNetworkList->dwNumberOfItems),
+                                          Logger::Level::TRACE);
+
+                for (int lCount = 0; lCount < lNetworkList->dwNumberOfItems; lCount++) {
+                    lNetworkInformation = &lNetworkList->Network[lCount];
+
+                    if (lNetworkInformation->dot11Ssid.uSSIDLength != 0) {
+                        std::string lSSID{reinterpret_cast<char*>(lNetworkInformation->dot11Ssid.ucSSID),
+                                          lNetworkInformation->dot11Ssid.uSSIDLength};
+
+                        Logger::GetInstance().Log("SSID: " + lSSID, Logger::Level::TRACE);
+
+                        if (lNetworkInformation->dot11BssType == dot11_BSS_type_independent) {
+                            Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
+                            lReturn.emplace_back(lSSID);
+                        }
+
+                        Logger::GetInstance().Log(
+                            "Amount of BSSIDs: " + std::to_string(lNetworkInformation->uNumberOfBssids),
+                            Logger::Level::TRACE);
+
+                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED) {
+                            Logger::GetInstance().Log("Connected to this network", Logger::Level::TRACE);
+                        }
+
+                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_HAS_PROFILE) {
+                            Logger::GetInstance().Log("Network has a profile in network manager!",
+                                                      Logger::Level::TRACE);
+                        }
+                    }
+                }
+            } else {
+                Logger::GetInstance().Log("Could not gather scan results:" + std::system_category().message(lResult),
+                                          Logger::Level::ERROR);
+            }
+        } else {
+            mWifiHandle = nullptr;
+            Logger::GetInstance().Log("Could not open WlanHandle" + std::system_category().message(lResult),
+                                      Logger::Level::ERROR);
+        }
+
+        if (lNetworkList != nullptr) {
+            WlanFreeMemory(lNetworkList);
+            lNetworkList = nullptr;
+        }
+    } else {
+        Logger::GetInstance().Log("Could not send Scan request" + std::system_category().message(lResult),
+                                  Logger::Level::ERROR);
     }
     return lReturn;
 }

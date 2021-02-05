@@ -1,9 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
-
-#include <bits/stdint-uintn.h>
 
 /* Copyright (c) 2020 [Rick de Bondt] - IWifiInterface.h
  *
