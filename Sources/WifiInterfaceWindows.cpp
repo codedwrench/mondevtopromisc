@@ -218,7 +218,6 @@ uint64_t WifiInterface::GetAdapterMACAddress()
         while (lCurrentAddresses != nullptr) {
             if (lCurrentAddresses->AdapterName == mAdapterName) {
                 memcpy(&lReturn, lCurrentAddresses->PhysicalAddress, Net_8023_Constants::cSourceAddressLength);
-                lReturn = SwapMacEndian(lReturn);
             }
             lCurrentAddresses = lCurrentAddresses->Next;
         }

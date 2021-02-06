@@ -22,6 +22,11 @@ WifiInterface::WifiInterface(std::string_view aAdapter)
 {
     mAdapterName = aAdapter;
     SetBSSPolicy();
+    // Open socket to kernel.
+    mSocket = nl_socket_alloc();  // Allocate new netlink socket in memory
+    genl_connect(mSocket);        // Create file descriptor and bind socket
+    mDriverId = genl_ctrl_resolve(mSocket, WifiInterface_Constants::cDriverName.data());  // Find the nl80211 driver ID
+    mNetworkAdapterIndex = if_nametoindex(mAdapterName.data());  // Use this wireless interface for scanning
 }
 
 WifiInterface::~WifiInterface() {}
@@ -56,14 +61,12 @@ uint64_t WifiInterface::GetAdapterMACAddress()
                 (lInterfaceAddress->ifa_addr->sa_family == AF_PACKET)) {
                 auto* lSocketAddress = reinterpret_cast<sockaddr_ll*>(lInterfaceAddress->ifa_addr);
                 memcpy(&lReturn, &lSocketAddress->sll_addr, Net_8023_Constants::cSourceAddressLength);
-                lReturn = SwapMacEndian(lReturn);
             }
 #else
             if ((lInterfaceAddress->ifa_name == mAdapterName) && (lInterfaceAddress->ifa_addr->sa_family == AF_LINK)) {
                 unsigned char* lAddress = reinterpret_cast<unsigned char*>(
                     LLADDR(reinterpret_cast<sockaddr_dl*>(lInterfaceAddress->ifa_addr)));
                 memcpy(&lReturn, lAddress, Net_8023_Constants::cSourceAddressLength);
-                lReturn = SwapMacEndian(lReturn);
             }
 #endif
         }
@@ -266,8 +269,8 @@ static int DumpResults(nl_msg* aMessage, void* aArgument)
 
     // Called by the kernel with a dump of the successful scan's data. Called for each SSID.
     auto* lGenlMessageHeader = reinterpret_cast<genlmsghdr*>(nlmsg_data(nlmsg_hdr(aMessage)));
-    std::array<nlattr*, NL80211_ATTR_MAX + 1> lIndices;
-    std::array<nlattr*, NL80211_ATTR_MAX + 1> lBSS;
+    std::array<nlattr*, NL80211_ATTR_MAX + 1> lIndices{};
+    std::array<nlattr*, NL80211_ATTR_MAX + 1> lBSS{};
 
     // Parse and error check.
     nla_parse(lIndices.data(),
@@ -283,23 +286,49 @@ static int DumpResults(nl_msg* aMessage, void* aArgument)
                 std::string lSSID{GetSSIDFromIE(reinterpret_cast<unsigned char*>(lBSS.at(NL80211_BSS_BEACON_IES)),
                                                 nla_len(lBSS.at(NL80211_BSS_BEACON_IES)))};
 
+                // I'm also filtering the hidden SSIDs, (" ")
                 if (!lSSID.empty() && lSSID != " ") {
                     Logger::GetInstance().Log(lSSID, Logger::Level::TRACE);
+
+                    IWifiInterface::WifiInformation lInformation{};
+
+                    // Grab the connected information
+                    if (lBSS.at(NL80211_BSS_STATUS) != nullptr) {
+                        uint32_t lBSSStatus{nla_get_u32(lBSS.at(NL80211_BSS_STATUS))};
+                        lInformation.isconnected =
+                            lBSSStatus == NL80211_BSS_STATUS_ASSOCIATED || lBSSStatus == NL80211_BSS_STATUS_IBSS_JOINED;
+                    }
+
+                    // Grab the SSID
+                    lInformation.ssid = lSSID;
+
+                    // Grab the BSSID
+                    memcpy(lInformation.bssid.data(), nla_data(lBSS.at(NL80211_BSS_BSSID)), 6);
+
+                    // Grab the frequency
+                    if (lBSS.at(NL80211_BSS_FREQUENCY) != nullptr) {
+                        lInformation.frequency = nla_get_u32(lBSS.at(NL80211_BSS_FREQUENCY));
+                    }
 
                     // Using the Capability field, index 0, field ESS, if this is 0, the network is an adhoc
                     // network.
                     if ((nla_get_u32(lBSS.at(NL80211_BSS_CAPABILITY)) & 0b1U) == 0U) {
                         Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
+                        lInformation.isadhoc = true;
+                    }
 
-                        // Add the network to the vector
-                        lArgument->adhocnetworks.emplace_back(lSSID);
+                    // Add the network to the vector
+                    lArgument->adhocnetworks.emplace_back(lInformation);
+
+                    // Associated info will always be put at the beginning
+                    if (lInformation.isconnected) {
+                        std::swap(lArgument->adhocnetworks.back(), lArgument->adhocnetworks.front());
                     }
                 }
             }
         } else {
             Logger::GetInstance().Log("Parsing info failed!", Logger::Level::ERROR);
         }
-
     } else {
         Logger::GetInstance().Log("Basic service set info missing!", Logger::Level::ERROR);
     }
@@ -307,13 +336,13 @@ static int DumpResults(nl_msg* aMessage, void* aArgument)
     return NL_SKIP;
 }
 
-
-int WifiInterface::ScanTrigger()
+bool WifiInterface::ScanTrigger()
 {
     // Starts the scan and waits for it to finish. Does not return until the scan is done or has been aborted.
     TriggerResults lResults{};
     int            lError{};
-    int            lReturn{};
+    int            lSuccess{};
+    bool           lReturn{};
     int            lMulticastId = GetMulticastId();
 
     nl_socket_add_membership(mSocket, lMulticastId);  // Without this, CallbackTrigger() won't be called.
@@ -356,37 +385,39 @@ int WifiInterface::ScanTrigger()
                 // Send NL80211_CMD_TRIGGER_SCAN to start the scan. The kernel may reply with
                 // NL80211_CMD_NEW_SCAN_RESULTS on success or NL80211_CMD_SCAN_ABORTED if another scan was started
                 // by another process.
-                lReturn = nl_send_auto(mSocket, lMessage);  // Send the message.
+                lSuccess = nl_send_auto(mSocket, lMessage);  // Send the message.
                 Logger::GetInstance().Log("Waiting for scan to complete...", Logger::Level::DEBUG);
                 while (lError > 0) {
                     // First wait for AcknowledgeHandler(). This helps with basic errors.
-                    lReturn = nl_recvmsgs(mSocket, lCallback);
+                    lSuccess = nl_recvmsgs(mSocket, lCallback);
                 }
 
                 if (lError < 0) {
-                    Logger::GetInstance().Log("Error occured with a value of " + std::to_string(lError),
-                                              Logger::Level::WARNING);
+                    // Put resulting lErroror message in return value
+                    lSuccess = lError;
                 }
 
-                if (lReturn >= 0) {
-                    while (lResults.done == 0 && lResults.aborted == 0) {
-                        // Now wait until the scan is done or aborted.
+                if (lSuccess >= 0) {
+                    lError = 1;
+                    while (lResults.done == 0 && lResults.aborted == 0 && lError > 0) {
+                        // Now wait until the scan is done or aborted
                         nl_recvmsgs(mSocket, lCallback);
-                        lReturn = 0;
+                    }
+
+                    if (lError < 0) {
+                        Logger::GetInstance().Log(std::string("Error occured: ") + nl_geterror(-lError),
+                                                  Logger::Level::ERROR);
                     }
 
                     if (lResults.aborted != 0) {
                         Logger::GetInstance().Log("Kernel aborted scan", Logger::Level::WARNING);
-                        lReturn = 1;
                     }
 
                     if (lCallback != nullptr) {
                         nl_cb_put(lCallback);
                     }
-
-                    Logger::GetInstance().Log("Scan is done", Logger::Level::DEBUG);
                 } else {
-                    Logger::GetInstance().Log(std::string("nl_recvmsgs() returned") + nl_geterror(-lReturn),
+                    Logger::GetInstance().Log(std::string("nl_recvmsgs() returned") + nl_geterror(-lSuccess),
                                               Logger::Level::ERROR);
                 }
             } else {
@@ -395,11 +426,9 @@ int WifiInterface::ScanTrigger()
             }
         } else {
             Logger::GetInstance().Log("Failed to allocate netlink message for SSIDsToScan", Logger::Level::ERROR);
-            lReturn = -ENOMEM;
         }
     } else {
         Logger::GetInstance().Log("Failed to allocate netlink message for message", Logger::Level::ERROR);
-        lReturn = -ENOMEM;
     }
 
     if (lMessage != nullptr) {
@@ -411,25 +440,13 @@ int WifiInterface::ScanTrigger()
 }
 
 
-std::vector<std::string> WifiInterface::GetAdhocNetworks()
+std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
 {
-    // Declare and initialize variables.
-    std::vector<std::string> lReturn{};
-
-    // Open socket to kernel.
-    if (mSocket == nullptr) {
-        mSocket = nl_socket_alloc();  // Allocate new netlink socket in memory
-        genl_connect(mSocket);        // Create file descriptor and bind socket
-        mDriverId =
-            genl_ctrl_resolve(mSocket, WifiInterface_Constants::cDriverName.data());  // Find the nl80211 driver ID
-        mNetworkAdapterIndex = if_nametoindex(mAdapterName.data());  // Use this wireless interface for scanning
-    }
-
     // Issue NL80211_CMD_TRIGGER_SCAN to the kernel and wait for it to finish.
-    int lError = ScanTrigger();
-    if (lError == 0) {
+    bool lSuccess{ScanTrigger()};
+    if (lSuccess) {
         // Now get info for all SSIDs detected.
-        struct nl_msg* lMessage = nlmsg_alloc();  // Allocate a message.
+        nl_msg* lMessage = nlmsg_alloc();  // Allocate a message.
 
         // We want to dump all the information
         genlmsg_put(lMessage, 0, 0, mDriverId, 0, NLM_F_DUMP, NL80211_CMD_GET_SCAN, 0);
@@ -437,8 +454,11 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
         // Add message attribute, which interface to use
         nla_put_u32(lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);
 
+        // Clear previous scan info
+        mLastReceivedScanInformation.clear();
+
         // Add the callback
-        DumpResultArgument lArgument{mBSSPolicy, lReturn};
+        DumpResultArgument lArgument{mBSSPolicy, mLastReceivedScanInformation};
         nl_socket_modify_cb(mSocket, NL_CB_VALID, NL_CB_CUSTOM, DumpResults, &lArgument);
 
         // Send the message
@@ -456,11 +476,171 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
 
         nlmsg_free(lMessage);
     } else {
-        Logger::GetInstance().Log("ScanTrigger() failed with " + std::to_string(lError), Logger::Level::ERROR);
         nl_socket_free(mSocket);
         mSocket              = nullptr;
         mDriverId            = 0;
         mNetworkAdapterIndex = 0;
     }
+
+    return mLastReceivedScanInformation;
+}
+
+bool WifiInterface::SetIBSSType()
+{
+    bool lReturn{};
+
+    // Allocate the messages and callback handler.
+    nl_msg* lMessage{nlmsg_alloc()};
+    if (lMessage != nullptr) {
+        genlmsg_put(lMessage,
+                    0,
+                    0,
+                    mDriverId,
+                    0,
+                    (NLM_F_REQUEST | NLM_F_ACK),
+                    NL80211_CMD_SET_INTERFACE,
+                    0);  // Setup which
+                         // command to run.
+        // Interface
+        nla_put_u32(lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);
+        // What type to set
+        nla_put_u32(lMessage, NL80211_ATTR_IFTYPE, NL80211_IFTYPE_ADHOC);
+
+
+        int lError{1};
+        // Send the message.
+        lError = nl_send_auto_complete(mSocket, lMessage);
+        Logger::GetInstance().Log("Setting BSS type", Logger::Level::TRACE);
+
+        if (lError >= 0) {
+            // When this is done command is successful
+            lError = nl_recvmsgs_default(mSocket);
+            if (lError >= 0) {
+                lReturn = true;
+            } else {
+                Logger::GetInstance().Log(std::string("Failed to nl_recvmsgs_default ") + nl_geterror(-lError),
+                                          Logger::Level::ERROR);
+            }
+        } else {
+            Logger::GetInstance().Log(std::string("Failed to nl_send_auto_complete ") + nl_geterror(-lError),
+                                      Logger::Level::ERROR);
+        }
+    } else {
+        Logger::GetInstance().Log("Failed to allocate netlink message for message", Logger::Level::ERROR);
+    }
+
+    // Cleanup.
+    if (lMessage != nullptr) {
+        nlmsg_free(lMessage);
+    }
+
+    return lReturn;
+}
+
+bool WifiInterface::Connect(const IWifiInterface::WifiInformation& aConnection)
+{
+    bool lReturn{};
+
+    // Disconnect from the old network
+    if (mLastReceivedScanInformation.begin()->isconnected) {
+        if (mLastReceivedScanInformation.begin()->isadhoc) {
+            LeaveIBSS();
+        } else {
+            SetIBSSType();
+        }
+    } else {
+        // If not connected just set IBSS mode anyway and leave old IBSS for good measure, even if there aren't any
+        SetIBSSType();
+        LeaveIBSS();
+    }
+
+    // Allocate the messages and callback handler.
+    nl_msg* lMessage{nlmsg_alloc()};
+    if (lMessage != nullptr) {
+        // Set connect command
+        genlmsg_put(lMessage, 0, 0, mDriverId, 0, (NLM_F_REQUEST | NLM_F_ACK), NL80211_CMD_JOIN_IBSS, 0);
+
+        // Interface, what ssid to connect to, what bssid to connect to and frequency
+        nla_put_u32(
+            lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);  // Add message attribute, which interface to use.
+        nla_put(lMessage, NL80211_ATTR_SSID, aConnection.ssid.length(), aConnection.ssid.data());
+        nla_put_u32(lMessage,
+                    NL80211_ATTR_WIPHY_FREQ,
+                    aConnection.frequency);  // Add message attribute, which frequency to use.
+        nla_put(lMessage, NL80211_ATTR_MAC, 6, aConnection.bssid.data());
+        Logger::GetInstance().Log("Connecting to:" + aConnection.ssid, Logger::Level::DEBUG);
+
+        int lError{1};
+        // Send the message.
+        lError = nl_send_auto_complete(mSocket, lMessage);
+        Logger::GetInstance().Log("Leaving AdHoc network", Logger::Level::TRACE);
+
+        if (lError >= 0) {
+            // When this is done command is successful
+            lError = nl_recvmsgs_default(mSocket);
+            if (lError >= 0) {
+                lReturn = true;
+            } else {
+                Logger::GetInstance().Log(std::string("Failed to nl_recvmsgs_default ") + nl_geterror(-lError),
+                                          Logger::Level::ERROR);
+            }
+        } else {
+            Logger::GetInstance().Log(std::string("Failed to nl_send_auto_complete ") + nl_geterror(-lError),
+                                      Logger::Level::ERROR);
+        }
+    } else {
+        Logger::GetInstance().Log("Failed to allocate netlink message for message", Logger::Level::ERROR);
+    }
+
+    Logger::GetInstance().Log("Connection is done", Logger::Level::TRACE);
+
+    // Cleanup.
+    if (lMessage != nullptr) {
+        nlmsg_free(lMessage);
+    }
+
+    return lReturn;
+}
+
+bool WifiInterface::LeaveIBSS()
+{
+    bool lReturn{};
+
+    // Allocate the messages and callback handler.
+    nl_msg* lMessage{nlmsg_alloc()};
+    if (lMessage != nullptr) {
+        // Set leave BSS command
+        genlmsg_put(lMessage, 0, 0, mDriverId, 0, (NLM_F_REQUEST | NLM_F_ACK), NL80211_CMD_LEAVE_IBSS, 0);
+
+        // Interface to use.
+        nla_put_u32(lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);
+
+        int lError{1};
+        // Send the message.
+        lError = nl_send_auto_complete(mSocket, lMessage);
+        Logger::GetInstance().Log("Leaving AdHoc network", Logger::Level::TRACE);
+
+        if (lError >= 0) {
+            // When this is done command is successful
+            lError = nl_recvmsgs_default(mSocket);
+            if (lError >= 0) {
+                lReturn = true;
+            } else {
+                Logger::GetInstance().Log(std::string("Failed to nl_recvmsgs_default ") + nl_geterror(-lError),
+                                          Logger::Level::ERROR);
+            }
+        } else {
+            Logger::GetInstance().Log(std::string("Failed to nl_send_auto_complete ") + nl_geterror(-lError),
+                                      Logger::Level::ERROR);
+        }
+    } else {
+        Logger::GetInstance().Log("Failed to allocate netlink message for message", Logger::Level::ERROR);
+    }
+
+    // Cleanup
+    if (lMessage != nullptr) {
+        nlmsg_free(lMessage);
+    }
+
     return lReturn;
 }

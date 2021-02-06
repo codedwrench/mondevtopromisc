@@ -59,7 +59,9 @@ protected:
 TEST_F(PacketHandlingTest, MacToInt)
 {
     uint64_t aResult{MacToInt("01:23:45:67:AB:CD")};
-    ASSERT_EQ(aResult, 0x01234567abcd);
+
+    // Internally saved as big endian
+    ASSERT_EQ(aResult, 0xcdab67452301);
 }
 
 TEST_F(PacketHandlingTest, MonitorToPromiscuous)

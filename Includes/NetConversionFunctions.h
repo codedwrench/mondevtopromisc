@@ -108,8 +108,6 @@ static void InsertIEEE80211Header(
 
     uint64_t lBSSID = aBSSID;
 
-    // Little- to Big endian
-    lBSSID = SwapMacEndian(lBSSID);
     memcpy(&lIeee80211Header.addr3[0], &lBSSID, Net_80211_Constants::cBSSIDLength * sizeof(uint8_t));
 
     memcpy(aPacket + aIndex, &lIeee80211Header, sizeof(lIeee80211Header));
@@ -230,6 +228,9 @@ static uint64_t MacToInt(std::string_view aMac)
         }
     }
 
+    // This will make it into a big endian number
+    lResult = SwapMacEndian(lResult);
+
     return lResult;
 }
 
@@ -245,7 +246,7 @@ static std::string ConstructAcknowledgementFrame(uint64_t                       
     std::string lReturn;
 
     // Big- to Little endian
-    uint64_t lUnconvertedSourceMac = SwapMacEndian(aReceiverMac);
+    uint64_t lUnconvertedSourceMac = aReceiverMac;
 
     std::array<uint8_t, 6> lSourceMac{};
     memcpy(reinterpret_cast<char*>(lSourceMac.data()), &lUnconvertedSourceMac, sizeof(uint8_t) * 6);

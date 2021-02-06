@@ -10,6 +10,7 @@
 
 #include <array>
 #include <string_view>
+#include <utility>
 
 #include <linux/nl80211.h>
 
@@ -42,8 +43,8 @@ namespace WifiInterface_Constants
 
     struct DumpResultArgument
     {
-        std::array<nla_policy, NL80211_BSS_MAX + 1>& bssserviceinfo;
-        std::vector<std::string>&                    adhocnetworks;
+        std::array<nla_policy, NL80211_BSS_MAX + 1>&  bssserviceinfo;
+        std::vector<IWifiInterface::WifiInformation>& adhocnetworks;
     };
 
 }  // namespace WifiInterface_Constants
@@ -52,17 +53,22 @@ class WifiInterface : public IWifiInterface
 public:
     explicit WifiInterface(std::string_view aAdapterName);
     ~WifiInterface();
-    uint64_t                 GetAdapterMACAddress() override;
-    std::vector<std::string> GetAdhocNetworks() override;
+
+    bool                                          Connect(const IWifiInterface::WifiInformation& aConnection) override;
+    bool                                          LeaveIBSS();
+    bool                                          SetIBSSType();
+    uint64_t                                      GetAdapterMACAddress() override;
+    std::vector<IWifiInterface::WifiInformation>& GetAdhocNetworks() override;
 
 private:
-    int  ScanTrigger();
+    bool  ScanTrigger();
     int  GetMulticastId();
     void SetBSSPolicy();
 
-    std::string                                 mAdapterName;
-    std::array<nla_policy, NL80211_BSS_MAX + 1> mBSSPolicy;
-    nl_sock*                                    mSocket{nullptr};
-    int                                         mDriverId{0};
-    unsigned int                                mNetworkAdapterIndex{0};
+    std::string                                  mAdapterName;
+    std::array<nla_policy, NL80211_BSS_MAX + 1>  mBSSPolicy;
+    nl_sock*                                     mSocket{nullptr};
+    int                                          mDriverId{0};
+    unsigned int                                 mNetworkAdapterIndex{0};
+    std::vector<IWifiInterface::WifiInformation> mLastReceivedScanInformation{};
 };

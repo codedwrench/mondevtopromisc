@@ -54,8 +54,7 @@ std::string Handler8023::ConvertPacket(uint64_t aBSSID, RadioTapReader::Physical
         lFullPacket.resize(lReserveSize + lRadioTapSize);
 
         // IEEE80211 Header
-        InsertIEEE80211Header(
-            &lFullPacket[0], SwapMacEndian(mSourceMAC), SwapMacEndian(mDestinationMAC), aBSSID, lIndex);
+        InsertIEEE80211Header(&lFullPacket[0], mSourceMAC, mDestinationMAC, aBSSID, lIndex);
         lIndex += lIeee80211HeaderSize;
 
         // Logical Link Control (LLC) header
@@ -136,12 +135,11 @@ void Handler8023::Update(std::string_view aPacket)
     auto lSourceMAC = GetRawData<uint64_t>(mLastReceivedData, Net_8023_Constants::cSourceAddressIndex);
     lSourceMAC &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-    // Big- to Little endian
-    mSourceMAC = SwapMacEndian(lSourceMAC);
+    // Clean extranous data as well
+    mSourceMAC = lSourceMAC;
 
     auto lDestinationMAC = GetRawData<uint64_t>(mLastReceivedData, Net_8023_Constants::cDestinationAddressIndex);
     lDestinationMAC &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-    // Big- to Little endian
-    mDestinationMAC = SwapMacEndian(lDestinationMAC);
+    mDestinationMAC = lDestinationMAC;
 }

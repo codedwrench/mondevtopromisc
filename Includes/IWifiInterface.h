@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -17,6 +18,22 @@
 class IWifiInterface
 {
 public:
+    struct WifiInformation
+    {
+        std::string            ssid;
+        std::array<uint8_t, 6> bssid;
+        int                    frequency;
+        bool                   isadhoc;
+        bool                   isconnected;
+    };
+
+    /**
+     * Connects to a wireless network.
+     * @param aConnection - Network to connect to.
+     * @return true if successful.
+     */
+    virtual bool Connect(const WifiInformation& aConnection) = 0;
+
     /**
      * Get the MAC address of the adapter.
      * @return the MAC address of the adapter.
@@ -27,5 +44,5 @@ public:
      * Gets the adhoc networks the network adapter has found.
      * @return a list of adhoc networks, an empty list if none found.
      */
-    virtual std::vector<std::string> GetAdhocNetworks() = 0;
+    virtual std::vector<WifiInformation>& GetAdhocNetworks() = 0;
 };

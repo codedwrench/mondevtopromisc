@@ -18,9 +18,19 @@
 using namespace std::chrono;
 
 // Keeping the SSID filter in because of future autoconnect
-bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::string>& /*aSSIDFilter*/)
+bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::string>& aSSIDFilter)
 {
     bool lReturn{true};
+
+    mWifiInterface                                          = std::make_shared<WifiInterface>(aName);
+    std::vector<IWifiInterface::WifiInformation>& lNetworks = mWifiInterface->GetAdhocNetworks();
+    for (const auto& lNetwork : lNetworks) {
+        for (const auto& lFilter : aSSIDFilter) {
+            if (lNetwork.ssid.find(lFilter) != std::string::npos && lNetwork.isadhoc && !lNetwork.isconnected) {
+                mWifiInterface->Connect(lNetwork);
+            }
+        }
+    }
 
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
@@ -34,7 +44,6 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
 
     if (lStatus == 0) {
         mConnected         = true;
-        mWifiInterface     = std::make_shared<WifiInterface>(aName);
         mAdapterMACAddress = mWifiInterface->GetAdapterMACAddress();
         // Do not try to negiotiate with localhost
         BlackList(mAdapterMACAddress);
@@ -78,14 +87,12 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
     uint64_t    lSourceMac{
         (GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex) & Net_Constants::cBroadcastMac)};
 
-    lSourceMac = SwapMacEndian(lSourceMac);
-
     if (!IsMACBlackListed(lSourceMac)) {
         if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) &
               Net_Constants::cBroadcastMac) == Net_Constants::cBroadcastMac) &&
             (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
             // Obtain required MACs
-            uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
+            uint64_t lAdapterMAC = mAdapterMACAddress;
             auto     lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
 
             // Tell the PSP what Mac address to use
@@ -206,7 +213,7 @@ bool WirelessPSPPluginDevice::Send(std::string_view aData, bool aModifyData)
             std::string lData{aData};
 
             if (aModifyData) {
-                uint64_t lAdapterMAC = SwapMacEndian(mAdapterMACAddress);
+                uint64_t lAdapterMAC = mAdapterMACAddress;
 
                 std::string lActualSourceMac{
                     lData.substr(Net_8023_Constants::cSourceAddressIndex, Net_8023_Constants::cSourceAddressLength)};

@@ -328,8 +328,7 @@ void Handler80211::UpdateBSSID()
                                       mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cBSSIDIndex);
         lBSSID &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-        // Big- to Little endian
-        mBSSID = SwapMacEndian(lBSSID);
+        mBSSID = lBSSID;
     }
 }
 
@@ -462,8 +461,7 @@ void Handler80211::UpdateDestinationMac()
             mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cDestinationAddressIndex)};
         lDestinationMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-        // Big- to Little endian
-        mDestinationMac = SwapMacEndian(lDestinationMac);
+        mDestinationMac = lDestinationMac;
     }
 }
 
@@ -474,7 +472,6 @@ void Handler80211::UpdateSourceMac()
             mLastReceivedData, mPhysicalDeviceHeaderReader->GetLength() + Net_80211_Constants::cSourceAddressIndex)};
         lSourceMac &= static_cast<uint64_t>(static_cast<uint64_t>(1LLU << 48U) - 1);  // it's actually a uint48.
 
-        // Big- to Little endian
-        mSourceMac = SwapMacEndian(lSourceMac);
+        mSourceMac = lSourceMac;
     }
 }
