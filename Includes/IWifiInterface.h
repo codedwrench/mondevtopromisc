@@ -35,6 +35,13 @@ public:
     virtual bool Connect(const WifiInformation& aConnection) = 0;
 
     /**
+     * Leaves adhoc network.
+     * @return true if successful.
+     */
+    virtual bool LeaveIBSS() = 0;
+
+
+    /**
      * Get the MAC address of the adapter.
      * @return the MAC address of the adapter.
      */

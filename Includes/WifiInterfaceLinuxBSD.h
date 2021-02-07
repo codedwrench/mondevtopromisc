@@ -9,6 +9,7 @@
  **/
 
 #include <array>
+#include <chrono>
 #include <string_view>
 #include <utility>
 
@@ -47,6 +48,8 @@ namespace WifiInterface_Constants
         std::vector<IWifiInterface::WifiInformation>& adhocnetworks;
     };
 
+    static constexpr std::chrono::seconds cScanTimeout{30};
+
 }  // namespace WifiInterface_Constants
 class WifiInterface : public IWifiInterface
 {
@@ -55,13 +58,12 @@ public:
     ~WifiInterface();
 
     bool                                          Connect(const IWifiInterface::WifiInformation& aConnection) override;
-    bool                                          LeaveIBSS();
-    bool                                          SetIBSSType();
+    bool                                          LeaveIBSS() override;
     uint64_t                                      GetAdapterMACAddress() override;
     std::vector<IWifiInterface::WifiInformation>& GetAdhocNetworks() override;
 
 private:
-    bool  ScanTrigger();
+    bool ScanTrigger();
     int  GetMulticastId();
     void SetBSSPolicy();
 

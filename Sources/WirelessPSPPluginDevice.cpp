@@ -22,7 +22,10 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
 {
     bool lReturn{true};
 
-    mWifiInterface                                          = std::make_shared<WifiInterface>(aName);
+    mWifiInterface = std::make_shared<WifiInterface>(aName);
+
+    // Send leave IBSS command just in case
+    mWifiInterface->LeaveIBSS();
     std::vector<IWifiInterface::WifiInformation>& lNetworks = mWifiInterface->GetAdhocNetworks();
     for (const auto& lNetwork : lNetworks) {
         for (const auto& lFilter : aSSIDFilter) {

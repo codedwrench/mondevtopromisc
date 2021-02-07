@@ -1,6 +1,7 @@
 #include "../Includes/WifiInterfaceLinuxBSD.h"
 
 #include <cerrno>
+#include <chrono>
 
 #include <ifaddrs.h>
 #include <net/if.h>
@@ -387,30 +388,46 @@ bool WifiInterface::ScanTrigger()
                 // by another process.
                 lSuccess = nl_send_auto(mSocket, lMessage);  // Send the message.
                 Logger::GetInstance().Log("Waiting for scan to complete...", Logger::Level::DEBUG);
-                while (lError > 0) {
+                std::chrono::time_point<std::chrono::system_clock> lTimerStart{std::chrono::system_clock::now()};
+                bool                                               lTimedOut{};
+                while ((lError > 0) && (!lTimedOut)) {
                     // First wait for AcknowledgeHandler(). This helps with basic errors.
                     lSuccess = nl_recvmsgs(mSocket, lCallback);
+                    lTimedOut =
+                        (std::chrono::system_clock::now() - lTimerStart > WifiInterface_Constants::cScanTimeout);
                 }
 
                 if (lError < 0) {
-                    // Put resulting lErroror message in return value
+                    Logger::GetInstance().Log(std::string("Error occured: ") + nl_geterror(-lError),
+                                              Logger::Level::ERROR);
                     lSuccess = lError;
+                } else if (lTimedOut) {
+                    Logger::GetInstance().Log("Timeout waiting for acknowledge!", Logger::Level::ERROR);
+                    lSuccess = -1;
                 }
 
                 if (lSuccess >= 0) {
-                    lError = 1;
-                    while (lResults.done == 0 && lResults.aborted == 0 && lError > 0) {
+                    lError      = 1;
+                    lTimerStart = std::chrono::system_clock::now();
+                    while (lResults.done == 0 && lResults.aborted == 0 && lError >= 0 && (!lTimedOut)) {
                         // Now wait until the scan is done or aborted
                         nl_recvmsgs(mSocket, lCallback);
+                        lTimedOut =
+                            (std::chrono::system_clock::now() - lTimerStart > WifiInterface_Constants::cScanTimeout);
                     }
 
                     if (lError < 0) {
                         Logger::GetInstance().Log(std::string("Error occured: ") + nl_geterror(-lError),
                                                   Logger::Level::ERROR);
+                    } else if (lTimedOut) {
+                        Logger::GetInstance().Log("Timeout waiting for acknowledge!", Logger::Level::ERROR);
+                    } else {
+                        lReturn = true;
                     }
 
                     if (lResults.aborted != 0) {
                         Logger::GetInstance().Log("Kernel aborted scan", Logger::Level::WARNING);
+                        lReturn = false;
                     }
 
                     if (lCallback != nullptr) {
@@ -474,7 +491,9 @@ std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
             Logger::GetInstance().Log("Failed to send message " + std::to_string(lError), Logger::Level::ERROR);
         }
 
-        nlmsg_free(lMessage);
+        if (lMessage != nullptr) {
+            nlmsg_free(lMessage);
+        }
     } else {
         nl_socket_free(mSocket);
         mSocket              = nullptr;
@@ -485,74 +504,9 @@ std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
     return mLastReceivedScanInformation;
 }
 
-bool WifiInterface::SetIBSSType()
-{
-    bool lReturn{};
-
-    // Allocate the messages and callback handler.
-    nl_msg* lMessage{nlmsg_alloc()};
-    if (lMessage != nullptr) {
-        genlmsg_put(lMessage,
-                    0,
-                    0,
-                    mDriverId,
-                    0,
-                    (NLM_F_REQUEST | NLM_F_ACK),
-                    NL80211_CMD_SET_INTERFACE,
-                    0);  // Setup which
-                         // command to run.
-        // Interface
-        nla_put_u32(lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);
-        // What type to set
-        nla_put_u32(lMessage, NL80211_ATTR_IFTYPE, NL80211_IFTYPE_ADHOC);
-
-
-        int lError{1};
-        // Send the message.
-        lError = nl_send_auto_complete(mSocket, lMessage);
-        Logger::GetInstance().Log("Setting BSS type", Logger::Level::TRACE);
-
-        if (lError >= 0) {
-            // When this is done command is successful
-            lError = nl_recvmsgs_default(mSocket);
-            if (lError >= 0) {
-                lReturn = true;
-            } else {
-                Logger::GetInstance().Log(std::string("Failed to nl_recvmsgs_default ") + nl_geterror(-lError),
-                                          Logger::Level::ERROR);
-            }
-        } else {
-            Logger::GetInstance().Log(std::string("Failed to nl_send_auto_complete ") + nl_geterror(-lError),
-                                      Logger::Level::ERROR);
-        }
-    } else {
-        Logger::GetInstance().Log("Failed to allocate netlink message for message", Logger::Level::ERROR);
-    }
-
-    // Cleanup.
-    if (lMessage != nullptr) {
-        nlmsg_free(lMessage);
-    }
-
-    return lReturn;
-}
-
 bool WifiInterface::Connect(const IWifiInterface::WifiInformation& aConnection)
 {
     bool lReturn{};
-
-    // Disconnect from the old network
-    if (mLastReceivedScanInformation.begin()->isconnected) {
-        if (mLastReceivedScanInformation.begin()->isadhoc) {
-            LeaveIBSS();
-        } else {
-            SetIBSSType();
-        }
-    } else {
-        // If not connected just set IBSS mode anyway and leave old IBSS for good measure, even if there aren't any
-        SetIBSSType();
-        LeaveIBSS();
-    }
 
     // Allocate the messages and callback handler.
     nl_msg* lMessage{nlmsg_alloc()};
@@ -626,8 +580,9 @@ bool WifiInterface::LeaveIBSS()
             if (lError >= 0) {
                 lReturn = true;
             } else {
+                // Putting this on DEBUG because this message also appears when not connected to a network
                 Logger::GetInstance().Log(std::string("Failed to nl_recvmsgs_default ") + nl_geterror(-lError),
-                                          Logger::Level::ERROR);
+                                          Logger::Level::DEBUG);
             }
         } else {
             Logger::GetInstance().Log(std::string("Failed to nl_send_auto_complete ") + nl_geterror(-lError),

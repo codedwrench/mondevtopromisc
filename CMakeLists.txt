@@ -90,8 +90,8 @@ endif ()
 
 if (BUILD_STATIC)
     message("Static linking enabled")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
     set(BUILD_STATIC ON)
+    set(BOOST_ROOT "/home/codedwrench/src/boost")
     add_definitions(-DBUILD_STATIC)
     set(Boost_USE_STATIC_LIBS ON)
 endif()
@@ -159,6 +159,12 @@ if(MSVC)
 else()
     target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceLinuxBSD.cpp Includes/WifiInterfaceLinuxBSD.h)
 endif()
+
+
+if (BUILD_STATIC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+endif ()
+
 
 target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ${LibNL_INCLUDE_DIR})
 target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES} ${LibNL_LIBRARIES})
