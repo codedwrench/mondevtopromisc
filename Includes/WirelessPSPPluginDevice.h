@@ -6,6 +6,7 @@
  *
  * */
 
+#include <chrono>
 #include <memory>
 
 #include <boost/thread.hpp>
@@ -22,8 +23,9 @@
 
 namespace WirelessPSPPluginDevice_Constants
 {
-    static constexpr unsigned int cSnapshotLength{65535};
-    static constexpr unsigned int cTimeout{1};
+    static constexpr unsigned int         cSnapshotLength{65535};
+    static constexpr unsigned int         cPCAPTimeoutMs{1};
+    static constexpr std::chrono::seconds cReadWatchdogTimeout{5};
 }  // namespace WirelessPSPPluginDevice_Constants
 
 using namespace WirelessPSPPluginDevice_Constants;
@@ -56,6 +58,7 @@ public:
     bool StartReceiverThread() override;
 
 private:
+    bool ConnectToAdhoc();
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
     void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
 
@@ -69,5 +72,10 @@ private:
     unsigned int                    mPacketCount{0};
     std::shared_ptr<boost::thread>  mReceiverThread{nullptr};
     bool                            mSendReceivedData{false};
+    std::vector<std::string>        mSSIDFilter{};
     std::shared_ptr<IWifiInterface> mWifiInterface{nullptr};
+    /**
+     * This timer checks if any data has been received from the connected to network, if not it will try to reconnect.
+     */
+    std::chrono::time_point<std::chrono::system_clock> mReadWatchdog{std::chrono::seconds(0)};
 };

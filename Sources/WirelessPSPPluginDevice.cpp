@@ -23,23 +23,14 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
     bool lReturn{true};
 
     mWifiInterface = std::make_shared<WifiInterface>(aName);
-
-    // Send leave IBSS command just in case
-    mWifiInterface->LeaveIBSS();
-    std::vector<IWifiInterface::WifiInformation>& lNetworks = mWifiInterface->GetAdhocNetworks();
-    for (const auto& lNetwork : lNetworks) {
-        for (const auto& lFilter : aSSIDFilter) {
-            if (lNetwork.ssid.find(lFilter) != std::string::npos && lNetwork.isadhoc && !lNetwork.isconnected) {
-                mWifiInterface->Connect(lNetwork);
-            }
-        }
-    }
+    mSSIDFilter    = aSSIDFilter;
+    ConnectToAdhoc();
 
     std::array<char, PCAP_ERRBUF_SIZE> lErrorBuffer{};
 
     mHandler = pcap_create(aName.data(), lErrorBuffer.data());
     pcap_set_snaplen(mHandler, cSnapshotLength);
-    pcap_set_timeout(mHandler, cTimeout);
+    pcap_set_timeout(mHandler, cPCAPTimeoutMs);
     // TODO: Test without immediate mode, see if it helps
     // pcap_set_immediate_mode(mHandler, 1);
 
@@ -55,6 +46,10 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
         Logger::GetInstance().Log("pcap_activate failed, " + std::string(pcap_statustostr(lStatus)),
                                   Logger::Level::ERROR);
     }
+
+    // Reset the timer
+    mReadWatchdog = std::chrono::system_clock::now();
+
     return lReturn;
 }
 
@@ -89,6 +84,9 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
     std::string lData{DataToString(aData, aHeader)};
     uint64_t    lSourceMac{
         (GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex) & Net_Constants::cBroadcastMac)};
+
+    // Reset the timer so it will not time out
+    mReadWatchdog = std::chrono::system_clock::now();
 
     if (!IsMACBlackListed(lSourceMac)) {
         if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) &
@@ -245,6 +243,22 @@ bool WirelessPSPPluginDevice::Send(std::string_view aData, bool aModifyData)
     return lReturn;
 }
 
+bool WirelessPSPPluginDevice::ConnectToAdhoc()
+{
+    bool lReturn{};
+    // Send leave IBSS command just in case
+    mWifiInterface->LeaveIBSS();
+    std::vector<IWifiInterface::WifiInformation>& lNetworks = mWifiInterface->GetAdhocNetworks();
+    for (const auto& lNetwork : lNetworks) {
+        for (const auto& lFilter : mSSIDFilter) {
+            if (lNetwork.ssid.find(lFilter) != std::string::npos && lNetwork.isadhoc && !lNetwork.isconnected) {
+                lReturn = mWifiInterface->Connect(lNetwork);
+            }
+        }
+    }
+    return lReturn;
+}
+
 void WirelessPSPPluginDevice::SetConnector(std::shared_ptr<IConnector> aDevice)
 {
     mConnector = aDevice;
@@ -253,6 +267,20 @@ void WirelessPSPPluginDevice::SetConnector(std::shared_ptr<IConnector> aDevice)
 bool WirelessPSPPluginDevice::StartReceiverThread()
 {
     bool lReturn{true};
+
+    boost::thread lWifiTimeoutThread{[&] {
+        while (true) {
+            if (std::chrono::system_clock::now() >
+                (mReadWatchdog + WirelessPSPPluginDevice_Constants::cReadWatchdogTimeout)) {
+                Logger::GetInstance().Log("Switching networks due to timeout!", Logger::Level::DEBUG);
+                // Read timed out try to connect to another network.
+                ConnectToAdhoc();
+                mReadWatchdog = std::chrono::system_clock::now();
+            }
+            std::this_thread::sleep_for(1s);
+        }
+    }};
+
     if (mHandler != nullptr) {
         // Run
         if (mReceiverThread == nullptr) {
@@ -260,6 +288,7 @@ bool WirelessPSPPluginDevice::StartReceiverThread()
                 // If we're receiving data from the receiver thread, send it off as well.
                 bool lSendReceivedDataOld = mSendReceivedData;
                 mSendReceivedData         = true;
+                mReadWatchdog             = std::chrono::system_clock::now();
 
                 auto lCallbackFunction =
                     [](unsigned char* aThis, const pcap_pkthdr* aHeader, const unsigned char* aPacket) {
@@ -283,6 +312,10 @@ bool WirelessPSPPluginDevice::StartReceiverThread()
     } else {
         Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::Level::ERROR);
         lReturn = false;
+    }
+
+    while (!lWifiTimeoutThread.joinable()) {
+        lWifiTimeoutThread.join();
     }
 
     return lReturn;

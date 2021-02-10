@@ -63,6 +63,7 @@ public:
     std::vector<IWifiInterface::WifiInformation>& GetAdhocNetworks() override;
 
 private:
+    void ClearSocket();
     bool ScanTrigger();
     int  GetMulticastId();
     void SetBSSPolicy();

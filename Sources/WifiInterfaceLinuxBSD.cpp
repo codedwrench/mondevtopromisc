@@ -26,6 +26,7 @@ WifiInterface::WifiInterface(std::string_view aAdapter)
     // Open socket to kernel.
     mSocket = nl_socket_alloc();  // Allocate new netlink socket in memory
     genl_connect(mSocket);        // Create file descriptor and bind socket
+    nl_socket_disable_seq_check(mSocket);
     mDriverId = genl_ctrl_resolve(mSocket, WifiInterface_Constants::cDriverName.data());  // Find the nl80211 driver ID
     mNetworkAdapterIndex = if_nametoindex(mAdapterName.data());  // Use this wireless interface for scanning
 }
@@ -337,6 +338,33 @@ static int DumpResults(nl_msg* aMessage, void* aArgument)
     return NL_SKIP;
 }
 
+void WifiInterface::ClearSocket()
+{
+    int    lError{1};
+    nl_cb* lCallback{};
+    nl_cb* lCallbackClone{};
+
+    lCallbackClone = nl_socket_get_cb(mSocket);
+    lCallback      = nl_cb_clone(lCallbackClone);
+    nl_cb_put(lCallbackClone);
+
+    if (lCallback != nullptr) {
+        nl_cb_set(lCallback, NL_CB_VALID, NL_CB_DEFAULT, nullptr, nullptr);
+        nl_cb_set(lCallback, NL_CB_SEQ_CHECK, NL_CB_DEFAULT, nullptr, nullptr);
+        nl_cb_err(lCallback, NL_CB_DEFAULT, nullptr, nullptr);
+        while (lError != -NLE_AGAIN) {
+            errno = 0;
+
+            lError = nl_recvmsgs(mSocket, lCallback);
+
+            if (lError == 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+                lError = -NLE_AGAIN;
+            }
+        }
+        nl_cb_put(lCallback);
+    }
+}
+
 bool WifiInterface::ScanTrigger()
 {
     // Starts the scan and waits for it to finish. Does not return until the scan is done or has been aborted.
@@ -394,12 +422,15 @@ bool WifiInterface::ScanTrigger()
                     // First wait for AcknowledgeHandler(). This helps with basic errors.
                     lSuccess = nl_recvmsgs(mSocket, lCallback);
                     lTimedOut =
-                        (std::chrono::system_clock::now() - lTimerStart > WifiInterface_Constants::cScanTimeout);
+                        ((std::chrono::system_clock::now() - lTimerStart) > WifiInterface_Constants::cScanTimeout);
                 }
 
                 if (lError < 0) {
-                    Logger::GetInstance().Log(std::string("Error occured: ") + nl_geterror(-lError),
-                                              Logger::Level::ERROR);
+                    if (lError == -NLE_NOMEM) {
+                        // Otherwise we will get a segfault
+                        ClearSocket();
+                    }
+
                     lSuccess = lError;
                 } else if (lTimedOut) {
                     Logger::GetInstance().Log("Timeout waiting for acknowledge!", Logger::Level::ERROR);
@@ -413,10 +444,14 @@ bool WifiInterface::ScanTrigger()
                         // Now wait until the scan is done or aborted
                         nl_recvmsgs(mSocket, lCallback);
                         lTimedOut =
-                            (std::chrono::system_clock::now() - lTimerStart > WifiInterface_Constants::cScanTimeout);
+                            ((std::chrono::system_clock::now() - lTimerStart) > WifiInterface_Constants::cScanTimeout);
                     }
 
                     if (lError < 0) {
+                        if (lError == -NLE_NOMEM) {
+                            // Otherwise we will get a segfault
+                            ClearSocket();
+                        }
                         Logger::GetInstance().Log(std::string("Error occured: ") + nl_geterror(-lError),
                                                   Logger::Level::ERROR);
                     } else if (lTimedOut) {
@@ -429,13 +464,13 @@ bool WifiInterface::ScanTrigger()
                         Logger::GetInstance().Log("Kernel aborted scan", Logger::Level::WARNING);
                         lReturn = false;
                     }
-
-                    if (lCallback != nullptr) {
-                        nl_cb_put(lCallback);
-                    }
                 } else {
                     Logger::GetInstance().Log(std::string("nl_recvmsgs() returned") + nl_geterror(-lSuccess),
                                               Logger::Level::ERROR);
+                }
+
+                if (lCallback != nullptr) {
+                    nl_cb_put(lCallback);
                 }
             } else {
                 Logger::GetInstance().Log("Failed to allocate netlink callbacks", Logger::Level::ERROR);
@@ -459,6 +494,9 @@ bool WifiInterface::ScanTrigger()
 
 std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
 {
+    // Clear previous scan info
+    mLastReceivedScanInformation.clear();
+
     // Issue NL80211_CMD_TRIGGER_SCAN to the kernel and wait for it to finish.
     bool lSuccess{ScanTrigger()};
     if (lSuccess) {
@@ -470,9 +508,6 @@ std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
 
         // Add message attribute, which interface to use
         nla_put_u32(lMessage, NL80211_ATTR_IFINDEX, mNetworkAdapterIndex);
-
-        // Clear previous scan info
-        mLastReceivedScanInformation.clear();
 
         // Add the callback
         DumpResultArgument lArgument{mBSSPolicy, mLastReceivedScanInformation};
