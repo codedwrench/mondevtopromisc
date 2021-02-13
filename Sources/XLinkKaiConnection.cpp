@@ -5,9 +5,11 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
+#include <thread>
 #include <utility>
 
-#include <boost/thread.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #include "../Includes/IPCapDevice.h"
 #include "../Includes/Logger.h"
@@ -16,6 +18,7 @@
 
 
 using namespace boost::asio;
+using namespace boost::placeholders;
 using namespace std::chrono_literals;
 
 XLinkKaiConnection::~XLinkKaiConnection()
@@ -36,12 +39,12 @@ bool XLinkKaiConnection::Open(std::string_view aIp, unsigned int aPort)
     unsigned int lPort{aPort};
 
     // TODO: Do broadcast, but for now, use default stuff
-    if (aIp == "") {
+    if (aIp.empty()) {
         lIp   = cIp;
         lPort = cPort;
     }
 
-    mRemote = ip::udp::endpoint(ip::address::from_string(aIp.data()), aPort);
+    mRemote = ip::udp::endpoint(ip::address::from_string(lIp.data()), lPort);
 
     try {
         mSocket.open(ip::udp::v4());
@@ -212,7 +215,7 @@ bool XLinkKaiConnection::StartReceiverThread()
                 &XLinkKaiConnection::ReceiveCallback, this, placeholders::error, placeholders::bytes_transferred));
         // Run
         if (mReceiverThread == nullptr) {
-            mReceiverThread = std::make_shared<boost::thread>([&] {
+            mReceiverThread = std::make_shared<std::thread>([&] {
                 mIoService.restart();
                 while (!mIoService.stopped()) {
                     if ((!mConnected && !mConnectInitiated)) {

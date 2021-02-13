@@ -5,8 +5,6 @@
 #include <chrono>
 #include <thread>
 
-#include <boost/thread.hpp>
-
 #include "../Includes/Logger.h"
 #include "../Includes/NetConversionFunctions.h"
 
@@ -270,7 +268,7 @@ bool PCapReader::StartReceiverThread()
     if (mHandler != nullptr) {
         // Run
         if (mReplayThread == nullptr) {
-            mReplayThread = std::make_shared<boost::thread>([&] {
+            mReplayThread = std::make_shared<std::thread>([&] {
                 if (ReadNextData()) {
                     microseconds lTimeStamp{mHeader->ts.tv_sec * 1000000 + mHeader->ts.tv_usec};
 

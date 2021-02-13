@@ -8,16 +8,12 @@
  **/
 
 #include <memory>
+#include <thread>
 
 #include "Handler80211.h"
 #include "Handler8023.h"
 #include "IConnector.h"
 #include "IPCapDevice.h"
-
-namespace boost
-{
-    class thread;
-}
 
 /**
  * This class contains the necessary components to read a PCap file.
@@ -107,7 +103,7 @@ private:
     bool                                                      mMonitorCapture{false};
     bool                                                      mTimeAccurate{false};
     std::shared_ptr<IHandler>                                 mPacketHandler{nullptr};
-    std::shared_ptr<boost::thread>                            mReplayThread{nullptr};
+    std::shared_ptr<std::thread>                              mReplayThread{nullptr};
     std::vector<std::string>                                  mSSIDFilter{};
     unsigned int                                              mPacketCount{0};
 };

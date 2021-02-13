@@ -8,8 +8,7 @@
 
 #include <chrono>
 #include <memory>
-
-#include <boost/thread.hpp>
+#include <thread>
 
 #include "Handler80211.h"
 #include "IConnector.h"
@@ -70,10 +69,11 @@ private:
     uint64_t                        mAdapterMACAddress{};
     const pcap_pkthdr*              mHeader{nullptr};
     unsigned int                    mPacketCount{0};
-    std::shared_ptr<boost::thread>  mReceiverThread{nullptr};
+    std::shared_ptr<std::thread>    mReceiverThread{nullptr};
     bool                            mSendReceivedData{false};
     std::vector<std::string>        mSSIDFilter{};
     std::shared_ptr<IWifiInterface> mWifiInterface{nullptr};
+    std::shared_ptr<std::thread>    mWifiTimeoutThread{nullptr};
     /**
      * This timer checks if any data has been received from the connected to network, if not it will try to reconnect.
      */

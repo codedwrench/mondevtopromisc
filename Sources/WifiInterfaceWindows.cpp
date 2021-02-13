@@ -18,6 +18,9 @@
 #define WLAN_AVAILABLE_NETWORK_CONSOLE_USER_PROFILE                                                                    \
     0x00000004  // The profile is the active console user's per user profile
 
+// Not sure why, but it couldn't find this on the mingw compiler
+#define L2_NOTIFICATION_SOURCE_ALL 0X0000FFFF
+
 // Context to pass along with callbacks
 typedef struct _WLAN_CALLBACK_INFO
 {
@@ -91,7 +94,7 @@ static void WlanCallback(WLAN_NOTIFICATION_DATA* aScanNotificationData, PVOID aC
     return;
 }
 
-std::vector<std::string> WifiInterface::GetAdhocNetworks()
+std::vector<IWifiInterface::WifiInformation>& WifiInterface::GetAdhocNetworks()
 {
     // Declare and initialize variables.
     std::vector<std::string> lReturn{};
@@ -128,6 +131,9 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
     // Start a scan. If the WlanScan call fails, log the error
     lResult = WlanScan(mWifiHandle, &mGUID, nullptr, nullptr, nullptr);
     if (lResult == ERROR_SUCCESS) {
+        // Clear last scan list
+        mLastReceivedScanInformation.clear();
+
         // Scan request successfully sent
         Logger::GetInstance().Log("Scan request sent. Waiting for reply", Logger::Level::TRACE);
 
@@ -162,25 +168,36 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
                         std::string lSSID{reinterpret_cast<char*>(lNetworkInformation->dot11Ssid.ucSSID),
                                           lNetworkInformation->dot11Ssid.uSSIDLength};
 
+                        WifiInformation lWifiInformation{};
+
                         Logger::GetInstance().Log("SSID: " + lSSID, Logger::Level::TRACE);
+
+                        lWifiInformation.ssid        = lSSID;
+                        lWifiInformation.isconnected = lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED;
 
                         if (lNetworkInformation->dot11BssType == dot11_BSS_type_independent) {
                             Logger::GetInstance().Log("Is Ad-Hoc network!", Logger::Level::TRACE);
-                            lReturn.emplace_back(lSSID);
+                            lWifiInformation.isadhoc = true;
                         }
 
                         Logger::GetInstance().Log(
                             "Amount of BSSIDs: " + std::to_string(lNetworkInformation->uNumberOfBssids),
                             Logger::Level::TRACE);
 
-                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_CONNECTED) {
-                            Logger::GetInstance().Log("Connected to this network", Logger::Level::TRACE);
+                        // Now get the BSSID belonging to the network, or atleast the first one
+                        PWLAN_BSS_LIST lWlanBSSList;
+                        DWORD          lResult{WlanGetNetworkBssList(mWifiHandle,
+                                                            &mGUID,
+                                                            &lNetworkInformation->dot11Ssid,
+                                                            lNetworkInformation->dot11BssType,
+                                                            lNetworkInformation->bSecurityEnabled,
+                                                            nullptr,
+                                                            &lWlanBSSList)};
+                        if (lResult == ERROR_SUCCESS && lWlanBSSList->dwNumberOfItems > 0) {
+                            memcpy(lWifiInformation.bssid.data(), lWlanBSSList->wlanBssEntries, 6);
                         }
 
-                        if (lNetworkInformation->dwFlags & WLAN_AVAILABLE_NETWORK_HAS_PROFILE) {
-                            Logger::GetInstance().Log("Network has a profile in network manager!",
-                                                      Logger::Level::TRACE);
-                        }
+                        mLastReceivedScanInformation.emplace_back(lWifiInformation);
                     }
                 }
             } else {
@@ -201,7 +218,7 @@ std::vector<std::string> WifiInterface::GetAdhocNetworks()
         Logger::GetInstance().Log("Could not send Scan request" + std::system_category().message(lResult),
                                   Logger::Level::ERROR);
     }
-    return lReturn;
+    return mLastReceivedScanInformation;
 }
 
 uint64_t WifiInterface::GetAdapterMACAddress()

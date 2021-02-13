@@ -7,16 +7,12 @@
  * */
 
 #include <string>
+#include <thread>
 
 #include <boost/asio.hpp>
 
 #include "Handler8023.h"
 #include "IConnector.h"
-
-namespace boost
-{
-    class thread;
-}
 
 namespace XLinkKai_Constants
 {
@@ -140,7 +136,7 @@ private:
     boost::asio::io_service        mIoService{};
     Handler8023                    mPacketHandler{};
     unsigned int                   mPort{cPort};
-    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
+    std::shared_ptr<std::thread>   mReceiverThread{nullptr};
     boost::asio::ip::udp::endpoint mRemote{};
     boost::asio::ip::udp::socket   mSocket{mIoService};
 };

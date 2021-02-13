@@ -47,6 +47,7 @@ endif (BUILD_DOC AND DOXYGEN_FOUND)
 # Windows specific options
 if (MSVC OR MSYS OR MINGW)
     message("You're running Windows! Make sure your paths are set correctly.")
+    set(BUILD_STATIC ON)
 
     if (MSYS OR MINGW)
         # Add delay loaded library so npcap can be loaded properly
@@ -55,7 +56,8 @@ if (MSVC OR MSYS OR MINGW)
         )
             
         # Add WinSock, liphlpapi, wlanapi and ole32 to the platform specific libraries, MINGW needs it.
-        string(APPEND PLATFORM_SPECIFIC_LIBRARIES "ws2_32 -liphlpapi -lwlanapi -lole32")
+        set(CMAKE_CXX_STANDARD_LIBRARIES "-liphlpapi -lwlanapi -lole32 -lwinmm -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
     
         # Needed because otherwise the libraries cannot be found.
         set(Boost_ARCHITECTURE "-x64")
@@ -64,17 +66,9 @@ if (MSVC OR MSYS OR MINGW)
     endif ()
     
     set(PCAP_ROOT_DIR "c:/npcapsdk")
-    set(BOOST_ROOT "e:/boost_1_75_0")
-    set(Boost_LIBRARY_DIR "e:/boost_1_75_0/stage/lib")
-    if (NOT BUILD_STATIC)
-        # Magic that boost on windows seems to need.
-        add_definitions( -DWIN32_LEAN_AND_MEAN )
-        add_definitions( -DBOOST_ALL_NO_LIB )
-        add_definitions( -DBOOST_ALL_DYN_LINK )
-    endif ()
 
     set(PDCURSES_INCLUDE_DIR "c:/pdcurses/")
-    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/pdcurses.lib")
+    set(PDCURSES_LIBRARY "c:/pdcurses/wincon/static/pdcurses.a")
     find_package(PDCurses REQUIRED)
     
     set(CURSES_INCLUDE_DIRS "c:/pdcurses/")
@@ -101,7 +95,7 @@ add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 find_package(PCAP REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic thread system program_options regex)
+find_package(Boost 1.71 REQUIRED COMPONENTS chrono date_time atomic system program_options regex)
 
 # TODO: Make this search for source files automatically, this is very ugly!
 add_executable(xlinkhandheldassistant main.cpp
@@ -153,16 +147,18 @@ add_executable(xlinkhandheldassistant main.cpp
 	    Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h)
         
-if(MSVC) 
-    set_property(TARGET xlinkhandheldassistant APPEND PROPERTY LINK_FLAGS "/DELAYLOAD:wpcap.dll")
+if(WIN32)
+    if(MSYS)
+        set_property(TARGET xlinkhandheldassistant APPEND PROPERTY LINK_FLAGS "/DELAYLOAD:wpcap.dll")
+    endif()
     target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceWindows.cpp Includes/WifiInterfaceWindows.h)
-else()
+elseif (UNIX)
     target_sources(xlinkhandheldassistant PRIVATE Sources/WifiInterfaceLinuxBSD.cpp Includes/WifiInterfaceLinuxBSD.h)
 endif()
 
 
-if (BUILD_STATIC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+if (BUILD_STATIC)    
+    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ ${CMAKE_EXE_LINKER_FLAGS}")
 endif ()
 
 

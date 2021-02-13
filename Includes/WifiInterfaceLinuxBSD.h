@@ -1,5 +1,5 @@
 #pragma once
-
+#if not defined(_WIN32) && not defined(_WIN64)
 #include "IWifiInterface.h"
 
 /* Copyright (c) 2020 [Rick de Bondt] - WifiInterfaceLinuxBSD.h
@@ -75,3 +75,4 @@ private:
     unsigned int                                 mNetworkAdapterIndex{0};
     std::vector<IWifiInterface::WifiInformation> mLastReceivedScanInformation{};
 };
+#endif

@@ -9,9 +9,6 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <thread>
-
-#include <boost/thread.hpp>
 
 #include "../Includes/Logger.h"
 
@@ -61,8 +58,18 @@ void WirelessPSPPluginDevice::Close()
         pcap_breakloop(mHandler);
     }
 
-    if (mReceiverThread != nullptr && mReceiverThread->joinable()) {
+    if (mReceiverThread != nullptr) {
+        while (!mReceiverThread->joinable()) { 
+            // Wait 
+        };
         mReceiverThread->join();
+    }
+
+    if (mWifiTimeoutThread != nullptr) {
+        while (!mWifiTimeoutThread->joinable()) { 
+            // Wait
+        };
+        mWifiTimeoutThread->join();
     }
 
     if (mHandler != nullptr) {
@@ -268,23 +275,25 @@ bool WirelessPSPPluginDevice::StartReceiverThread()
 {
     bool lReturn{true};
 
-    boost::thread lWifiTimeoutThread{[&] {
-        while (true) {
-            if (std::chrono::system_clock::now() >
-                (mReadWatchdog + WirelessPSPPluginDevice_Constants::cReadWatchdogTimeout)) {
-                Logger::GetInstance().Log("Switching networks due to timeout!", Logger::Level::DEBUG);
-                // Read timed out try to connect to another network.
-                ConnectToAdhoc();
-                mReadWatchdog = std::chrono::system_clock::now();
-            }
-            std::this_thread::sleep_for(1s);
-        }
-    }};
-
     if (mHandler != nullptr) {
         // Run
         if (mReceiverThread == nullptr) {
-            mReceiverThread = std::make_shared<boost::thread>([&] {
+            if (mWifiTimeoutThread == nullptr) {
+                mWifiTimeoutThread = std::make_shared<std::thread>([&] {
+                    while (mConnected) {
+                        if (std::chrono::system_clock::now() >
+                            (mReadWatchdog + WirelessPSPPluginDevice_Constants::cReadWatchdogTimeout)) {
+                            Logger::GetInstance().Log("Switching networks due to timeout!", Logger::Level::DEBUG);
+                            // Read timed out try to connect to another network.
+                            ConnectToAdhoc();
+                            mReadWatchdog = std::chrono::system_clock::now();
+                        }
+                        std::this_thread::sleep_for(1s);
+                    }
+                });
+            }
+
+            mReceiverThread = std::make_shared<std::thread>([&] {
                 // If we're receiving data from the receiver thread, send it off as well.
                 bool lSendReceivedDataOld = mSendReceivedData;
                 mSendReceivedData         = true;
@@ -299,7 +308,7 @@ bool WirelessPSPPluginDevice::StartReceiverThread()
                 while (mConnected && (mHandler != nullptr)) {
                     // Use pcap_dispatch instead of pcap_next_ex so that as many packets as possible will be processed
                     // in a single cycle.
-                    if (pcap_dispatch(mHandler, -1, lCallbackFunction, reinterpret_cast<u_char*>(this)) == -1) {
+                    if (pcap_dispatch(mHandler, 0, lCallbackFunction, reinterpret_cast<u_char*>(this)) == -1) {
                         Logger::GetInstance().Log(
                             "Error occurred while reading packet: " + std::string(pcap_geterr(mHandler)),
                             Logger::Level::DEBUG);
@@ -312,10 +321,6 @@ bool WirelessPSPPluginDevice::StartReceiverThread()
     } else {
         Logger::GetInstance().Log("Can't start receiving without a handler!", Logger::Level::ERROR);
         lReturn = false;
-    }
-
-    while (!lWifiTimeoutThread.joinable()) {
-        lWifiTimeoutThread.join();
     }
 
     return lReturn;

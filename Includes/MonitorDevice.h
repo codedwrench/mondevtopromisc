@@ -7,8 +7,7 @@
  * */
 
 #include <memory>
-
-#include <boost/thread.hpp>
+#include <thread>
 
 #include "Handler80211.h"
 #include "IConnector.h"
@@ -62,14 +61,14 @@ private:
     bool ReadCallback(const unsigned char* aData, const pcap_pkthdr* aHeader);
     void ShowPacketStatistics(const pcap_pkthdr* aHeader) const;
 
-    bool                           mAcknowledgePackets{false};
-    bool                           mConnected{false};
-    std::shared_ptr<IConnector>    mConnector{nullptr};
-    const unsigned char*           mData{nullptr};
-    pcap_t*                        mHandler{nullptr};
-    const pcap_pkthdr*             mHeader{nullptr};
-    unsigned int                   mPacketCount{0};
-    Handler80211                   mPacketHandler{PhysicalDeviceHeaderType::RadioTap};
-    std::shared_ptr<boost::thread> mReceiverThread{nullptr};
-    bool                           mSendReceivedData{false};
+    bool                         mAcknowledgePackets{false};
+    bool                         mConnected{false};
+    std::shared_ptr<IConnector>  mConnector{nullptr};
+    const unsigned char*         mData{nullptr};
+    pcap_t*                      mHandler{nullptr};
+    const pcap_pkthdr*           mHeader{nullptr};
+    unsigned int                 mPacketCount{0};
+    Handler80211                 mPacketHandler{PhysicalDeviceHeaderType::RadioTap};
+    std::shared_ptr<std::thread> mReceiverThread{nullptr};
+    bool                         mSendReceivedData{false};
 };

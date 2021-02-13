@@ -11,8 +11,6 @@
 #include <string>
 #include <thread>
 
-#include <boost/thread.hpp>
-
 #include "../Includes/Logger.h"
 
 using namespace std::chrono;
@@ -193,7 +191,7 @@ bool MonitorDevice::StartReceiverThread()
     if (mHandler != nullptr) {
         // Run
         if (mReceiverThread == nullptr) {
-            mReceiverThread = std::make_shared<boost::thread>([&] {
+            mReceiverThread = std::make_shared<std::thread>([&] {
                 // If we're receiving data from the receiver thread, send it off as well.
                 bool lSendReceivedDataOld = mSendReceivedData;
                 mSendReceivedData         = true;
