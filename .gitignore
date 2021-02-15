@@ -1,7 +1,14 @@
 build/
 cmake-build-debug/
+Objects/
 .idea/
 Tests/Output/*
+.vs/
 .vscode/
 .cache
 .bak
+.swp
+.o
+.a
+.so
+.lib

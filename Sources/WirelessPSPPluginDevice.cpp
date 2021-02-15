@@ -5,10 +5,12 @@
 /* Copyright (c) 2021 [Rick de Bondt] - WirelessPSPPluginDevice.cpp */
 
 #include <chrono>
+#include <cstring>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "../Includes/Logger.h"
 
@@ -218,7 +220,7 @@ bool WirelessPSPPluginDevice::Send(std::string_view aData, bool aModifyData)
     bool lReturn{false};
     if (mHandler != nullptr) {
         if (!aData.empty()) {
-            std::string lData{aData};
+            std::string lData{aData.data(), aData.size()};
 
             if (aModifyData) {
                 uint64_t lAdapterMAC = mAdapterMACAddress;

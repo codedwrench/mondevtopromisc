@@ -144,7 +144,7 @@ add_executable(xlinkhandheldassistant main.cpp
         Includes/UserInterface/UIObject.h
         Includes/UserInterface/Window.h
         Includes/UserInterface/WindowController.h
-	    Includes/WindowModel.h
+	Includes/WindowModel.h
         Includes/UserInterface/XLinkWindow.h)
         
 if(WIN32)
@@ -163,7 +163,7 @@ endif ()
 
 
 target_include_directories(xlinkhandheldassistant PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${CURSES_INCLUDE_DIRS} ${LibNL_INCLUDE_DIR})
-target_link_libraries(xlinkhandheldassistant ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES} ${LibNL_LIBRARIES})
+target_link_libraries(xlinkhandheldassistant Threads::Threads ${PCAP_LIBRARY} ${Boost_LIBRARIES} ${CURSES_LIBRARIES} ${PLATFORM_SPECIFIC_LIBRARIES} ${LibNL_LIBRARIES})
 
 if (ENABLE_TESTS)
     find_package(GTest REQUIRED)
@@ -181,6 +181,6 @@ if (ENABLE_TESTS)
             Sources/WindowModel.cpp
             Sources/XLinkKaiConnection.cpp)
     target_include_directories(tests PRIVATE ${PCAP_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-    target_link_libraries(tests gtest gmock gtest_main ${PCAP_LIBRARY} ${Boost_LIBRARIES})
+    target_link_libraries(tests gtest gmock gtest_main Threads::Threads ${PCAP_LIBRARY} ${Boost_LIBRARIES})
     gtest_discover_tests(tests)
 endif(ENABLE_TESTS)

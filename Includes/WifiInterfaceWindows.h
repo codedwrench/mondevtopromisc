@@ -23,10 +23,10 @@ class WifiInterface : public IWifiInterface
 public:
     WifiInterface(std::string_view aAdapterName);
     ~WifiInterface();
-    bool                          Connect(const WifiInformation& aConnection) override { return true; }
+    bool                          Connect(const WifiInformation& aConnection) override;
     uint64_t                      GetAdapterMACAddress() override;
     std::vector<WifiInformation>& GetAdhocNetworks() override;
-    bool                          LeaveIBSS() override { return true; }
+    bool                          LeaveIBSS() override;
 
 private:
     std::vector<WifiInformation> mLastReceivedScanInformation;
