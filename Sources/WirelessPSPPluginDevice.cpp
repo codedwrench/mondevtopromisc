@@ -30,6 +30,7 @@ bool WirelessPSPPluginDevice::Open(std::string_view aName, std::vector<std::stri
     mHandler = pcap_create(aName.data(), lErrorBuffer.data());
     pcap_set_snaplen(mHandler, cSnapshotLength);
     pcap_set_timeout(mHandler, cPCAPTimeoutMs);
+    pcap_setdirection(mHandler, PCAP_D_IN);
     // TODO: Test without immediate mode, see if it helps
     // pcap_set_immediate_mode(mHandler, 1);
 
@@ -94,13 +95,14 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
     uint64_t    lSourceMac{
         (GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex) & Net_Constants::cBroadcastMac)};
 
-    // Reset the timer so it will not time out
-    mReadWatchdog = std::chrono::system_clock::now();
-
     if (!IsMACBlackListed(lSourceMac)) {
         if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) &
               Net_Constants::cBroadcastMac) == Net_Constants::cBroadcastMac) &&
             (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
+            
+            // Reset the timer so it will not time out
+            mReadWatchdog = std::chrono::system_clock::now();
+
             // Obtain required MACs
             uint64_t lAdapterMAC = mAdapterMACAddress;
             auto     lPSPMAC     = GetRawData<uint64_t>(lData, Net_8023_Constants::cSourceAddressIndex);
