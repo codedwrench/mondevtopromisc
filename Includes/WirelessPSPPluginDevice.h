@@ -24,7 +24,7 @@ namespace WirelessPSPPluginDevice_Constants
 {
     static constexpr unsigned int         cSnapshotLength{65535};
     static constexpr unsigned int         cPCAPTimeoutMs{1};
-    static constexpr std::chrono::seconds cReadWatchdogTimeout{10};
+    static constexpr std::chrono::seconds cReadWatchdogTimeout{5};
 }  // namespace WirelessPSPPluginDevice_Constants
 
 using namespace WirelessPSPPluginDevice_Constants;
