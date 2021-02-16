@@ -16,13 +16,13 @@
 
 namespace IPCapDevice_Constants
 {
-    PACK64(struct WiFiBeaconInformation
+    struct WiFiBeaconInformation
     {
         uint64_t    BSSID{};
         std::string SSID{};
         uint8_t     MaxRate{RadioTap_Constants::cRateFlags};
         uint16_t    Frequency{RadioTap_Constants::cChannel};
-    });
+    };
 }  // namespace IPCapDevice_Constants
 
 class IConnector;
