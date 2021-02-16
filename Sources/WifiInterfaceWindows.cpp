@@ -242,8 +242,8 @@ uint64_t WifiInterface::GetAdapterMACAddress()
     return lReturn;
 }
 
-bool WifiInterface::Connect(const IWifiInterface::WifiInformation& aConnection) 
-{ 
+bool WifiInterface::Connect(const IWifiInterface::WifiInformation& aConnection)
+{
     Logger::GetInstance().Log("Connecting to: " + aConnection.ssid, Logger::Level::TRACE);
     DWORD lReturn{};
 
@@ -253,15 +253,15 @@ bool WifiInterface::Connect(const IWifiInterface::WifiInformation& aConnection)
     lSSID.uSSIDLength = aConnection.ssid.size();
 
     WLAN_CONNECTION_PARAMETERS mParameters{};
-    mParameters.dot11BssType = dot11_BSS_type_independent;
-    mParameters.pDesiredBssidList = nullptr;
-    mParameters.pDot11Ssid = &lSSID;
+    mParameters.dot11BssType       = dot11_BSS_type_independent;
+    mParameters.pDesiredBssidList  = nullptr;
+    mParameters.pDot11Ssid         = &lSSID;
     mParameters.wlanConnectionMode = wlan_connection_mode_discovery_unsecure;
-    mParameters.dwFlags = WLAN_CONNECTION_ADHOC_JOIN_ONLY;
-    mParameters.strProfile = nullptr;
+    mParameters.dwFlags            = WLAN_CONNECTION_ADHOC_JOIN_ONLY;
+    mParameters.strProfile         = nullptr;
 
     lReturn = WlanConnect(mWifiHandle, &mGUID, &mParameters, nullptr);
-    return lReturn == ERROR_SUCCESS; 
+    return lReturn == ERROR_SUCCESS;
 }
 
 
@@ -269,4 +269,3 @@ bool WifiInterface::LeaveIBSS()
 {
     return WlanDisconnect(mWifiHandle, &mGUID, nullptr) == ERROR_SUCCESS;
 }
-

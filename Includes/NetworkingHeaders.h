@@ -16,7 +16,7 @@
 #endif
 
 #ifdef _MSC_VER
-#define PACK(__Declaration__) __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
+#define PACK(__Declaration__)   __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
 #define PACK64(__Declaration__) __pragma(pack(push, 8)) __Declaration__ __pragma(pack(pop))
 #endif
 

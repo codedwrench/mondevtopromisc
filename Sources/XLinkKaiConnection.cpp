@@ -134,7 +134,7 @@ bool XLinkKaiConnection::ReadNextData()
     return lReturn;
 }
 
-void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code&  /*aError*/, size_t aBytesReceived)
+void XLinkKaiConnection::ReceiveCallback(const boost::system::error_code& /*aError*/, size_t aBytesReceived)
 {
     std::string lData{mData.begin(), mData.begin() + aBytesReceived};
 

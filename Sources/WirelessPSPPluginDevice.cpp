@@ -58,7 +58,7 @@ void WirelessPSPPluginDevice::Close()
     }
 
     if (mReceiverThread != nullptr) {
-        while (!mReceiverThread->joinable()) { 
+        while (!mReceiverThread->joinable()) {
             // Wait
             std::this_thread::sleep_for(1ms);
         };
@@ -66,7 +66,7 @@ void WirelessPSPPluginDevice::Close()
     }
 
     if (mWifiTimeoutThread != nullptr) {
-        while (!mWifiTimeoutThread->joinable()) { 
+        while (!mWifiTimeoutThread->joinable()) {
             // Wait
             std::this_thread::sleep_for(1ms);
         };
@@ -97,7 +97,6 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
         if (((GetRawData<uint64_t>(lData, Net_8023_Constants::cDestinationAddressIndex) &
               Net_Constants::cBroadcastMac) == Net_Constants::cBroadcastMac) &&
             (GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
-            
             // Reset the timer so it will not time out
             mReadWatchdog = std::chrono::system_clock::now();
 
@@ -124,10 +123,10 @@ bool WirelessPSPPluginDevice::ReadCallback(const unsigned char* aData, const pca
             memcpy(lPacket.data() + lIndex, &lAdapterMAC, Net_8023_Constants::cDestinationAddressLength);
 
             Send(lPacket, false);
-        } else if((GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
+        } else if ((GetRawData<uint16_t>(lData, Net_8023_Constants::cEtherTypeIndex) == Net_Constants::cPSPEtherType)) {
             // Reset the timer so it will not time out
             mReadWatchdog = std::chrono::system_clock::now();
-            
+
             // With the plugin the destination mac is kept at the end of the packet
             std::string lActualDestinationMac{
                 lData.substr(lData.size() - Net_8023_Constants::cDestinationAddressLength)};

@@ -87,7 +87,7 @@ static int ErrorHandler(sockaddr_nl* /*aSockAddress*/, nlmsgerr* aError, void* a
 }
 
 
-static int FinishHandler(nl_msg*  /*aMessage*/, void* aArgument)
+static int FinishHandler(nl_msg* /*aMessage*/, void* aArgument)
 {
     // Callback for NL_CB_FINISH.
     int* lReturn = static_cast<int*>(aArgument);
@@ -96,7 +96,7 @@ static int FinishHandler(nl_msg*  /*aMessage*/, void* aArgument)
 }
 
 
-static int AcknowledgeHandler(nl_msg*  /*aMessage*/, void* aArgument)
+static int AcknowledgeHandler(nl_msg* /*aMessage*/, void* aArgument)
 {
     // Callback for NL_CB_ACK.
     int* lReturn = static_cast<int*>(aArgument);
