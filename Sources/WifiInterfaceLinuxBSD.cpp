@@ -10,8 +10,6 @@
 #include "../Includes/NetConversionFunctions.h"
 
 #ifdef __linux__
-#include <arpa/inet.h>
-#include <net/ethernet.h>
 #include <netpacket/packet.h>
 #else
 #include <net/if_dl.h>
@@ -19,19 +17,20 @@
 
 using namespace WifiInterface_Constants;
 
-WifiInterface::WifiInterface(std::string_view aAdapter)
+WifiInterface::WifiInterface(std::string_view aAdapter) :
+    mAdapterName(aAdapter), mSocket(nl_socket_alloc()), mNetworkAdapterIndex(if_nametoindex(mAdapterName.data()))
 {
-    mAdapterName = aAdapter;
     SetBSSPolicy();
     // Open socket to kernel.
-    mSocket = nl_socket_alloc();  // Allocate new netlink socket in memory
-    genl_connect(mSocket);        // Create file descriptor and bind socket
+    genl_connect(mSocket);  // Create file descriptor and bind socket
     nl_socket_disable_seq_check(mSocket);
     mDriverId = genl_ctrl_resolve(mSocket, WifiInterface_Constants::cDriverName.data());  // Find the nl80211 driver ID
-    mNetworkAdapterIndex = if_nametoindex(mAdapterName.data());  // Use this wireless interface for scanning
 }
 
-WifiInterface::~WifiInterface() {}
+WifiInterface::~WifiInterface()
+{
+    nl_socket_free(mSocket);
+}
 
 void WifiInterface::SetBSSPolicy()
 {
@@ -88,7 +87,7 @@ static int ErrorHandler(sockaddr_nl* /*aSockAddress*/, nlmsgerr* aError, void* a
 }
 
 
-static int FinishHandler(nl_msg* aMessage, void* aArgument)
+static int FinishHandler(nl_msg*  /*aMessage*/, void* aArgument)
 {
     // Callback for NL_CB_FINISH.
     int* lReturn = static_cast<int*>(aArgument);
@@ -97,7 +96,7 @@ static int FinishHandler(nl_msg* aMessage, void* aArgument)
 }
 
 
-static int AcknowledgeHandler(nl_msg* aMessage, void* aArgument)
+static int AcknowledgeHandler(nl_msg*  /*aMessage*/, void* aArgument)
 {
     // Callback for NL_CB_ACK.
     int* lReturn = static_cast<int*>(aArgument);
@@ -106,7 +105,7 @@ static int AcknowledgeHandler(nl_msg* aMessage, void* aArgument)
 }
 
 
-static int SkipSequenceCheck(nl_msg* aMessage, void* aArgument)
+static int SkipSequenceCheck(nl_msg* /*aMessage*/, void* /*aArgument*/)
 {
     // Callback for NL_CB_SEQ_CHECK.
     return NL_OK;
@@ -119,7 +118,7 @@ static int FamilyHandler(nl_msg* aMessage, void* aArgument)
     auto*                                     lGroup{reinterpret_cast<HandlerArguments*>(aArgument)};
     std::array<nlattr*, NL80211_ATTR_MAX + 1> lIndices{};
     auto*   lGenlMessageHeader{reinterpret_cast<genlmsghdr*>(nlmsg_data(nlmsg_hdr(aMessage)))};
-    nlattr* lMultiCastGroup{};
+    nlattr* lMultiCastGroup{nullptr};
     int     lRemaining{};
 
     nla_parse(lIndices.data(),
@@ -132,7 +131,7 @@ static int FamilyHandler(nl_msg* aMessage, void* aArgument)
         // Loop through the multicast groups
         nla_for_each_nested(lMultiCastGroup, lIndices.at(CTRL_ATTR_MCAST_GROUPS), lRemaining)
         {
-            std::array<nlattr*, CTRL_ATTR_MCAST_GRP_MAX + 1> lMulticastGroupIndices;
+            std::array<nlattr*, CTRL_ATTR_MCAST_GRP_MAX + 1> lMulticastGroupIndices{};
 
             nla_parse(lMulticastGroupIndices.data(),
                       CTRL_ATTR_MCAST_GRP_MAX,
@@ -214,7 +213,6 @@ int WifiInterface::GetMulticastId()
 static std::string GetSSIDFromIE(unsigned char* aBeaconInformation, int aBeaconLength)
 {
     std::string lSSID{};
-    uint8_t     lLength{};
     uint8_t*    lData{};
 
     while (aBeaconLength >= 2 && aBeaconLength >= aBeaconInformation[1]) {
@@ -266,7 +264,6 @@ static int CallbackTrigger(nl_msg* aMessage, void* aArgument)
  */
 static int DumpResults(nl_msg* aMessage, void* aArgument)
 {
-    int   lReturn{};
     auto* lArgument = reinterpret_cast<DumpResultArgument*>(aArgument);
 
     // Called by the kernel with a dump of the successful scan's data. Called for each SSID.
@@ -469,9 +466,7 @@ bool WifiInterface::ScanTrigger()
                                               Logger::Level::ERROR);
                 }
 
-                if (lCallback != nullptr) {
-                    nl_cb_put(lCallback);
-                }
+                nl_cb_put(lCallback);
             } else {
                 Logger::GetInstance().Log("Failed to allocate netlink callbacks", Logger::Level::ERROR);
                 nlmsg_free(lSSIDsToScan);

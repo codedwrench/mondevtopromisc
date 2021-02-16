@@ -68,8 +68,8 @@ private:
     int  GetMulticastId();
     void SetBSSPolicy();
 
-    std::string                                  mAdapterName;
-    std::array<nla_policy, NL80211_BSS_MAX + 1>  mBSSPolicy;
+    std::string                                  mAdapterName{};
+    std::array<nla_policy, NL80211_BSS_MAX + 1>  mBSSPolicy{};
     nl_sock*                                     mSocket{nullptr};
     int                                          mDriverId{0};
     unsigned int                                 mNetworkAdapterIndex{0};

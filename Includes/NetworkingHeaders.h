@@ -9,11 +9,15 @@
 #include <cstdint>
 
 #ifdef __GNUC__
+// Aligns to 1 byte
 #define PACK(__Declaration__) __Declaration__ __attribute__((__packed__))
+// Aligns to 8 bytes
+#define PACK64(__Declaration__) __Declaration__ __attribute__((aligned(64))) __attribute__((__packed__))
 #endif
 
 #ifdef _MSC_VER
 #define PACK(__Declaration__) __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
+#define PACK64(__Declaration__) __pragma(pack(push, 8)) __Declaration__ __pragma(pack(pop))
 #endif
 
 /**

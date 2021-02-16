@@ -18,7 +18,6 @@
 namespace Window_Constants
 {
     using Dimensions       = std::array<int, 4>;
-    using ScaleCalculation = std::function<Dimensions(const int&, const int&)>;
     using NCursesWindow    = std::unique_ptr<WINDOW, std::function<void(WINDOW*)>>;
     using ObjectList       = std::vector<std::shared_ptr<IUIObject>>;
 }  // namespace Window_Constants

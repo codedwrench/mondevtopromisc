@@ -1,17 +1,13 @@
 #include "../Includes/MonitorDevice.h"
 
-#include "../Includes/NetConversionFunctions.h"
-
 /* Copyright (c) 2020 [Rick de Bondt] - MonitorDevice.cpp */
 
 #include <chrono>
 #include <functional>
-#include <iomanip>
-#include <iostream>
 #include <string>
 #include <thread>
 
-#include "../Includes/Logger.h"
+#include "../Includes/NetConversionFunctions.h"
 
 using namespace std::chrono;
 

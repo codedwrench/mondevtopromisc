@@ -5,12 +5,10 @@
 /* Copyright (c) 2020 [Rick de Bondt] - Parameter80211Reader.cpp */
 
 #include "../Includes/NetConversionFunctions.h"
-#include "../Includes/NetworkingHeaders.h"
 
-Parameter80211Reader::Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader)
-{
-    mPhysicalDeviceHeaderReader = std::move(aPhysicalDeviceHeaderReader);
-}
+Parameter80211Reader::Parameter80211Reader(std::shared_ptr<RadioTapReader> aPhysicalDeviceHeaderReader) :
+    mPhysicalDeviceHeaderReader(std::move(aPhysicalDeviceHeaderReader))
+{}
 
 uint8_t Parameter80211Reader::GetFrequency() const
 {

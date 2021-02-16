@@ -59,7 +59,7 @@ static void SignalHandler(const boost::system::error_code& aError, int aSignalNu
     }
 }
 
-int main(int argc, char* argv[])
+int main(int  /*argc*/, char* argv[])
 {
     std::string lProgramPath{"./"};
 

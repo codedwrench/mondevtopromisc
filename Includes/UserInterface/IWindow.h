@@ -120,7 +120,7 @@ public:
 
     /**
      * Makes a window exclusive, other windows stop being processed.
-     * @param aExclusive - Wether the window should be exclusive or not.
+     * @param aExclusive - Whether the window should be exclusive or not.
      */
     virtual void SetExclusive(bool aExclusive) = 0;
 
@@ -132,7 +132,7 @@ public:
 
     /**
      * Makes a window visible.
-     * @param aVisible - Wether the window should be visible or not.
+     * @param aVisible - Whether the window should be visible or not.
      */
     virtual void SetVisible(bool aVisible) = 0;
 

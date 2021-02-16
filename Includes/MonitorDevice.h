@@ -32,7 +32,7 @@ public:
      * Adds a MAC address to the blacklist.
      * @param aMAC - MAC address to blacklist.
      */
-    void                 BlackList(uint64_t aMAC);
+    void                 BlackList(uint64_t aMAC) override;
     void                 Close() override;
     std::string          DataToString(const unsigned char* aData, const pcap_pkthdr* aHeader) override;
     const unsigned char* GetData() override;

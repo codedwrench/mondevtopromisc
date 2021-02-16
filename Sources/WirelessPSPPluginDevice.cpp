@@ -1,18 +1,14 @@
 #include "../Includes/WirelessPSPPluginDevice.h"
 
-#include "../Includes/NetConversionFunctions.h"
-
 /* Copyright (c) 2021 [Rick de Bondt] - WirelessPSPPluginDevice.cpp */
 
 #include <chrono>
 #include <cstring>
 #include <functional>
-#include <iomanip>
-#include <iostream>
 #include <string>
 #include <thread>
 
-#include "../Includes/Logger.h"
+#include "../Includes/NetConversionFunctions.h"
 
 using namespace std::chrono;
 
@@ -63,7 +59,8 @@ void WirelessPSPPluginDevice::Close()
 
     if (mReceiverThread != nullptr) {
         while (!mReceiverThread->joinable()) { 
-            // Wait 
+            // Wait
+            std::this_thread::sleep_for(1ms);
         };
         mReceiverThread->join();
     }
@@ -71,6 +68,7 @@ void WirelessPSPPluginDevice::Close()
     if (mWifiTimeoutThread != nullptr) {
         while (!mWifiTimeoutThread->joinable()) { 
             // Wait
+            std::this_thread::sleep_for(1ms);
         };
         mWifiTimeoutThread->join();
     }
